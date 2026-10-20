@@ -2,7 +2,8 @@
 
 Réplica mínima del lago del Cerebro Lima: un script por tema, un contrato común, una verificación que sabe fallar.
 Solo biblioteca estándar de Python 3.9 o superior: no hay nada que instalar ni llaves que pedir.
-(`catalogo/exportar_catalogo.py` es la excepción: usa `openpyxl`, y no forma parte del lago.)
+(`catalogo/exportar_catalogo.py` es la excepción: usa `openpyxl`, y no forma parte del lago. Además del catálogo, ahora exporta
+`catalogo/diccionario.json` y `catalogo/bitacora_ia.json`, que la vista lee sin openpyxl.)
 
 ## Cómo se corre
 
@@ -15,6 +16,7 @@ python3 ingesta/pull_territorio.py   # Límites, barrios y distritos de Orlando 
 python3 verificacion/verificar.py    # con un solo FAIL no se publica
 python3 reconstruir.py               # borra el lago, lo reconstruye y verifica (funciona en Windows)
 python3 verificacion/probar_verificador.py   # comprueba que la verificación sepa fallar
+python3 vista/construir_vista.py     # arma vista/index.html con el lago; corre verificar.py antes y no construye si falla
 ```
 
 En Windows se usa `python` o `py` en lugar de `python3`. Opcional: `set CONTACTO=correo-del-grupo@...` antes de
@@ -28,6 +30,7 @@ correr, porque el servicio del clima pide que el cliente se identifique.
 | `catalogo/` | `fuentes_lago.json`: las fuentes que alimentan el lago, con su licencia (aquí se corrige). `catalogo_completo.json`: las 105 fichas del Excel, con las que no entraron, generadas por `exportar_catalogo.py`. |
 | `lago/` | `lago/raw/<tema>/<tema>.json`: lo que escribe cada script de ingesta, con la forma del contrato. Está en `.gitignore`: no llega al repositorio ni al despliegue. `lago/territorio/`: capas GeoJSON en WGS84, simplificadas; esta sí se publica. |
 | `verificacion/` | `verificar.py` y la prueba de que sabe fallar. |
+| `vista/` | `plantilla.html` (diseño y código de la página) y `construir_vista.py`, que le incrusta el lago y escribe `index.html`: una sola página sin servidor ni librerías, lista para Vercel o GitHub Pages. |
 
 ## Lo que hay que hacer a mano antes de publicar
 
@@ -45,3 +48,14 @@ correr, porque el servicio del clima pide que el cliente se identifique.
 - `lago/raw/clima/clima.json` cambia en cada corrida (tiempo real). Es esperado: no entra en la prueba de reproducibilidad.
 - `lago/raw/escucha/escucha.json` suma un mes nuevo cada mes; `lago/raw/empleo/empleo.json`, cada semana.
 - Las capas de Orlando se actualizan cuando la ciudad las actualiza (ver `vigencia` en cada cifra).
+
+## La vista (Cerebro Orlando)
+
+`vista/index.html` responde las preguntas del diccionario en lenguaje sencillo: cómo va la economía (empleo, vivienda,
+interés), en qué barrios y distritos se autoriza más construcción (mapa), qué clima hay y de dónde sale cada dato.
+Cada cifra abre su ficha de trazabilidad (fuente, licencia, enlace consultado, fecha de prueba y campo del diccionario).
+
+- Se publica solo lo agregado: la vista no tiene nombres, direcciones ni teléfonos; los barrios bajo el umbral se ven con rayas.
+- Lo que la vista calcula (barrio → distrito por su centro, área en km², permisos por km²) aparece marcado como «derivado».
+- Para desplegar en Vercel: carpeta raíz `vista/`, sin comando de build (o `python3 vista/construir_vista.py` si el lago se reconstruye allá).
+- `python3 vista/construir_vista.py --sin-verificar` sirve solo para probar el diseño; la página lo dice en «Fuentes».
