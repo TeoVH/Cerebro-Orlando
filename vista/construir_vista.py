@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Construye la vista pública del Cerebro Orlando: vista/index.html, una sola página sin servidor.
 
-Lee:     lago/raw/<tema>/<tema>.json (los 6 temas), lago/territorio/*.geojson y catalogo/*.json.
-Escribe: vista/index.html = vista/plantilla.html + los datos incrustados en un <script type="application/json">.
+Lee:     lago/raw/<tema>/<tema>.json (13 temas), lago/territorio/*.geojson y catalogo/*.json.
+Escribe: vista/index.html = vista/plantilla.html + estilos.css + app.js + los datos incrustados en un <script type="application/json">.
 
 Uso (solo biblioteca estándar de Python 3.9+):
     python3 vista/construir_vista.py                 # corre verificar.py antes; con un solo FAIL no construye
@@ -11,13 +11,15 @@ Uso (solo biblioteca estándar de Python 3.9+):
 Qué agrega la vista (todo queda marcado como «derivado» en la página):
 - Cada barrio se asigna al distrito de comisionado que contiene su centro (cruce espacial, no viene de la fuente).
 - Área aproximada de cada barrio en km² (proyección plana local) para el indicador «permisos por km²».
-- Las geometrías se proyectan una vez aquí a coordenadas de pantalla para que la página no cargue librerías de mapas.
+- Las geometrías se proyectan aquí a coordenadas de pantalla (mapas planos SVG) y se incrustan como GeoJSON para el mapa 3D
+  (MapLibre GL desde cdnjs, sin teselas ni llaves: solo las capas del lago).
 Nada de esto agrega datos de personas: la vista solo usa conteos por barrio que ya pasaron el umbral del lago."""
 import argparse, datetime, json, math, pathlib, subprocess, sys
 
 RAIZ = pathlib.Path(__file__).resolve().parents[1]
 VISTA = RAIZ / "vista"
-TEMAS = ["empleo", "vivienda", "escucha", "clima", "permisos", "territorio"]
+TEMAS = ["gente", "economia", "empleo", "vivienda", "escucha", "permisos", "seguridad", "codigo", "negocios", "turismo",
+         "clima", "clima_historico", "territorio"]
 ANCHO = 1000                      # ancho del mapa en unidades de pantalla (viewBox)
 REPO = "https://github.com/NSaldarriagaV/Cerebro-Orlando"
 
@@ -52,6 +54,8 @@ for t in TEMAS:
 barrios_geo = leer(RAIZ / "lago" / "territorio" / "barrios.geojson")["features"]
 distritos_geo = leer(RAIZ / "lago" / "territorio" / "distritos_comisionados.geojson")["features"]
 limite_geo = leer(RAIZ / "lago" / "territorio" / "limite_ciudad.geojson")["features"]
+lagos_ruta = RAIZ / "lago" / "territorio" / "lagos.geojson"
+lagos_geo = leer(lagos_ruta)["features"] if lagos_ruta.exists() else []
 
 
 # ---------- geometría ----------
@@ -146,7 +150,7 @@ for f in barrios_geo:
     area, centro = medir(f["geometry"])
     cx, cy = xy(centro)
     barrios.append({"id": f["properties"]["id"], "nombre": nombre, "d": ruta_svg(f["geometry"]),
-                    "cx": round(cx, 1), "cy": round(cy, 1), "km2": round(area, 2),
+                    "cx": round(cx, 1), "cy": round(cy, 1), "km2": round(area, 2), "lon": round(centro[0], 5), "lat": round(centro[1], 5),
                     "distrito": distrito_de(f["geometry"], centro),
                     "permisos": por_nombre.get(nombre.casefold()), "puesto": ranking.get(nombre.casefold())})
 sin_poligono = [[b, n] for b, n in serie if b.casefold() not in nombres_capa]
@@ -158,10 +162,20 @@ for d in sorted(distritos_geo, key=lambda f: int(f["properties"]["distrito"])):
     cx, cy = xy(centro)
     suyos = [b for b in barrios if b["distrito"] == num]
     distritos.append({"distrito": num, "d": ruta_svg(d["geometry"]), "cx": round(cx, 1), "cy": round(cy, 1),
+                      "lon": round(centro[0], 5), "lat": round(centro[1], 5),
                       "km2": round(area, 1), "barrios": len(suyos),
                       "permisos": sum(b["permisos"] or 0 for b in suyos)})
 
 limite = "".join(ruta_svg(f["geometry"]) for f in limite_geo)
+# Lagos dentro del recuadro de la ciudad, para el mapa plano (el 3D usa el GeoJSON)
+lagos = "".join(ruta_svg(f["geometry"]) for f in lagos_geo)
+
+
+def geo(features, campos):
+    """GeoJSON compacto para MapLibre: solo los campos que usa la vista; el índice del barrio va en «i»."""
+    return {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "properties": {k: (i if k == "i" else f["properties"].get(k)) for k in campos}, "geometry": f["geometry"]}
+        for i, f in enumerate(features)]}
 
 datos = {
     "generado": datetime.date.today().isoformat(),
@@ -171,16 +185,24 @@ datos = {
     "catalogo": leer(RAIZ / "catalogo" / "catalogo_completo.json"),
     "diccionario": leer(RAIZ / "catalogo" / "diccionario.json"),
     "bitacora": leer(RAIZ / "catalogo" / "bitacora_ia.json"),
-    "mapa": {"ancho": ANCHO, "alto": ALTO, "km_por_unidad": round(1 / ESCALA, 5), "limite": limite,
-             "barrios": barrios, "distritos": distritos, "sin_poligono": sin_poligono},
+    "mapa": {"ancho": ANCHO, "alto": ALTO, "km_por_unidad": round(1 / ESCALA, 5), "limite": limite, "lagos": lagos,
+             "barrios": barrios, "distritos": distritos, "sin_poligono": sin_poligono,
+             "caja": [round(min_lon, 5), round(min_lat, 5), round(max_lon, 5), round(max_lat, 5)],
+             "geo": {"barrios": geo(barrios_geo, ["i", "nombre"]), "distritos": geo(distritos_geo, ["distrito"]),
+                     "limite": geo(limite_geo, []), "lagos": geo(lagos_geo, ["nombre"])}},
 }
 
 datos["verificacion"] = verificacion
 
 plantilla = (VISTA / "plantilla.html").read_text(encoding="utf-8")
 incrustado = json.dumps(datos, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-if "__DATOS__" not in plantilla or "<!--CUERPO-->" not in plantilla:
-    sys.exit("La plantilla no tiene los marcadores __DATOS__ y <!--CUERPO-->.")
+for marca in ("__DATOS__", "<!--CUERPO-->", "/*__ESTILOS__*/", "/*__APP__*/"):
+    if marca not in plantilla:
+        sys.exit(f"La plantilla no tiene el marcador {marca}.")
+estilos = (VISTA / "estilos.css").read_text(encoding="utf-8").replace("</", "<\\/")
+app = (VISTA / "app.js").read_text(encoding="utf-8").replace("</script", "<\\/script")
+# Estilos y código viven en archivos aparte para poder leerlos; la página final los lleva adentro (un solo archivo)
+plantilla = plantilla.replace("/*__ESTILOS__*/", estilos).replace("/*__APP__*/", app)
 cabeza, cuerpo = plantilla.replace("__DATOS__", incrustado).split("<!--CUERPO-->", 1)
 salida = VISTA / "index.html"
 salida.write_text('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'

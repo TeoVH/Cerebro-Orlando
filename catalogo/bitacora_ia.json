@@ -118,5 +118,15 @@
   "resultado": null,
   "fuentes": "F14, F57, F58, F79, F106",
   "aprendizaje": "Los dos Excel marcaban F58 (NOAA) como integrada en lugar de F57 (el servicio meteorológico que sí alimenta el lago): el estado de una fuente debe salir de lo que de verdad hay en lago/ y en catalogo/fuentes_lago.json, no de memoria."
+ },
+ {
+  "n": "13",
+  "herramienta": "Claude",
+  "encargo": "Ampliar el lago a seis preguntas (gente, economía y vivienda, barrios, seguridad y convivencia, turismo, clima) y construir la vista v2 con mapa 3D, ficha de barrio, índice con pesos y comparación con ciudades pares",
+  "respuesta": "Revisó los campos de cada fuente en el navegador del grupo y escribió seis scripts nuevos y cinco ampliaciones. Propuso agregar todo en el servidor (SoQL y outStatistics de ArcGIS), excluir de la policía las categorías de salud mental, muertes y desaparecidos, y poner un umbral general por barrio en verificar.py. También propuso el PIB del área y la población por barrio.",
+  "comprobacion": "verificar.py: 286 comprobaciones, 0 fallos. probar_verificador.py atrapa una categoría excluida («Baker Act») y una celda de 3 casos. Al probar: el PIB del área está DESCONTINUADO en FRED (NGMP36740 y RGMP36740), el primer id de empleo en ocio (SMU…) dio 404 y el Census sigue pidiendo llave. El campo de origen de los casos de código casi no se anotaba antes de 2020: la IA había publicado ceros.",
+  "resultado": "Parcial",
+  "fuentes": "F14, F58, F70, F71, F79, F81, F83, F85, F93, F106",
+  "aprendizaje": "Agregar en el servidor deja usar fuentes con personas sin bajar a nadie, pero la regla tiene que estar en el verificador, no solo en el script. Un cero en una serie puede ser «no se anotaba»: hay que mirar desde cuándo se llena el campo antes de graficarlo."
  }
 ]

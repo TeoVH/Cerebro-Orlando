@@ -71,3 +71,42 @@ def escribir_lago(tema, fuentes, cifras, series):
     ruta = carpeta / f"{tema}.json"
     ruta.write_text(json.dumps(lago, ensure_ascii=False, indent=1), encoding="utf-8")
     return ruta
+
+
+# ---------- utilidades para fuentes nuevas (v2) ----------
+def fred(ids, desde=None):
+    """Baja varias series de FRED en una sola consulta (fredgraph.csv acepta ids separados por coma, sin llave).
+    Devuelve (url, {id: [[fecha AAAA-MM-DD, valor], ...]}), sin los valores vacíos ni los puntos «.»."""
+    import csv, io
+    url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=" + ",".join(ids)
+    filas = list(csv.reader(io.StringIO(get_texto(url, timeout=120))))
+    cab = filas[0]
+    faltan = [i for i in ids if i not in cab]
+    if faltan:
+        raise SystemExit(f"FRED no devolvió las series {faltan}: ¿cambió el id o la descontinuaron?")
+    series = {i: [] for i in ids}
+    for f in filas[1:]:
+        if desde and f[0] < desde:
+            continue
+        for j, i in enumerate(cab[1:], start=1):
+            if j < len(f) and f[j] not in ("", "."):
+                series[i].append([f[0], float(f[j])])
+    for i, p in series.items():
+        if not p:
+            raise SystemExit(f"La serie {i} llegó vacía.")
+    return url, series
+
+
+def mes(fecha):
+    """2026-08-01 -> 2026-08"""
+    return fecha[:7]
+
+
+def anio(fecha):
+    return fecha[:4]
+
+
+def suprimir(conteos, umbral):
+    """Separa {barrio: n} en (mostrados, cuántos se suprimieron). Nunca se dice cuáles se suprimieron."""
+    mostrados = {b: n for b, n in conteos.items() if b and n >= umbral}
+    return mostrados, sum(1 for b, n in conteos.items() if b and n < umbral)

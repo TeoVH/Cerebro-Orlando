@@ -14,7 +14,10 @@ fallos = 0
 PII = [re.compile(r"[\w.+-]+@[\w-]+\.[a-z]{2,}"),                                      # correos
        re.compile(r"(?<!\d)3\d{9}(?!\d)"),                                              # celulares colombianos
        re.compile(r"(?<![\d.])(?:\+?1[ .-]?)?\(?[2-9]\d{2}\)?[ .-]?\d{3}[ .-]?\d{4}(?!\d)")]   # teléfonos de EE. UU.
-CAMPOS_PERSONALES = re.compile(r"cedula|documento_identidad|telefono|celular|correo|email|phone|owner|contractor|applicant|suspect|officer|name_?holder|commissionername", re.I)
+CAMPOS_PERSONALES = re.compile(r"cedula|documento_identidad|telefono|celular|correo|email|phone|owner|contractor|applicant|suspect|officer|name_?holder|commissionername"
+                               r"|casenumber|case_number|license_holder|casename|case_comments|add_by|property_address", re.I)
+# Categorías de la policía que decidimos no publicar nunca (salud mental, muertes, personas vulnerables)
+EXCLUIDAS = re.compile(r"baker|suicid|unattended death|drowning|missing|desaparec|custody|custodia|injunction|alejamiento|elderly", re.I)
 BBOX = (-82.0, 28.0, -80.8, 29.0)        # lon_min, lat_min, lon_max, lat_max alrededor de Orlando
 MAX_KB_GEOJSON = 5000
 DIAS_MAX_PRUEBA = 400
@@ -72,6 +75,24 @@ def dominio(ruta, lago):
                       ("los barrios mostrados no suman más que el total de la ciudad", lambda: sum(p[1] for p in lago["series"]["permisos_por_barrio_ultimo_anio"]["puntos"]) <= valor(lago, "permisos_emitidos_ultimo_anio_completo")),
                       ("serie anual ordenada y sin el año en curso", lambda: (lambda a: a == sorted(set(a)) and max(a) < hoy.year)([int(p[0]) for p in lago["series"]["permisos_por_anio"]["puntos"]]))],
         "territorio": [("hay al menos un polígono por capa", lambda: all(c["valor"] >= 1 for c in lago["cifras"].values()))],
+        "economia":  [("desempleo en rango sensato", lambda: 0.5 < valor(lago, "desempleo_ultimo_mes") < 30),
+                      ("empleo total en rango sensato (miles)", lambda: 300 < valor(lago, "empleo_total_ultimo_mes") < 5000),
+                      ("las seis series de desempleo están", lambda: all(f"desempleo_{c}" in lago["series"] for c in ("orlando", "tampa", "miami", "jacksonville", "florida", "eeuu")))],
+        "gente":     [("población del condado en rango sensato (miles)", lambda: 500 < valor(lago, "poblacion_condado_ultimo_anio") < 5000),
+                      ("ingreso mediano en rango sensato", lambda: 20_000 < valor(lago, "ingreso_mediano_condado") < 300_000),
+                      ("pobreza en rango sensato", lambda: 0 < valor(lago, "pobreza_condado") < 60)],
+        "turismo":   [("empleo en ocio y hotelería en rango sensato (miles)", lambda: 20 < valor(lago, "empleo_ocio_ultimo_mes") < 1000),
+                      ("participación del ocio en rango sensato", lambda: 1 < valor(lago, "participacion_ocio_ultimo_mes") < 60)],
+        "seguridad": [("casos del último año en rango sensato", lambda: 100 < valor(lago, "delitos_ultimo_anio") < 1_000_000),
+                      ("umbral mínimo por barrio de al menos 5 casos", lambda: valor(lago, "umbral_minimo_por_barrio") >= 5),
+                      ("ninguna categoría excluida (salud mental, muertes, desaparecidos, custodia, órdenes de alejamiento)",
+                       lambda: not any(EXCLUIDAS.search(str(p[0])) for s in lago["series"].values() for p in s["puntos"]))],
+        "codigo":    [("casos del último año en rango sensato", lambda: 100 < valor(lago, "casos_ultimo_anio") < 1_000_000),
+                      ("umbral mínimo por barrio de al menos 5 casos", lambda: valor(lago, "umbral_minimo_por_barrio") >= 5)],
+        "negocios":  [("licencias vigentes en rango sensato", lambda: 100 < valor(lago, "negocios_vigentes") < 1_000_000),
+                      ("umbral mínimo por barrio de al menos 5 licencias", lambda: valor(lago, "umbral_minimo_por_barrio") >= 5)],
+        "clima_historico": [("temperatura media anual en °F en rango sensato", lambda: all(55 < p[1] < 85 for p in lago["series"]["temperatura_anual"]["puntos"])),
+                            ("al menos 60 años con temperatura", lambda: len(lago["series"]["temperatura_anual"]["puntos"]) >= 60)],
     }
     for nombre, fn in reglas.get(t, []):
         try:
@@ -80,6 +101,11 @@ def dominio(ruta, lago):
             ok = False
             nombre += f" (no se pudo evaluar: {type(e).__name__})"
         check(f"{ruta}: {nombre}", ok, "valor fuera de rango o estructura distinta")
+    # Regla general de privacidad: en todo tema con umbral, ninguna serie por barrio publica una celda bajo el umbral
+    umbral = valor(lago, "umbral_minimo_por_barrio")
+    if umbral is not None:
+        bajo = [(k, p) for k, s in lago.get("series", {}).items() if "barrio" in k for p in s["puntos"] if p[1] < umbral]
+        check(f"{ruta}: ninguna celda por barrio bajo el umbral de {umbral}", not bajo, bajo[:3])
     if t == "permisos":
         c = valor(lago, "coincidencia_nombres_con_capa_barrios")
         if c is not None and c < 80:

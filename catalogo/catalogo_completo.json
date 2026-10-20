@@ -213,7 +213,7 @@
   "probado": "2026-10-06",
   "estado": "candidato",
   "hallada_por": "Listado del docx «Fuentes de información sobre Orlando» (29-sep-2026), fuente #12; confirmar si salió de IA o de búsqueda",
-  "nota": "Prioridad alta. API en api.census.gov (sin llave con tope diario; llave gratuita para más). La API pide un aviso de que el Census no avala el uso. Prueba 2026-10-05 (script del grupo): HTTP 403, el servidor rechazó al script. Esto es de la página principal: no prueba nada sobre la API o la descarga, que pueden estar en otro dominio. Prueba de endpoint 2026-10-05 (script del grupo): la consulta ACS respondió HTTP 200 pero con una página HTML «Missing Key»: la API pide llave (gratuita, se solicita en api.census.gov/data/key_signup.html). Repetir con la llave. No se pone fecha porque no entregó datos. Repetida 2026-10-06: mismo resultado."
+  "nota": "Prioridad alta. API en api.census.gov (sin llave con tope diario; llave gratuita para más). La API pide un aviso de que el Census no avala el uso. Prueba 2026-10-05 (script del grupo): HTTP 403, el servidor rechazó al script. Esto es de la página principal: no prueba nada sobre la API o la descarga, que pueden estar en otro dominio. Prueba de endpoint 2026-10-05 (script del grupo): la consulta ACS respondió HTTP 200 pero con una página HTML «Missing Key»: la API pide llave (gratuita, se solicita en api.census.gov/data/key_signup.html). Repetir con la llave. No se pone fecha porque no entregó datos. Repetida 2026-10-06: mismo resultado. v2 2026-10-20: sigue pidiendo llave; por eso no hay población por barrio en el lago. Es un hueco declarado en la vista."
  },
  {
   "id": "F13",
@@ -249,7 +249,7 @@
   "probado": "2026-10-06",
   "estado": "integrado",
   "hallada_por": "Listado del docx «Fuentes de información sobre Orlando» (29-sep-2026), fuente #14; confirmar si salió de IA o de búsqueda",
-  "nota": "Prioridad alta. La licencia varía por serie (cada una trae su copyright/fuente original); anotarla serie por serie. Hay también CSV directo por serie sin llave. Prueba 2026-10-05 (script del grupo): HTTP 200 pero devolvió una página HTML, no una descarga ni una API; falta probar el endpoint exacto. Prueba de endpoint 2026-10-05 (script del grupo): el CSV directo de la serie ATNHPIUS36740Q (índice de precios de vivienda, área de Orlando) se descargó sin llave; la primera fila de datos es 1978-04-01 y es trimestral. Los datos de la serie son una sola de las que cubre esta fuente. Licencia leída el 2026-10-06 en los Tags de la serie ATNHPIUS36740Q: «Public Domain: Citation Requested». Origen: U.S. Federal Housing Finance Agency (FHFA), distribuido por FRED. Cita sugerida: «Source: U.S. Federal Housing Finance Agency via FRED». Los términos generales de FRED prohíben guardar contenido sin permiso y a la vez permiten usar sin permiso las series de dominio público: la contradicción queda anotada. Unidad: índice 1995-Q1 = 100, sin ajuste estacional. Repetida 2026-10-06: mismo resultado. Integrada al lago el 2026-10-06: su script de ingesta corrió con datos reales y escribió lago/raw/vivienda/vivienda.json; verificar.py sin fallos."
+  "nota": "Prioridad alta. La licencia varía por serie (cada una trae su copyright/fuente original); anotarla serie por serie. Hay también CSV directo por serie sin llave. Prueba 2026-10-05 (script del grupo): HTTP 200 pero devolvió una página HTML, no una descarga ni una API; falta probar el endpoint exacto. Prueba de endpoint 2026-10-05 (script del grupo): el CSV directo de la serie ATNHPIUS36740Q (índice de precios de vivienda, área de Orlando) se descargó sin llave; la primera fila de datos es 1978-04-01 y es trimestral. Los datos de la serie son una sola de las que cubre esta fuente. Licencia leída el 2026-10-06 en los Tags de la serie ATNHPIUS36740Q: «Public Domain: Citation Requested». Origen: U.S. Federal Housing Finance Agency (FHFA), distribuido por FRED. Cita sugerida: «Source: U.S. Federal Housing Finance Agency via FRED». Los términos generales de FRED prohíben guardar contenido sin permiso y a la vez permiten usar sin permiso las series de dominio público: la contradicción queda anotada. Unidad: índice 1995-Q1 = 100, sin ajuste estacional. Repetida 2026-10-06: mismo resultado. Integrada al lago el 2026-10-06: su script de ingesta corrió con datos reales y escribió lago/raw/vivienda/vivienda.json; verificar.py sin fallos. Integración v2 2026-10-20: además del índice de vivienda, el lago usa de FRED el desempleo (Orlando, Tampa, Miami, Jacksonville, Florida y EE. UU.), el empleo total y el de ocio y hotelería, la población del condado y del área, el ingreso mediano y la pobreza por condado, viviendas autorizadas y el inventario de Realtor.com. La licencia se leyó serie por serie: «Public Domain: Citation Requested» en todas salvo las de Realtor.com, que dicen «Copyrighted: Citation Required». El PIB del área (NGMP36740 y RGMP36740) está DESCONTINUADO en FRED: no se integró."
  },
  {
   "id": "F15",
@@ -1030,18 +1030,18 @@
   "nombre": "Histórico de temperatura y lluvia (Climate Data Online)",
   "entidad": "NOAA NCEI",
   "tipo_publicador": "Entidad pública",
-  "url": "https://www.ncei.noaa.gov/cdo-web/",
-  "formato": "CSV",
+  "url": "https://www.ncei.noaa.gov/access/services/data/v1?dataset=global-summary-of-the-year&stations=USW00012815&dataTypes=TAVG,PRCP&format=json&units=standard",
+  "formato": "JSON",
   "como_se_obtiene": "API sin llave",
   "licencia": "Dominio público (obra del gobierno de EE. UU.)",
   "personas": "No",
   "cobertura": "Estaciones de Orlando",
-  "vigencia": "Histórico de décadas por estación (verificar la estación del MCO)",
-  "frecuencia": "Diaria",
-  "probado": "2026-10-06",
-  "estado": "candidato",
+  "vigencia": "1953 a 2025",
+  "frecuencia": "Anual",
+  "probado": "2026-10-20",
+  "estado": "integrado",
   "hallada_por": "Listado del docx «Fuentes de información sobre Orlando» (29-sep-2026), fuente #58; confirmar si salió de IA o de búsqueda",
-  "nota": "Prioridad alta. La API pide un token gratuito enviado por correo. Prueba 2026-10-05 (script del grupo): HTTP 200 pero devolvió una página HTML, no una descarga ni una API; falta probar el endpoint exacto. Prueba de endpoint 2026-10-05 (script del grupo): el servicio de acceso a datos de NCEI devolvió un CSV sin token (con el token de CDO v2 no se probó). Solo se vio el encabezado: falta confirmar que hay filas de 2025 y que la estación USW00012815 es Orlando Intl. Repetida 2026-10-06: mismo resultado. Estado corregido el 2026-10-06: figuraba «Integrada al lago» por error. La fuente del clima que alimenta el lago es F57 (servicio meteorológico NWS); para NOAA NCEI no existe script de ingesta."
+  "nota": "Prioridad alta. La API pide un token gratuito enviado por correo. Prueba 2026-10-05 (script del grupo): HTTP 200 pero devolvió una página HTML, no una descarga ni una API; falta probar el endpoint exacto. Prueba de endpoint 2026-10-05 (script del grupo): el servicio de acceso a datos de NCEI devolvió un CSV sin token (con el token de CDO v2 no se probó). Solo se vio el encabezado: falta confirmar que hay filas de 2025 y que la estación USW00012815 es Orlando Intl. Repetida 2026-10-06: mismo resultado. Estado corregido el 2026-10-06: figuraba «Integrada al lago» por error. La fuente del clima que alimenta el lago es F57 (servicio meteorológico NWS); para NOAA NCEI no existe script de ingesta. Integrada 2026-10-20: script ingesta/pull_clima_historico.py, conjunto global-summary-of-the-year de la estación USW00012815 (Orlando International Airport) por el servicio de acceso de NCEI, sin token. Respondió con 1953 a 2025 (1952 sin temperatura). Confirma la duda anterior: la estación sí es Orlando Intl y sí hay filas de 2025."
  },
  {
   "id": "F59",
@@ -1257,7 +1257,7 @@
   "probado": "2026-10-06",
   "estado": "integrado",
   "hallada_por": "Se la pedimos a la IA (Claude) como alternativa abierta a Indeed (F19); clonada desde GitHub",
-  "nota": "Probada por Claude el 2026-10-02 y repetida por el grupo el 2026-10-05 (HTTP 200, 62 MB). La licencia sale de LICENSE y README del repo. Serie diaria que el repo refresca cada semana; columnas: date, metro, cbsa_code, indeed_job_postings_index (índice, base 100 = 1-feb-2020). El archivo trae todas las áreas metropolitanas de EE. UU.: filtrar Orlando-Kissimmee-Sanford, FL (CBSA 36740). No está en el repo del grupo todavía. Repetida 2026-10-06: mismo resultado. Integrada al lago el 2026-10-06: su script de ingesta corrió con datos reales y escribió lago/raw/empleo/empleo.json; verificar.py sin fallos."
+  "nota": "Probada por Claude el 2026-10-02 y repetida por el grupo el 2026-10-05 (HTTP 200, 62 MB). La licencia sale de LICENSE y README del repo. Serie diaria que el repo refresca cada semana; columnas: date, metro, cbsa_code, indeed_job_postings_index (índice, base 100 = 1-feb-2020). El archivo trae todas las áreas metropolitanas de EE. UU.: filtrar Orlando-Kissimmee-Sanford, FL (CBSA 36740). No está en el repo del grupo todavía. Repetida 2026-10-06: mismo resultado. Integrada al lago el 2026-10-06: su script de ingesta corrió con datos reales y escribió lago/raw/empleo/empleo.json; verificar.py sin fallos. v2 2026-10-20: del mismo archivo salen Tampa (CBSA 45300), Miami (33100) y Jacksonville (27260) para comparar."
  },
  {
   "id": "F71",
@@ -1275,7 +1275,7 @@
   "probado": "2026-10-06",
   "estado": "integrado",
   "hallada_por": "IA (Claude), a partir de la tabla «Dónde buscar» del taller; todavía nadie ha abierto el enlace",
-  "nota": "Es la fuente del ejemplo del taller (CC0). Ojo: el título del artículo no está confirmado; el script de la lámina del lago lo comprueba con assert (debe ser un artículo, no una página de desambiguación). Cuenta personas, no bots. Prueba 2026-10-06 (script del grupo): HTTP 200 con JSON; el título «Orlando_(Florida)» tiene vistas. Falta confirmar con el assert del script que es el artículo de la ciudad y no una redirección, y anotar el último mes completo. Integrada al lago el 2026-10-06: su script de ingesta corrió con datos reales y escribió lago/raw/escucha/escucha.json; verificar.py sin fallos."
+  "nota": "Es la fuente del ejemplo del taller (CC0). Ojo: el título del artículo no está confirmado; el script de la lámina del lago lo comprueba con assert (debe ser un artículo, no una página de desambiguación). Cuenta personas, no bots. Prueba 2026-10-06 (script del grupo): HTTP 200 con JSON; el título «Orlando_(Florida)» tiene vistas. Falta confirmar con el assert del script que es el artículo de la ciudad y no una redirección, y anotar el último mes completo. Integrada al lago el 2026-10-06: su script de ingesta corrió con datos reales y escribió lago/raw/escucha/escucha.json; verificar.py sin fallos. v2 2026-10-20: se agregan las vistas de los artículos de Tampa, Miami y Jacksonville (Florida) en el mismo periodo, para comparar."
  },
  {
   "id": "F72",
@@ -1419,7 +1419,7 @@
   "probado": "2026-10-06",
   "estado": "integrado",
   "hallada_por": "Búsqueda: catálogo del portal de Orlando, bajado con catalogo_orlando.py; ficha leída con licencias_orlando.py",
-  "nota": "Prioridad alta. Trae nombres de propietarios y contratistas, y teléfono y dirección del contratista: no entra tal cual; agregar por barrio o distrito y quitar esos campos. «Updated daily» según la descripción del portal. Prueba 2026-10-06 (script del grupo): HTTP 200, JSON, 5 filas de muestra. Ficha sin licencia: el campo license está vacío en la ficha del portal; revisar si hay términos generales del portal antes de integrar. Integrada al lago el 2026-10-06: su script de ingesta corrió con datos reales y escribió lago/raw/permisos/permisos.json; verificar.py sin fallos."
+  "nota": "Prioridad alta. Trae nombres de propietarios y contratistas, y teléfono y dirección del contratista: no entra tal cual; agregar por barrio o distrito y quitar esos campos. «Updated daily» según la descripción del portal. Prueba 2026-10-06 (script del grupo): HTTP 200, JSON, 5 filas de muestra. Ficha sin licencia: el campo license está vacío en la ficha del portal; revisar si hay términos generales del portal antes de integrar. Integrada al lago el 2026-10-06: su script de ingesta corrió con datos reales y escribió lago/raw/permisos/permisos.json; verificar.py sin fallos. v2 2026-10-20: se publican además los permisos por barrio de los últimos 5 años completos, con el mismo umbral."
  },
  {
   "id": "F80",
@@ -1450,12 +1450,12 @@
   "licencia": "no declara",
   "personas": "Personas identificables",
   "cobertura": "Ciudad de Orlando",
-  "vigencia": "Desde 2010 (según la descripción del portal); actualizado hasta 2026-10-05",
-  "frecuencia": "No se sabe",
-  "probado": "2026-10-06",
-  "estado": "candidato",
+  "vigencia": "Licencias vigentes a la fecha; aperturas desde 2000",
+  "frecuencia": "Diaria",
+  "probado": "2026-10-20",
+  "estado": "integrado",
   "hallada_por": "Búsqueda: catálogo del portal de Orlando, bajado con catalogo_orlando.py; ficha leída con licencias_orlando.py",
-  "nota": "Prioridad media. Trae nombre del dueño, teléfono y correo del negocio: agregar por barrio y quitar esos campos. Prueba 2026-10-06 (script del grupo): HTTP 200, JSON, 5 filas de muestra. Ficha sin licencia: el campo license está vacío en la ficha del portal; revisar si hay términos generales del portal antes de integrar."
+  "nota": "Prioridad media. Trae nombre del dueño, teléfono y correo del negocio: agregar por barrio y quitar esos campos. Prueba 2026-10-06 (script del grupo): HTTP 200, JSON, 5 filas de muestra. Ficha sin licencia: el campo license está vacío en la ficha del portal; revisar si hay términos generales del portal antes de integrar. Integrada 2026-10-20: script ingesta/pull_negocios.py. La consulta agrupa en el servidor por barrio y categoría (licencias «Open»); nombres, teléfonos y correos nunca se descargan. Celdas con menos de 5 licencias se suprimen."
  },
  {
   "id": "F82",
@@ -1486,12 +1486,12 @@
   "licencia": "no declara",
   "personas": "Texto libre sin revisar",
   "cobertura": "Ciudad de Orlando",
-  "vigencia": "Últimos 5 años móviles (según la descripción del portal); actualizado hasta 2026-10-05",
-  "frecuencia": "No se sabe",
-  "probado": "2026-10-06",
-  "estado": "candidato",
+  "vigencia": "2017 a la fecha (casos anteriores son migrados y escasos)",
+  "frecuencia": "Diaria",
+  "probado": "2026-10-20",
+  "estado": "integrado",
   "hallada_por": "Búsqueda: catálogo del portal de Orlando, bajado con catalogo_orlando.py; ficha leída con licencias_orlando.py",
-  "nota": "Prioridad alta. «Case Name», «Case Comments» y «Add By» pueden traer nombres: revisar una muestra antes de decidir. Para publicar, agregar por barrio. Prueba 2026-10-06 (script del grupo): HTTP 200, JSON, 5 filas de muestra. Ficha sin licencia: el campo license está vacío en la ficha del portal; revisar si hay términos generales del portal antes de integrar."
+  "nota": "Prioridad alta. «Case Name», «Case Comments» y «Add By» pueden traer nombres: revisar una muestra antes de decidir. Para publicar, agregar por barrio. Prueba 2026-10-06 (script del grupo): HTTP 200, JSON, 5 filas de muestra. Ficha sin licencia: el campo license está vacío en la ficha del portal; revisar si hay términos generales del portal antes de integrar. Integrada 2026-10-20: script ingesta/pull_codigo.py. Revisada una muestra: «Case Name», «Case Comments» y «Add By» traen nombres; nunca se descargan (la consulta agrupa por barrio, año y tipo). 260.807 casos; el 34 % de 2025 no trae barrio. El campo «src» (Citizen) casi no se anotaba antes de 2020."
  },
  {
   "id": "F84",
@@ -1522,12 +1522,12 @@
   "licencia": "no declara",
   "personas": "Personas identificables",
   "cobertura": "Ciudad de Orlando",
-  "vigencia": "Inicio por verificar; actualizado hasta 2026-10-05",
-  "frecuencia": "No se sabe",
-  "probado": "2026-10-06",
-  "estado": "candidato",
+  "vigencia": "2018 a la fecha",
+  "frecuencia": "Diaria",
+  "probado": "2026-10-20",
+  "estado": "integrado",
   "hallada_por": "Búsqueda: catálogo del portal de Orlando, bajado con catalogo_orlando.py; ficha leída con licencias_orlando.py",
-  "nota": "Prioridad media. Trae nombre, correo, teléfono y dirección de titulares y propietarios: agregar por zona y quitar esos campos. Atribución que declara el portal: City of Orlando. Prueba 2026-10-06 (script del grupo): HTTP 200, JSON, 5 filas de muestra. Ficha sin licencia: el campo license está vacío en la ficha del portal; revisar si hay términos generales del portal antes de integrar."
+  "nota": "Prioridad media. Trae nombre, correo, teléfono y dirección de titulares y propietarios: agregar por zona y quitar esos campos. Atribución que declara el portal: City of Orlando. Prueba 2026-10-06 (script del grupo): HTTP 200, JSON, 5 filas de muestra. Ficha sin licencia: el campo license está vacío en la ficha del portal; revisar si hay términos generales del portal antes de integrar. Integrada 2026-10-20: script ingesta/pull_turismo.py. Solo conteos de toda la ciudad por estado y año de emisión: 537 licencias, 115 activas. Sin coordenadas ni barrio; no se geocodifican direcciones para no tocar domicilios."
  },
  {
   "id": "F86",
@@ -1668,10 +1668,10 @@
   "cobertura": "Ciudad de Orlando",
   "vigencia": "Inicio por verificar; actualizado hasta 2016-03-24",
   "frecuencia": "No se sabe",
-  "probado": "2026-10-06",
-  "estado": "candidato",
+  "probado": "2026-10-20",
+  "estado": "integrado",
   "hallada_por": "Búsqueda: catálogo del portal de Orlando, bajado con catalogo_orlando.py; ficha leída con licencias_orlando.py",
-  "nota": "Prioridad baja. Cuerpos de agua dentro de la ciudad. DATO VIEJO: sin cambios desde 2016-03-24. Prueba 2026-10-06 (script del grupo): HTTP 200, JSON, 5 filas de muestra. Ficha sin licencia: el campo license está vacío en la ficha del portal; revisar si hay términos generales del portal antes de integrar."
+  "nota": "Prioridad baja. Cuerpos de agua dentro de la ciudad. DATO VIEJO: sin cambios desde 2016-03-24. Prueba 2026-10-06 (script del grupo): HTTP 200, JSON, 5 filas de muestra. Ficha sin licencia: el campo license está vacío en la ficha del portal; revisar si hay términos generales del portal antes de integrar. Integrada 2026-10-20 como contexto visual del mapa (lagos), en ingesta/pull_territorio.py. 133 polígonos."
  },
  {
   "id": "F94",
@@ -1894,17 +1894,17 @@
   "nombre": "Casos de la Policía de Orlando (OPD Cases Viewing, capa LERMSCases4Dashboard)",
   "entidad": "Ciudad de Orlando",
   "tipo_publicador": "Entidad pública",
-  "url": "https://gis.orlando.gov/server/rest/services/OPD_Cases_Viewing/FeatureServer/0/query?where=1%3D1&outFields=*&f=geojson",
+  "url": "https://gis.orlando.gov/server/rest/services/OPD_Cases_Viewing/FeatureServer/0/query",
   "formato": "GeoJSON",
   "como_se_obtiene": "API sin llave",
   "licencia": "no declara",
   "personas": "Personas identificables",
   "cobertura": "Ciudad de Orlando, por punto; 126 barrios (campo NeighborhoodName)",
-  "vigencia": "2021-02-13 a 2026-10-05",
+  "vigencia": "2021-02 a la fecha",
   "frecuencia": "Diaria",
-  "probado": "2026-10-06",
-  "estado": "candidato",
+  "probado": "2026-10-20",
+  "estado": "integrado",
   "hallada_por": "Búsqueda asistida por IA (Claude): enlace «View the OPD Crime & Cases Dashboard» de orlando.gov/Public-Safety/OPD/OPD-Records-Open-Data → tablero ArcGIS (orl.maps.arcgis.com, item eae3bde08de34ea0b7c2a637b255b48b) → capa del servicio",
-  "nota": "Prioridad alta. No está en el portal de datos abiertos (F01, F79 a F105): es la capa que alimenta el tablero de casos de la OPD. Prueba 2026-10-06 (script de Claude): HTTP 200, JSON; 239.996 casos con geometría de punto; 91 tipos de caso; 126 barrios y 5.731 casos sin barrio; campos CaseNumber, CaseDate, CaseType, CommDistID, Beat, Sector, Division, NeighborhoodName. Sin licencia: el campo licenseInfo del tablero y del mapa está vacío y la capa no trae copyrightText. Consulta máxima de 2.000 registros por llamada (hay que paginar). Personas: no trae nombres, pero el número de caso, la fecha y el punto exacto pueden identificar a víctimas o domicilios. Si se integra, solo conteos por barrio y mes, sin CaseNumber ni coordenadas. Los avisos legales de orlando.gov prohíben el uso comercial sin permiso (ver F02)."
+  "nota": "Prioridad alta. No está en el portal de datos abiertos (F01, F79 a F105): es la capa que alimenta el tablero de casos de la OPD. Prueba 2026-10-06 (script de Claude): HTTP 200, JSON; 239.996 casos con geometría de punto; 91 tipos de caso; 126 barrios y 5.731 casos sin barrio; campos CaseNumber, CaseDate, CaseType, CommDistID, Beat, Sector, Division, NeighborhoodName. Sin licencia: el campo licenseInfo del tablero y del mapa está vacío y la capa no trae copyrightText. Consulta máxima de 2.000 registros por llamada (hay que paginar). Personas: no trae nombres, pero el número de caso, la fecha y el punto exacto pueden identificar a víctimas o domicilios. Si se integra, solo conteos por barrio y mes, sin CaseNumber ni coordenadas. Los avisos legales de orlando.gov prohíben el uso comercial sin permiso (ver F02). Integrada 2026-10-20: script ingesta/pull_seguridad.py. Todas las consultas piden estadísticas al servidor (outStatistics): nunca se baja un caso, un número de caso ni un punto. Tres grupos (hurtos y robos a la propiedad, violencia contra personas, drogas) por barrio y año desde 2022 (el primer caso es de febrero de 2021). No entran salud mental, suicidios, muertes, desaparecidos, custodia ni órdenes de alejamiento. Celdas barrio-año con menos de 5 casos se suprimen; verificar.py lo exige."
  }
 ]
