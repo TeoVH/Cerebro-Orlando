@@ -178,7 +178,7 @@ def geo(features, campos):
         for i, f in enumerate(features)]}
 
 datos = {
-    "generado": datetime.date.today().isoformat(),
+    "generado": max(l["probado"] for l in lago.values()),          # el día más reciente en que una fuente respondió
     "repo": REPO,
     "lago": lago,
     "fuentes_lago": leer(RAIZ / "catalogo" / "fuentes_lago.json"),

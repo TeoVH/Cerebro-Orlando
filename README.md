@@ -55,7 +55,9 @@ Los scripts de ingesta, uno por tema (cada uno dice arriba qué lee y qué escri
 
 **Cómo se trajeron los datos de la v3.** El contenedor donde se construyó no tiene salida a esas fuentes, así que el
 navegador del grupo pidió cada URL (las mismas que arman los scripts), las guardó en un archivo y los scripts corrieron
-contra esa copia, sin cambiar una línea. En un computador con internet, `reconstruir.py` las pide directo.
+contra esa copia, sin cambiar una línea. Al volver a correrlos sobre la copia, `CEREBRO_FECHA_PRUEBA=2026-10-26`
+mantiene como fecha de prueba el día en que las fuentes respondieron de verdad. En un computador con internet,
+`reconstruir.py` las pide directo.
 
 En Windows se usa `python` o `py` en lugar de `python3`. Opcional: `set CONTACTO=correo-del-grupo@...` antes de
 correr, porque el servicio del clima pide que el cliente se identifique.
@@ -84,7 +86,8 @@ punto exacto), código urbano (nombres en el caso), licencias de negocio (dueño
 - De la policía no entran Baker Act (salud mental), suicidios, muertes, personas desaparecidas, custodia ni órdenes de
   alejamiento: no son delitos y señalarían a personas vulnerables.
 - `verificar.py` falla si aparece un campo personal (nombres, número de caso, dirección, teléfono, correo), una categoría
-  excluida o una celda por barrio bajo el umbral. `probar_verificador.py` comprueba que esas fallas se detecten.
+  excluida, una celda por barrio bajo el umbral o un lago vacío (una verificación que no revisa nada no puede pasar).
+  `probar_verificador.py` comprueba que esas fallas se detecten.
 - El censo es agregado por diseño, pero un porcentaje de un barrio con muy poca gente se acerca a describir hogares: los
   barrios con menos de 200 habitantes estimados no publican porcentajes ni medianas, y `verificar.py` lo exige.
 - De los colegios solo se pide el tipo: el servidor trae nombre del director y teléfono, y no se descargan.
@@ -92,9 +95,9 @@ punto exacto), código urbano (nombres en el caso), licencias de negocio (dueño
 Las demás fuentes son **«abierto»**: series agregadas por área sin datos de personas.
 
 **Población por barrio (estimada).** El censo publica por sector censal, no por barrio. `comun.reparto()` cubre la ciudad
-con una rejilla de puntos cada 150 m (sin lagos) y reparte cada sector entre los barrios según los puntos que comparten.
+con una rejilla de puntos cada 40 m (sin lagos) y reparte cada sector entre los barrios según los puntos que comparten (con 150 m los barrios más pequeños recibían tan pocos puntos que su población variaba hasta 44 %).
 Los conteos se suman así; las medianas (ingreso, arriendo, edad) se promedian ponderando por población y se llaman
-«aproximadas». Control: los barrios suman 313.636 habitantes frente a 319.758 oficiales (−1,9 %); `verificar.py` falla
+«aproximadas». Control: los barrios suman 314.042 habitantes frente a 319.758 oficiales (−1,8 %); `verificar.py` falla
 si la diferencia pasa de 15 %. El índice de riesgo de FEMA y la proyección 2045 de la ciudad se llevan a barrios igual.
 
 ## La vista

@@ -540,7 +540,7 @@ dialog#traza .campo { border: 1px solid var(--line); border-radius: 12px; paddin
 .chips-f { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .contra { grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); }
 .pendientes { grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); }
-@media (min-width: 1000px) { .lado-a-lado > .card:last-child { position: sticky; top: 96px; align-self: start; } }
+@media (min-width: 1000px) { .lado-a-lado > .card:last-child { position: sticky; top: 132px; align-self: start; } }
 @media (max-width: 640px) {
   .fila-b { grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 4px 10px; }
   .fila-b > span:first-child { grid-column: 1 / -1; font-weight: 600; font-size: .85rem; color: var(--ink-2); }
@@ -567,3 +567,13 @@ dialog#traza .campo { border: 1px solid var(--line); border-radius: 12px; paddin
   .perfil-card b { font-size: 1rem; }
   .perfil-card .dato { font-size: .92rem; }
 }
+
+/* v3.1 · comparar: cada elemento con su color, nombrado siempre junto al color */
+.quien { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--ink); }
+.quien i { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.fila-b .val b em.mejor { font: 700 .72rem var(--font-mono); font-style: normal; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); background: var(--accent-soft); padding: 1px 6px; border-radius: 999px; vertical-align: 2px; }
+.leyenda-fija { position: sticky; top: var(--alto-top, 118px); z-index: 5; background: var(--surface); padding: 8px 0; }
+.barra-graf .leyenda-fija { padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line); }
+#globo { transition: opacity .12s, visibility 0s linear .12s; }
+#globo.on { transition: opacity .12s, visibility 0s; }
+#globo:not(.on) { visibility: hidden; }

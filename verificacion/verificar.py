@@ -144,7 +144,10 @@ def dominio(ruta, lago):
 
 
 # ---------- lago/raw/*/*.json
-for ruta in sorted(glob.glob(str(RAIZ / "lago" / "raw" / "*" / "*.json"))):
+ARCHIVOS_LAGO = sorted(glob.glob(str(RAIZ / "lago" / "raw" / "*" / "*.json")))
+# Una verificación que no encuentra nada que revisar no puede pasar (así pasó al reorganizar el lago: bitácora, encargo 8)
+check(f"hay archivos del lago que revisar ({len(ARCHIVOS_LAGO)})", len(ARCHIVOS_LAGO) > 0, f"no hay ningún lago/raw/<tema>/<tema>.json bajo {RAIZ}")
+for ruta in ARCHIVOS_LAGO:
     nombre_ruta = pathlib.Path(ruta).relative_to(RAIZ).as_posix()
     lago = json.load(open(ruta, encoding="utf-8"))
     fuentes = lago.get("fuentes", [])

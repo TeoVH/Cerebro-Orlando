@@ -1691,7 +1691,7 @@
   "puede_vacio": "No",
   "rango": "≥ 0",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos); los conteos se reparten por la fracción del sector que cae en cada barrio",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos); los conteos se reparten por la fracción del sector que cae en cada barrio",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1706,7 +1706,7 @@
   "puede_vacio": "Sí",
   "rango": "5 000 a 300 000",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos); barrios con menos de 200 habitantes quedan vacíos",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos); barrios con menos de 200 habitantes quedan vacíos",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1721,7 +1721,7 @@
   "puede_vacio": "Sí",
   "rango": "200 a 5 000",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos); mediana aproximada en barrios",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos); mediana aproximada en barrios",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1736,7 +1736,7 @@
   "puede_vacio": "Sí",
   "rango": "10 000 a 3 000 000",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos); mediana aproximada en barrios",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos); mediana aproximada en barrios",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1751,7 +1751,7 @@
   "puede_vacio": "Sí",
   "rango": "10 a 90",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos); mediana aproximada en barrios",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos); mediana aproximada en barrios",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1766,7 +1766,7 @@
   "puede_vacio": "Sí",
   "rango": "0 a 100",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos); el porcentaje se calcula después de sumar numerador y denominador por barrio",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos); el porcentaje se calcula después de sumar numerador y denominador por barrio",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1781,7 +1781,7 @@
   "puede_vacio": "Sí",
   "rango": "0 a 100",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos)",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos)",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1796,7 +1796,7 @@
   "puede_vacio": "Sí",
   "rango": "0 a 100",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos)",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos)",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1811,7 +1811,7 @@
   "puede_vacio": "Sí",
   "rango": "5 a 90",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos)",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos)",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1826,7 +1826,7 @@
   "puede_vacio": "Sí",
   "rango": "0 a 100",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos)",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos)",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1841,7 +1841,7 @@
   "puede_vacio": "Sí",
   "rango": "0 a 100",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos)",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos)",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1856,7 +1856,7 @@
   "puede_vacio": "Sí",
   "rango": "0 a 100",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos)",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos)",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1871,7 +1871,7 @@
   "puede_vacio": "Sí",
   "rango": "0 a 100",
   "clasificacion": "Pública",
-  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 150 m sin lagos)",
+  "transformacion": "Promedio ACS 2020-2024; barrios: reparto por superficie compartida (rejilla de 40 m sin lagos)",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1882,7 +1882,7 @@
   "significado": "Control de la estimación por barrio: suma de los barrios, su diferencia con la cifra oficial, cuántos barrios y sectores entran y el mínimo de habitantes para publicar porcentajes y medianas.",
   "tipo": "Decimal",
   "unidad": "personas / % / barrios / sectores",
-  "ejemplo": "313636",
+  "ejemplo": "314042",
   "puede_vacio": "No",
   "rango": "≥ 0",
   "clasificacion": "Pública",
@@ -1897,11 +1897,11 @@
   "significado": "Qué parte del barrio queda cubierta por sectores censales con dato.",
   "tipo": "Decimal",
   "unidad": "% del barrio",
-  "ejemplo": "33rd St. Industrial → 100.0",
+  "ejemplo": "Airport North → 100.0",
   "puede_vacio": "No",
   "rango": "0 a 100",
   "clasificacion": "Pública",
-  "transformacion": "Rejilla de 150 m sin lagos",
+  "transformacion": "Rejilla de 40 m sin lagos",
   "pregunta": "¿Quién vive en cada barrio y qué tiene cerca?"
  },
  {
@@ -1942,7 +1942,7 @@
   "significado": "Promedio de los barrios para cada peligro.",
   "tipo": "Decimal",
   "unidad": "puntaje de 0 a 100",
-  "ejemplo": "55.1",
+  "ejemplo": "55.0",
   "puede_vacio": "No",
   "rango": "0 a 100",
   "clasificacion": "Pública",
@@ -1957,7 +1957,7 @@
   "significado": "Vulnerabilidad social de FEMA (qué tan difícil le es a la gente prepararse y recuperarse), percentil nacional.",
   "tipo": "Decimal",
   "unidad": "puntaje de 0 a 100",
-  "ejemplo": "Bryn Mawr → 95.8",
+  "ejemplo": "Bryn Mawr → 95.9",
   "puede_vacio": "Sí",
   "rango": "0 a 100",
   "clasificacion": "Pública",
@@ -1972,7 +1972,7 @@
   "significado": "Pérdida económica que se espera en promedio cada año por todos los peligros.",
   "tipo": "Decimal",
   "unidad": "dólares al año",
-  "ejemplo": "Metro West → 6498456",
+  "ejemplo": "Metro West → 6480488",
   "puede_vacio": "Sí",
   "rango": "≥ 0",
   "clasificacion": "Pública",
@@ -2047,11 +2047,11 @@
   "significado": "Residentes en 2017 y proyectados por la ciudad a 2045 (zonas de análisis de tránsito).",
   "tipo": "Decimal",
   "unidad": "personas",
-  "ejemplo": "Metro West → 19951",
+  "ejemplo": "Metro West → 20201",
   "puede_vacio": "Sí",
   "rango": "≥ 0",
   "clasificacion": "Pública",
-  "transformacion": "Cada zona se reparte entre barrios por superficie (rejilla de 150 m)",
+  "transformacion": "Cada zona se reparte entre barrios por superficie (rejilla de 40 m)",
   "pregunta": "¿Hacia dónde va cada barrio: crecimiento proyectado, proyectos e incentivos?"
  },
  {
@@ -2062,7 +2062,7 @@
   "significado": "Empleos en 2017 y proyectados a 2045.",
   "tipo": "Decimal",
   "unidad": "empleos",
-  "ejemplo": "Central Business District → 34499",
+  "ejemplo": "Central Business District → 34195",
   "puede_vacio": "Sí",
   "rango": "≥ 0",
   "clasificacion": "Pública",
@@ -2077,7 +2077,7 @@
   "significado": "Cambio porcentual proyectado entre 2017 y 2045.",
   "tipo": "Decimal",
   "unidad": "%",
-  "ejemplo": "Princeton/Silver Star → 1168.8",
+  "ejemplo": "Princeton/Silver Star → 1153.9",
   "puede_vacio": "Sí",
   "rango": "−100 a 5 000",
   "clasificacion": "Pública",
@@ -2096,7 +2096,7 @@
   "puede_vacio": "Sí",
   "rango": "0 a 100",
   "clasificacion": "Pública",
-  "transformacion": "Rejilla de 150 m; se publica desde 5 % del barrio",
+  "transformacion": "Rejilla de 40 m; se publica desde 5 % del barrio",
   "pregunta": "¿Hacia dónde va cada barrio: crecimiento proyectado, proyectos e incentivos?"
  },
  {

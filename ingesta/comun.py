@@ -35,7 +35,13 @@ def get_texto(url, timeout=60):
 
 
 def hoy():
-    """El día de la prueba: AAAA-MM-DD, nunca con hora."""
+    """El día de la prueba: AAAA-MM-DD, nunca con hora.
+    Si se reconstruye desde una copia guardada de las respuestas, CEREBRO_FECHA_PRUEBA dice el día en que la fuente
+    respondió de verdad (la prueba no cambia de fecha por volver a leer la misma copia)."""
+    fija = os.environ.get("CEREBRO_FECHA_PRUEBA", "")
+    if fija:
+        datetime.date.fromisoformat(fija)                  # falla si no es AAAA-MM-DD
+        return fija
     return datetime.date.today().isoformat()
 
 

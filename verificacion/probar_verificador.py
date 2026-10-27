@@ -84,5 +84,12 @@ c_mal, sal_c = correr(lago_censo([["Barrio A", 7.5], ["Barrio B", 30.0]]))
 atrapo_censo = c_mal == 1 and any(l.startswith("FAIL") and "mínimo de habitantes" in l for l in sal_c.splitlines())
 print("censo correcto ->", "PASA" if c_ok == 0 else f"FALLA (código {c_ok})")
 print("censo con porcentaje de un barrio de 80 habitantes ->", "ATRAPADO" if atrapo_censo else "NO LO ATRAPÓ")
-sys.exit(0 if ok and codigo == 1 and c_ok == 0 and atrapo_censo and len(atrapadas) == len(esperadas) and cod_ok == 0 and atrapo
+# Un lago vacío (por ejemplo, rutas mal después de reorganizar carpetas) tiene que fallar, no pasar sin revisar nada
+with tempfile.TemporaryDirectory() as t:
+    (pathlib.Path(t) / "lago" / "raw").mkdir(parents=True)
+    (pathlib.Path(t) / "catalogo").mkdir()
+    (pathlib.Path(t) / "catalogo" / "fuentes_lago.json").write_text(CATALOGO, encoding="utf-8")
+    vacio = subprocess.run([sys.executable, str(VERIFICAR), "--raiz", t], capture_output=True, text=True, encoding="utf-8", env=ENV).returncode
+print("lago vacío ->", "ATRAPADO" if vacio == 1 else "NO LO ATRAPÓ: pasa sin revisar nada")
+sys.exit(0 if vacio == 1 and ok and codigo == 1 and c_ok == 0 and atrapo_censo and len(atrapadas) == len(esperadas) and cod_ok == 0 and atrapo
          and s_ok == 0 and atrapo_cat and atrapo_bar else 1)
