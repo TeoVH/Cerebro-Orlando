@@ -52,7 +52,10 @@ const CORTO = {indeed_hiring_lab: "Indeed Hiring Lab · CC BY 4.0", fred_ihv_orl
   noaa_gsoy: "NOAA NCEI", orlando_permisos: "Datos abiertos de Orlando", orlando_barrios: "Datos abiertos de Orlando",
   orlando_distritos: "Datos abiertos de Orlando", orlando_limites: "Datos abiertos de Orlando", orlando_lagos: "Datos abiertos de Orlando",
   orlando_codigo: "Datos abiertos de Orlando", orlando_negocios: "Datos abiertos de Orlando", orlando_alquiler_corto: "Datos abiertos de Orlando",
-  opd_casos: "Policía de Orlando (mapa público)"};
+  opd_casos: "Policía de Orlando (mapa público)", censo_acs: "Census ACS (vía Census Reporter)", censo_tiger: "Census TIGER",
+  fema_nri: "FEMA · Índice Nacional de Riesgo", orlando_sig: "SIG de la Ciudad de Orlando", orlando_planeacion: "Datos abiertos de Orlando",
+  orlando_anexiones: "Datos abiertos de Orlando", fred_salarios: "BLS vía FRED", fred_bfs: "Census vía FRED", fred_bea: "BEA vía FRED",
+  fred_ipc: "BLS vía FRED", zillow_research: "Zillow Research"};
 function chip(fuente, campo, vigencia, etiqueta) {
   const v = vigencia ? ` · ${fVig(String(vigencia))}` : "";
   return `<button type="button" class="fuente" data-fuente="${fuente}" data-campo="${campo || ""}" aria-label="Ver de dónde sale este dato">${ic("fuente")}<span>${etiqueta ? esc(etiqueta) + " · " : ""}${esc(CORTO[fuente] || fuente)}${esc(v)}</span></button>`;
@@ -113,7 +116,13 @@ const GLOSARIO = {
   derivado: "Lo calculamos nosotros a partir del lago (por ejemplo, el área del barrio o su distrito). No viene así de la fuente.",
   km2: "Total dividido por el área del barrio. Sirve para comparar barrios grandes con barrios pequeños. El área es aproximada (la calculamos del mapa).",
   indice: "Lo calculamos nosotros: cada señal se convierte en un puntaje de 0 a 100 según el puesto del barrio, y se promedian con los pesos que elijas. No es un dato oficial ni mide riesgo; ordena dónde mirar primero.",
-  pp: "Puntos porcentuales: la diferencia entre dos porcentajes. Pasar de 4 % a 5 % es subir 1 punto (y un 25 %)."
+  pp: "Puntos porcentuales: la diferencia entre dos porcentajes. Pasar de 4 % a 5 % es subir 1 punto (y un 25 %).",
+  estimacion: "El censo publica sus cifras por sector censal, no por barrio. Repartimos cada sector entre los barrios según cuánta superficie comparten (sin contar lagos). Es una aproximación: sirve para comparar, no para citar un barrio al detalle.",
+  percentil: "El puesto de un barrio expresado de 0 a 100. 80 quiere decir que está por encima del 80 % de los barrios en esa medida.",
+  rentabilidad: "Arriendo de un año dividido por el valor de la vivienda. Es bruta: no descuenta impuestos, seguro, mantenimiento ni meses vacíos.",
+  carga: "Hogares que arriendan y gastan 30 % o más de su ingreso en el arriendo. Es la medida estándar de vivienda «no asequible» en EE. UU.",
+  zona: "Zonas de Oportunidad: áreas de bajos ingresos donde invertir da beneficios tributarios federales. Main Street y CRA son programas de la ciudad para revitalizar corredores comerciales y el centro.",
+  por1000: "Total dividido por los habitantes estimados del barrio, por 1.000. Solo se calcula en barrios con 200 habitantes o más; donde trabaja o compra mucha gente que no vive allí, la tasa se infla."
 };
 const globo = $("#globo");
 function mostrarGlobo(html, x, y) {
@@ -315,6 +324,25 @@ cargar("negocios", "negocios_barrio", (b, v) => b.negocios = v);
 cargar("negocios", "restaurantes_barrio", (b, v) => b.restaurantes = v);
 cargar("negocios", "hospedajes_barrio", (b, v) => b.hospedajes = v);
 const VIG_NEG = C("negocios", "negocios_vigentes").vigencia;
+// v3: quién vive (censo, estimado por barrio), riesgo (FEMA), servicios, futuro (proyección 2045) e incentivos
+const U_AP = +Object.keys(L.negocios.series).find(k => k.startsWith("aperturas_barrio_")).slice(-4);
+for (const [serie, campo] of [["poblacion", "pob"], ["ingreso_mediano", "ingreso"], ["arriendo_mediano", "arriendo"], ["valor_vivienda", "valor"],
+  ["pct_carga_arriendo", "carga"], ["pct_arrendatarios", "arrend"], ["pct_sin_carro", "sinCarro"], ["pct_espanol", "espanol"], ["pct_pobreza", "pobreza"],
+  ["pct_universitarios", "univ"], ["edad_mediana", "edad"], ["minutos_al_trabajo", "minutos"], ["pct_vacantes", "vacantes"]])
+  cargar("censo", `${serie}_barrio`, (b, v) => b[campo] = v);
+for (const [serie, campo] of [["riesgo_total", "rTotal"], ["riesgo_huracan", "rHuracan"], ["riesgo_inundacion", "rInund"], ["riesgo_calor", "rCalor"],
+  ["riesgo_tornado", "rTornado"], ["vulnerabilidad_social", "rVulner"], ["perdida_anual_esperada", "perdida"]])
+  cargar("riesgo", `${serie}_barrio`, (b, v) => b[campo] = v);
+for (const [serie, campo] of [["parques", "parques"], ["parques_km2", "parquesKm2"], ["colegios", "colegios"], ["charter", "charter"], ["sunrail", "sunrail"], ["ciclovias_km", "ciclo"]])
+  cargar("servicios", `${serie}_barrio`, (b, v) => b[campo] = v);
+for (const [serie, campo] of [["poblacion_2017", "pob17"], ["poblacion_2045", "pob45"], ["crecimiento_poblacion_2045", "crec45"], ["empleo_2017", "emp17"],
+  ["empleo_2045", "emp45"], ["crecimiento_empleo_2045", "crecEmp45"], ["zona_oportunidad", "zo"], ["main_street", "mainSt"], ["cra", "cra"],
+  ["proyectos_grandes", "grandes"], ["solicitudes_abiertas", "abiertas"], [`solicitudes_barrio_${U_PERM}`, "solicitudes"]])
+  cargar("planeacion", serie.includes("solicitudes_barrio") ? serie : `${serie}_barrio`, (b, v) => b[campo] = v);
+for (const g of ["comercio", "belleza", "profesionales", "automotor"]) cargar("negocios", `${g}_barrio`, (b, v) => b[g] = v);
+cargar("negocios", `aperturas_barrio_${U_AP}`, (b, v) => b.aperturas = v);
+const MIN_HAB = C("censo", "minimo_habitantes_por_barrio").valor;
+const VIG_CEN = C("censo", "poblacion_ciudad").vigencia, VIG_NRI = C("riesgo", "riesgo_total_promedio_barrios").vigencia;
 
 // Una métrica se define una vez: nombre, unidad, de dónde sale y cómo se lee de un barrio
 const METRICAS = {
@@ -329,14 +357,75 @@ const METRICAS = {
   restaurantes: {frase: "restaurantes", nombre: "Restaurantes con licencia", corto: "Restaurantes", unidad: "licencias", anios: [VIG_NEG.slice(0, 4)], v: b => b.restaurantes, fuente: "orlando_negocios", campo: "restaurantes_barrio"},
   hospedajes: {frase: "hospedajes", nombre: "Hospedajes con licencia", corto: "Hospedajes", unidad: "licencias", anios: [VIG_NEG.slice(0, 4)], v: b => b.hospedajes, fuente: "orlando_negocios", campo: "hospedajes_barrio", icono: "maleta"},
 };
+const usdF = v => "US$" + NB + nf(v), pctF = v => nf(v, 1) + NB + "%", pctF0 = v => nf(v, 0) + NB + "%", ptsF = v => nf(v, 0);
+const crecF = v => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + nf(Math.abs(v), 0) + NB + "%";
+const CEN = (campo, nombre, corto, unidad, dir, fmt, extra = {}) => ({tipo: "tasa", frase: corto.toLowerCase(), nombre, corto, unidad, anios: [VIG_CEN],
+  v: b => b[campo], fuente: "censo_acs", campo: extra.campo, dir, fmt, grupo: "Quién vive", ...extra});
+const NRI = (campo, nombre, corto, serie, extra = {}) => ({tipo: "tasa", frase: `riesgo de ${corto.toLowerCase()}`, nombre, corto, unidad: "puntaje de 0 a 100 (percentil nacional)",
+  anios: [VIG_NRI], v: b => b[campo], fuente: "fema_nri", campo: serie, dir: -1, fmt: ptsF, grupo: "Riesgo", ...extra});
+const SIG = (campo, nombre, corto, unidad, serie, extra = {}) => ({tipo: "conteo", cero: true, frase: corto.toLowerCase(), nombre, corto, unidad, anios: [L.servicios.probado.slice(0, 4)],
+  v: b => b[campo] ?? 0, fuente: "orlando_sig", campo: serie, dir: 1, grupo: "Qué tiene cerca", ...extra});
+Object.assign(METRICAS, {
+  poblacion: {tipo: "poblacion", frase: "habitantes", nombre: "Población (estimada)", corto: "Población", unidad: "habitantes", anios: [VIG_CEN], v: b => b.pob,
+    fuente: "censo_acs", campo: "poblacion_barrio", dir: 0, grupo: "Quién vive", icono: "gente"},
+  ingreso: CEN("ingreso", "Ingreso mediano de los hogares (aprox.)", "Ingreso", "dólares al año", 1, usdF, {campo: "ingreso_mediano_barrio", icono: "empleo"}),
+  arriendo: CEN("arriendo", "Arriendo mediano (aprox.)", "Arriendo", "dólares al mes", -1, usdF, {campo: "arriendo_mediano_barrio", icono: "casa"}),
+  valorViv: CEN("valor", "Valor de la vivienda propia (aprox.)", "Valor vivienda", "dólares", 0, usdF, {campo: "valor_vivienda_barrio"}),
+  carga: CEN("carga", "Arrendatarios que gastan 30 % o más del ingreso en arriendo", "Carga de arriendo", "% de los hogares arrendatarios", -1, pctF, {campo: "pct_carga_arriendo_barrio"}),
+  arrend: CEN("arrend", "Hogares que arriendan", "Arriendan", "% de los hogares", 0, pctF, {campo: "pct_arrendatarios_barrio"}),
+  sinCarro: CEN("sinCarro", "Hogares sin carro", "Sin carro", "% de los hogares", 0, pctF, {campo: "pct_sin_carro_barrio", icono: "tren"}),
+  espanol: CEN("espanol", "Hablan español en casa", "Español", "% de los mayores de 5 años", 0, pctF, {campo: "pct_espanol_barrio"}),
+  pobreza: CEN("pobreza", "Personas en pobreza", "Pobreza", "% de las personas", -1, pctF, {campo: "pct_pobreza_barrio"}),
+  univ: CEN("univ", "Con título universitario", "Universitarios", "% de los mayores de 25", 1, pctF, {campo: "pct_universitarios_barrio"}),
+  edad: CEN("edad", "Edad mediana", "Edad", "años", 0, v => nf(v, 1), {campo: "edad_mediana_barrio"}),
+  minutos: CEN("minutos", "Viaje al trabajo (promedio)", "Viaje al trabajo", "minutos", -1, v => nf(v, 0) + NB + "min", {campo: "minutos_al_trabajo_barrio"}),
+  rInund: NRI("rInund", "Riesgo de inundación (FEMA)", "Inundación", "riesgo_inundacion_barrio", {icono: "gota"}),
+  rHuracan: NRI("rHuracan", "Riesgo de huracán (FEMA)", "Huracán", "riesgo_huracan_barrio", {icono: "viento"}),
+  rCalor: NRI("rCalor", "Riesgo por olas de calor (FEMA)", "Calor", "riesgo_calor_barrio", {icono: "sol"}),
+  rTornado: NRI("rTornado", "Riesgo de tornado (FEMA)", "Tornado", "riesgo_tornado_barrio"),
+  rVulner: NRI("rVulner", "Vulnerabilidad social (FEMA)", "Vulnerabilidad", "vulnerabilidad_social_barrio", {frase: "vulnerabilidad social"}),
+  parques: SIG("parques", "Parques de la ciudad", "Parques", "parques", "parques_barrio", {icono: "arbol"}),
+  colegios: SIG("colegios", "Colegios públicos", "Colegios", "colegios", "colegios_barrio", {icono: "escuela"}),
+  ciclo: SIG("ciclo", "Ciclovías existentes", "Ciclovías", "km", "ciclovias_km_barrio", {fmt: v => nf(v, 1) + NB + "km"}),
+  sunrail: SIG("sunrail", "Estaciones de SunRail", "SunRail", "estaciones", "sunrail_barrio", {icono: "tren"}),
+  crec45: {tipo: "tasa", frase: "crecimiento proyectado", nombre: "Residentes proyectados 2017 → 2045", corto: "Crecimiento 2045", unidad: "% de cambio (proyección de la ciudad)",
+    anios: ["2045"], v: b => b.crec45, fuente: "orlando_sig", campo: "crecimiento_poblacion_2045_barrio", dir: 0, fmt: crecF, grupo: "Hacia dónde va", icono: "futuro"},
+  crecEmp45: {tipo: "tasa", frase: "crecimiento del empleo", nombre: "Empleos proyectados 2017 → 2045", corto: "Empleo 2045", unidad: "% de cambio (proyección de la ciudad)",
+    anios: ["2045"], v: b => b.crecEmp45, fuente: "orlando_sig", campo: "crecimiento_empleo_2045_barrio", dir: 0, fmt: crecF, grupo: "Hacia dónde va"},
+  zo: {tipo: "tasa", cero: true, frase: "zona de oportunidad", nombre: "Dentro de una Zona de Oportunidad federal", corto: "Zona de oportunidad", unidad: "% del barrio",
+    anios: [L.planeacion.probado.slice(0, 4)], v: b => b.zo ?? 0, fuente: "orlando_sig", campo: "zona_oportunidad_barrio", dir: 0, fmt: pctF0, grupo: "Hacia dónde va"},
+  grandes: {tipo: "conteo", frase: "solicitudes de proyectos grandes", nombre: "Solicitudes de proyectos grandes (2 años)", corto: "Proyectos grandes", unidad: "solicitudes",
+    anios: [String(U_PERM)], v: b => b.grandes, fuente: "orlando_planeacion", campo: "proyectos_grandes_barrio", dir: 0, grupo: "Hacia dónde va", icono: "grua"},
+  abiertas: {tipo: "conteo", frase: "solicitudes abiertas", nombre: "Solicitudes de planeación abiertas hoy", corto: "Solicitudes abiertas", unidad: "solicitudes",
+    anios: [L.planeacion.probado.slice(0, 4)], v: b => b.abiertas, fuente: "orlando_planeacion", campo: "solicitudes_abiertas_barrio", dir: 0, grupo: "Hacia dónde va"},
+  aperturas: {tipo: "conteo", frase: `negocios abiertos en ${U_AP}`, nombre: `Negocios que abrieron en ${U_AP}`, corto: `Aperturas ${U_AP}`, unidad: "licencias",
+    anios: [String(U_AP)], v: b => b.aperturas, fuente: "orlando_negocios", campo: `aperturas_barrio_${U_AP}`, dir: 0, grupo: "Qué pasa", icono: "tienda"},
+  comercio: {tipo: "conteo", frase: "tiendas y comercios", nombre: "Comercios con licencia", corto: "Comercios", unidad: "licencias", anios: [VIG_NEG.slice(0, 4)], v: b => b.comercio, fuente: "orlando_negocios", campo: "comercio_barrio", dir: 0},
+  belleza: {tipo: "conteo", frase: "salones de belleza", nombre: "Salones de belleza con licencia", corto: "Belleza", unidad: "licencias", anios: [VIG_NEG.slice(0, 4)], v: b => b.belleza, fuente: "orlando_negocios", campo: "belleza_barrio", dir: 0},
+  profesionales: {tipo: "conteo", frase: "servicios profesionales", nombre: "Servicios profesionales con licencia", corto: "Profesionales", unidad: "licencias", anios: [VIG_NEG.slice(0, 4)], v: b => b.profesionales, fuente: "orlando_negocios", campo: "profesionales_barrio", dir: 0},
+});
+for (const k of ["permisos", "delitos", "hurtos", "violencia", "drogas", "quejas", "codigo", "negocios", "restaurantes", "hospedajes"]) {
+  METRICAS[k].tipo = "conteo"; METRICAS[k].grupo = "Qué pasa";
+  METRICAS[k].dir = ["delitos", "hurtos", "violencia", "drogas", "quejas", "codigo"].includes(k) ? -1 : 0;
+}
 const porKm2 = (v, b) => v == null || !b.km2 ? null : v / b.km2;
-const valorDe = (met, b, a, km2) => { const v = METRICAS[met].v(b, a); return km2 ? porKm2(v, b) : v ?? null; };
-const fmtV = (v, km2) => v == null ? "sin dato" : km2 ? nf(v, v < 10 ? 1 : 0) : nf(v);
+const porHab = (v, b) => v == null || !(b.pob >= MIN_HAB) ? null : v / b.pob * 1000;
+// modo: "total", "km2" o "hab" (por 1.000 habitantes). Una tasa (porcentaje, mediana, puntaje) no se divide por área ni por gente.
+const aplica = (met, modo) => !modo || modo === "total" || METRICAS[met].tipo === "conteo" || (METRICAS[met].tipo === "poblacion" && modo === "km2");
+function valorDe(met, b, a, modo) {
+  if (modo === true) modo = "km2";
+  const v = METRICAS[met].v(b, a) ?? null;
+  if (!modo || modo === "total" || !aplica(met, modo)) return v;
+  return modo === "km2" ? porKm2(v, b) : porHab(v, b);
+}
+const sufijo = modo => modo === "km2" ? " por km²" : modo === "hab" ? " por 1.000 hab." : "";
+const fmtV = (v, modo, met) => v == null ? "sin dato" : modo === true || modo === "km2" || modo === "hab" ? nf(v, v < 10 ? 1 : 0) : met && METRICAS[met] && METRICAS[met].fmt ? METRICAS[met].fmt(v) : nf(v);
 function cortesQ(vals, n = 5) {
   const o = vals.filter(v => v != null).sort((a, b) => a - b);
   if (!o.length) return [];
   return Array.from({length: n - 1}, (_, k) => o[Math.min(o.length - 1, Math.floor((k + 1) / n * o.length))]);
 }
+const mediana = arr => { const o = arr.filter(v => v != null).sort((a, b) => a - b); return o.length ? (o.length % 2 ? o[o.length >> 1] : (o[o.length / 2 - 1] + o[o.length / 2]) / 2) : null; };
 const binDe = (v, cortes) => v == null ? -1 : (cortes.findIndex(c => v < c) + 1 || cortes.length + 1) - 1;
 const colorBin = i => i < 0 ? css("--nodata") : css(`--seq-${i + 1}`);
 const colorBinVar = i => i < 0 ? "url(#rayado)" : `var(--seq-${i + 1})`;
@@ -370,11 +459,11 @@ function mapaPlano(svg, cfg) {
     <path class="lago" d="${M.lagos}"/>${M.distritos.map(d => `<path class="dist" d="${d.d}"/>`).join("")}<path class="lim" d="${M.limite}"/>`;
   const pintar = () => {
     const vals = M.barrios.map((_, i) => cfg.valores(i));
-    const cortes = cortesQ(vals);
+    const cortes = cfg.cortes || cortesQ(vals);
     $$(".b", svg).forEach(p => { const k = binDe(vals[+p.dataset.i], cortes); p.style.fill = k < 0 ? `url(#${svg.id}-r)` : `var(--seq-${k + 1})`; });
     if (cfg.ley) {
       const o = vals.filter(v => v != null).sort((a, b) => a - b), lim = [o[0], ...cortes, ult(o)], f = cfg.fmt || nf;
-      cfg.ley.innerHTML = (cfg.titulo ? `<b>${esc(cfg.titulo())}</b>` : "") + [0, 1, 2, 3, 4].map(k => `<span class="sw"><i style="background:var(--seq-${k + 1})"></i>${k < 4 ? `${f(lim[k])}–${f(lim[k + 1])}` : `${f(lim[4])} o más`}</span>`).join("") + `<span class="sw"><i class="nd"></i>Sin dato publicable</span>`;
+      cfg.ley.innerHTML = (cfg.titulo ? `<b>${esc(cfg.titulo())}</b>` : "") + [0, 1, 2, 3, 4].map(k => `<span class="sw"><i style="background:var(--seq-${k + 1})"></i>${cfg.etiquetas ? esc(cfg.etiquetas[k]) : k < 4 ? `${f(lim[k])}–${f(lim[k + 1])}` : `${f(lim[4])} o más`}</span>`).join("") + `<span class="sw"><i class="nd"></i>Sin dato publicable</span>`;
     }
   };
   svg.addEventListener("pointermove", e => { const p = e.target.closest(".b"); if (!p) return ocultarGlobo(); mostrarGlobo(cfg.globo(+p.dataset.i), e.clientX, e.clientY); });
@@ -385,39 +474,60 @@ function mapaPlano(svg, cfg) {
 }
 
 /* ================= MAPA 3D (MapLibre GL, sin teselas ni llaves: solo las capas del lago) ================= */
+// Lentes del mapa. «modo» fija la medida (la densidad siempre es por km²); «grupo» arma el selector de la vista Barrios
 const LENTES = [
-  {k: "permisos", nombre: "Construcción", icono: "grua"},
-  {k: "delitos", nombre: "Seguridad", icono: "sirena"},
-  {k: "quejas", nombre: "Quejas", icono: "alerta"},
-  {k: "negocios", nombre: "Negocios", icono: "empleo"},
-  {k: "hospedajes", nombre: "Hospedaje", icono: "maleta"},
-  {k: "indice", nombre: "Índice", icono: "pesas"},
+  {k: "permisos", nombre: "Construcción", icono: "grua", grupo: "Qué pasa"},
+  {k: "delitos", nombre: "Seguridad", icono: "sirena", grupo: "Qué pasa"},
+  {k: "quejas", nombre: "Quejas", icono: "alerta", grupo: "Qué pasa"},
+  {k: "negocios", nombre: "Negocios", icono: "empleo", grupo: "Qué pasa"},
+  {k: "aperturas", nombre: "Negocios nuevos", icono: "tienda", grupo: "Qué pasa"},
+  {k: "hospedajes", nombre: "Hospedaje", icono: "maleta", grupo: "Qué pasa"},
+  {k: "poblacion", nombre: "Población", icono: "gente", grupo: "Quién vive", modo: "km2", nombreLargo: "Densidad de población"},
+  {k: "ingreso", nombre: "Ingreso", icono: "empleo", grupo: "Quién vive"},
+  {k: "arriendo", nombre: "Arriendo", icono: "casa", grupo: "Quién vive"},
+  {k: "carga", nombre: "Carga de arriendo", icono: "casa", grupo: "Quién vive"},
+  {k: "sinCarro", nombre: "Sin carro", icono: "tren", grupo: "Quién vive"},
+  {k: "espanol", nombre: "Español", icono: "gente", grupo: "Quién vive"},
+  {k: "parques", nombre: "Parques", icono: "arbol", grupo: "Qué tiene cerca"},
+  {k: "ciclo", nombre: "Ciclovías", icono: "ruta", grupo: "Qué tiene cerca"},
+  {k: "rInund", nombre: "Inundación", icono: "gota", grupo: "Riesgo"},
+  {k: "rHuracan", nombre: "Huracán", icono: "viento", grupo: "Riesgo"},
+  {k: "rVulner", nombre: "Vulnerabilidad", icono: "alerta", grupo: "Riesgo"},
+  {k: "crec45", nombre: "Futuro 2045", icono: "futuro", grupo: "Hacia dónde va"},
+  {k: "grandes", nombre: "Proyectos grandes", icono: "grua", grupo: "Hacia dónde va"},
+  {k: "zo", nombre: "Zona de oportunidad", icono: "tienda", grupo: "Hacia dónde va"},
+  {k: "indice", nombre: "Índice", icono: "pesas", grupo: "Índice"},
 ];
+const lenteDe = k => LENTES.find(l => l.k === k) || {k, nombre: METRICAS[k].corto};
 const hay3D = () => { try { return !!(window.maplibregl && (maplibregl.supported ? maplibregl.supported() : true)); } catch { return false; } };
 function crearAtlas(el, cfg) {
   // cfg: lentes (lista de claves), estado {lente, anio, km2}, onSelect(i), compacto
-  const st = Object.assign({lente: "permisos", anio: null, km2: false, sel: null}, cfg.estado || {});
-  const lentes = LENTES.filter(l => !cfg.lentes || cfg.lentes.includes(l.k));
+  const st = Object.assign({lente: "permisos", anio: null, modo: "total", sel: null}, cfg.estado || {});
+  const lentes = cfg.lentes ? cfg.lentes.map(lenteDe) : LENTES;
+  const grupos = [...new Set(lentes.map(l => l.grupo))];
+  const selector = cfg.selector ? `<label class="sr" for="${el.id}-lente">Qué mostrar en el mapa</label><select class="lente-sel" id="${el.id}-lente">${grupos.map(g => `<optgroup label="${esc(g)}">${lentes.filter(l => l.grupo === g).map(l => `<option value="${l.k}" ${l.k === st.lente ? "selected" : ""}>${esc(l.nombreLargo || METRICAS[l.k].nombre)}</option>`).join("")}</optgroup>`).join("")}</select>`
+    : `<div class="lentes" role="group" aria-label="Qué mostrar en el mapa">${lentes.map(l => `<button type="button" data-l="${l.k}" aria-pressed="${l.k === st.lente}">${ic(l.icono)}${l.nombre}</button>`).join("")}</div>`;
   el.innerHTML = `<div class="lienzo3d"></div>
-    <div class="superior"><div class="lentes" role="group" aria-label="Qué mostrar en el mapa">${lentes.map(l => `<button type="button" data-l="${l.k}" aria-pressed="${l.k === st.lente}">${ic(l.icono)}${l.nombre}</button>`).join("")}</div></div>
+    <div class="superior">${selector}</div>
     <div class="controles"><button type="button" data-z="mas" aria-label="Acercar">${ic("mas")}</button><button type="button" data-z="menos" aria-label="Alejar">${ic("menos")}</button><button type="button" data-z="3d" aria-label="Cambiar entre vista 3D y plana">2D</button><button type="button" data-z="todo" aria-label="Ver toda la ciudad">${ic("centrar")}</button></div>
     <div class="ley3d"></div>`;
   const lienzo = $(".lienzo3d", el), ley = $(".ley3d", el);
   let map = null, listo = false, svgFallback = null;
   const datos = () => {
-    const met = METRICAS[st.lente], a = st.anio && met.anios.includes(+st.anio) ? +st.anio : undefined;
-    const km2 = st.km2 && !met.sinKm2;
-    const vals = B.map(b => valorDe(st.lente, b, a, km2));
-    return {met, a: a ?? ult(met.anios), km2, vals, cortes: cortesQ(vals), max: Math.max(...vals.filter(v => v != null), 1)};
+    const met = METRICAS[st.lente], a = st.anio && met.anios.map(Number).includes(+st.anio) ? +st.anio : undefined;
+    const fijo = lenteDe(st.lente).modo, modo = fijo || (aplica(st.lente, st.modo) ? st.modo : "total");
+    const vals = B.map(b => valorDe(st.lente, b, a, modo));
+    const pos = vals.filter(v => v != null), min = Math.min(0, ...pos), max = Math.max(...pos, 1);
+    return {met, a: a ?? ult(met.anios), modo, km2: modo !== "total", vals, cortes: cortesQ(vals), min, max};
   };
   const leyenda = d => {
     const o = d.vals.filter(v => v != null).sort((a, b) => a - b);
-    const t = `${d.met.nombre}${d.km2 ? " por km²" : ""}${d.met.anios.length > 1 || st.lente === "permisos" || st.lente === "delitos" ? ` · ${d.a}` : ""}`;
-    ley.innerHTML = `<b>${esc(t)}</b><span class="ex">Color y altura: más alto, más ${esc(d.met.unidad)}</span><div class="esc">${[1, 2, 3, 4, 5].map(k => `<i style="background:var(--seq-${k})"></i>`).join("")}</div><div class="esc-t"><span>${fmtV(o[0], d.km2)}</span><span>${fmtV(ult(o), d.km2)}</span></div><span class="ex">Gris plano: sin dato publicable</span>${chip(d.met.fuente || "orlando_barrios", d.met.campo, d.met.fuente === "orlando_negocios" ? VIG_NEG : String(d.a))}`;
+    const t = `${lenteDe(st.lente).nombreLargo || d.met.nombre}${lenteDe(st.lente).modo ? "" : sufijo(d.modo)}${d.met.anios.length > 1 ? ` · ${d.a}` : ""}`;
+    ley.innerHTML = `<b>${esc(t)}</b><span class="ex">Color y altura: más alto, más ${esc(d.met.unidad)}${lenteDe(st.lente).modo ? " por km²" : ""}</span><div class="esc">${[1, 2, 3, 4, 5].map(k => `<i style="background:var(--seq-${k})"></i>`).join("")}</div><div class="esc-t"><span>${fmtV(o[0], d.modo, st.lente)}</span><span>${fmtV(ult(o), d.modo, st.lente)}</span></div><span class="ex">${d.met.cero ? "Sin color: cero" : "Gris plano: sin dato publicable"}</span>${chip(d.met.fuente || "orlando_barrios", d.met.campo, d.met.fuente === "orlando_negocios" ? VIG_NEG : String(d.a))}`;
   };
   const geoBarrios = d => ({type: "FeatureCollection", features: M.geo.barrios.features.map((f, i) => {
     const v = d.vals[i], k = binDe(v, d.cortes);
-    return {...f, properties: {i, nombre: B[i].nombre, color: colorBin(k), h: v == null ? 0 : 30 + v / d.max * 1200}};
+    return {...f, properties: {i, nombre: B[i].nombre, color: colorBin(k), h: v == null ? 0 : 30 + (v - d.min) / (d.max - d.min || 1) * 1200}};
   })});
   function pintar() {
     const d = datos(); leyenda(d);
@@ -446,7 +556,7 @@ function crearAtlas(el, cfg) {
   if (!hay3D()) {
     lienzo.innerHTML = `<svg class="svgmapa" id="${el.id}-svg" role="img" aria-label="Mapa de barrios" style="padding:70px 12px 90px"></svg>`;
     svgFallback = mapaPlano($("svg", lienzo), {valores: i => datos().vals[i], onClick: i => seleccionar(i, false),
-      globo: i => { const d = datos(); return `<b>${esc(B[i].nombre)}</b><br>${fmtV(d.vals[i], d.km2)} ${esc(d.met.unidad)}${d.km2 ? " por km²" : ""}`; }});
+      globo: i => { const d = datos(); return `<b>${esc(B[i].nombre)}</b><br>${fmtV(d.vals[i], d.modo, st.lente)} ${d.met.fmt && d.modo === "total" ? "" : esc(d.met.unidad) + sufijo(d.modo)}`; }});
     $(".controles", el).hidden = true;
   } else {
     try {
@@ -469,14 +579,21 @@ function crearAtlas(el, cfg) {
       for (const dd of M.distritos) { const e = document.createElement("div"); e.className = "et-dist"; e.textContent = "D" + dd.distrito; new maplibregl.Marker({element: e}).setLngLat([dd.lon, dd.lat]).addTo(map); }
       listo = true; pintar();
       if (st.sel != null) map.setFilter("sel", ["==", ["get", "i"], st.sel]);
+      if (girando) requestAnimationFrame(girar);
     });
+    let girando = !!cfg.girar && !matchMedia("(prefers-reduced-motion: reduce)").matches, visible = true;
+    const girar = () => { if (!girando || !listo) return; if (visible && !document.hidden && !map.isMoving()) map.setBearing(map.getBearing() - 0.035); requestAnimationFrame(girar); };
+    const parar = () => { girando = false; };
+    ["mousedown", "touchstart", "wheel", "dragstart"].forEach(ev => map.on(ev, parar));
+    el.addEventListener("pointerdown", parar);
+    new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(el);
     let hoverId = null;
     map.on("mousemove", "barrios-3d", e => {
       const f = e.features[0]; if (!f) return;
       if (hoverId !== null) map.setFeatureState({source: "barrios", id: hoverId}, {hover: false});
       hoverId = f.id; map.setFeatureState({source: "barrios", id: hoverId}, {hover: true});
       const d = datos(), i = f.properties.i;
-      mostrarGlobo(`<b>${esc(B[i].nombre)}</b><br>${fmtV(d.vals[i], d.km2)} ${esc(d.met.unidad)}${d.km2 ? " por km²" : ""}<br><span class="s">Distrito ${B[i].distrito} · toca para ver su ficha</span>`, e.originalEvent.clientX, e.originalEvent.clientY);
+      mostrarGlobo(`<b>${esc(B[i].nombre)}</b><br>${fmtV(d.vals[i], d.modo, st.lente)} ${d.met.fmt && d.modo === "total" ? "" : esc(d.met.unidad) + sufijo(d.modo)}<br><span class="s">Distrito ${B[i].distrito}${B[i].pob != null ? ` · ${nf(B[i].pob)} habitantes (estimado)` : ""} · toca para ver su ficha</span>`, e.originalEvent.clientX, e.originalEvent.clientY);
       map.getCanvas().style.cursor = "pointer";
     });
     map.on("mouseleave", "barrios-3d", () => { if (hoverId !== null) map.setFeatureState({source: "barrios", id: hoverId}, {hover: false}); hoverId = null; ocultarGlobo(); map.getCanvas().style.cursor = ""; });
@@ -492,16 +609,20 @@ function crearAtlas(el, cfg) {
     let anchoPrevio = el.clientWidth;
     new ResizeObserver(() => { if (!map) return; map.resize(); const w = el.clientWidth; if (anchoPrevio === 0 && w > 0) st.sel == null ? verTodo(false) : enfocar(st.sel, false); anchoPrevio = w; }).observe(el);
   }
-  $(".lentes", el).addEventListener("click", e => {
+  const lentesEl = $(".lentes", el), selEl = $(".lente-sel", el);
+  if (lentesEl) lentesEl.addEventListener("click", e => {
     const b = e.target.closest("button[data-l]"); if (!b) return;
     st.lente = b.dataset.l; $$(".lentes button", el).forEach(x => x.setAttribute("aria-pressed", x === b)); pintar(); if (cfg.onLente) cfg.onLente(st.lente);
   });
-  return {st, pintar, seleccionar, verTodo, get map() { return map; }, setLente(k) { st.lente = k; $$(".lentes button", el).forEach(x => x.setAttribute("aria-pressed", x.dataset.l === k)); pintar(); }};
+  if (selEl) selEl.addEventListener("change", () => { st.lente = selEl.value; pintar(); if (cfg.onLente) cfg.onLente(st.lente); });
+  const marcar = k => { $$(".lentes button", el).forEach(x => x.setAttribute("aria-pressed", x.dataset.l === k)); if (selEl && [...selEl.options].some(o => o.value === k)) selEl.value = k; };
+  return {st, pintar, seleccionar, verTodo, get map() { return map; }, setLente(k) { st.lente = k; marcar(k); pintar(); }};
 }
 
 /* ================= CIFRAS Y FRASES (se escriben solas desde el lago) ================= */
 const pobC = C("gente", "poblacion_condado_ultimo_anio"), pobM = C("gente", "poblacion_area_metro_ultimo_anio"), crec = C("gente", "crecimiento_condado_10_anios");
 const ing = C("gente", "ingreso_mediano_condado"), ingFl = C("gente", "ingreso_frente_a_florida"), pob = C("gente", "pobreza_condado"), pIng = C("gente", "puesto_ingreso_entre_pares");
+$("#notaEscala").innerHTML = `<b>Escala:</b> la ciudad de Orlando tiene ${nf(C("censo", "poblacion_ciudad").valor)} habitantes según el censo (promedio ${VIG_CEN.replace("-", "–")}), pero no una serie anual abierta y sin llave. El condado de Orange la contiene; el área metropolitana suma además los condados de Osceola, Seminole y Lake.`;
 const fraseGente = nb(`En el condado de Orange viven ${millones(pobC.valor)} de personas (${pobC.vigencia}), ${nf(crec.valor, 0)} % más que hace diez años. El ingreso mediano de sus hogares es ${usd(ing.valor)} al año, ${ingFl.valor >= 0 ? nf(ingFl.valor, 0) + " % más" : nf(-ingFl.valor, 0) + " % menos"} que el de Florida, y ${nf(pob.valor, 1).replace(",0", "")} de cada 100 personas viven en pobreza.`);
 
 const des = C("economia", "desempleo_ultimo_mes"), desAnt = C("economia", "desempleo_hace_un_anio"), desFl = C("economia", "diferencia_con_florida"), pDes = C("economia", "puesto_desempleo_entre_pares");
@@ -606,11 +727,16 @@ $("#contra").innerHTML = [
     .map(([n, k, yo]) => ({nombre: n, valor: ult(S("gente", `ingreso_mediano_${k}`))[1], yo, par: !yo})).sort((a, b) => b.valor - a.valor), usd, "fred_saipe", "ingreso_mediano_<condado>", ing.vigencia, `Condados, ${ing.vigencia}. Orange es el de Orlando; Hillsborough, el de Tampa; Duval, el de Jacksonville`),
   contraCard("Interés en Wikipedia en español", [["Orlando", "vistas_mensuales", true], ["Tampa", "vistas_mensuales_tampa"], ["Miami", "vistas_mensuales_miami"], ["Jacksonville", "vistas_mensuales_jacksonville"]]
     .map(([n, k, yo]) => ({nombre: n, valor: visDoce(k), yo, par: !yo})).sort((a, b) => b.valor - a.valor), v => nf(v), "wikimedia_pageviews", "vistas_mensuales_<ciudad>", C("escucha", "vistas_ultimo_mes").vigencia, "Visitas en los últimos 12 meses"),
+  contraCard("Salario por hora, sector privado", [["Orlando", "orlando", true], ["Tampa", "tampa"], ["Miami", "miami"], ["Jacksonville", "jacksonville"]]
+    .map(([n, k, yo]) => ({nombre: n, valor: ult(S("economia", `salario_hora_${k}`))[1], yo, par: !yo})).sort((a, b) => b.valor - a.valor), v => "US$" + NB + nf(v, 2), "fred_salarios", "salario_hora_<área>", C("economia", "salario_hora_ultimo_mes").vigencia, `Áreas metropolitanas, ${fMes(C("economia", "salario_hora_ultimo_mes").vigencia)}`),
+  contraCard("Arriendo típico al mes (menos es mejor)", [["Orlando", "orlando", true], ["Tampa", "tampa"], ["Miami", "miami"], ["Jacksonville", "jacksonville"], ["EE. UU.", "eeuu"]]
+    .map(([n, k, yo]) => ({nombre: n, valor: ult(S("vivienda", `arriendo_tipico_${k}`))[1], yo, par: !yo})).sort((a, b) => a.valor - b.valor), usd, "zillow_research", "arriendo_tipico_<área>", C("vivienda", "arriendo_tipico_ultimo_mes").vigencia, `Zillow, áreas metropolitanas, ${fMes(C("vivienda", "arriendo_tipico_ultimo_mes").vigencia)}`),
 ].join("");
 
 const PENDIENTES = [
   {t: "¿Qué reclaman los vecinos al 311?", p: "Las solicitudes al 311 no están publicadas. Las quejas de código urbano son lo más cercano, pero solo cubren el estado de los predios."},
-  {t: "¿Cuánta gente vive en cada barrio?", p: "La American Community Survey (F12) lo tiene, pero su API pide llave. Sin población por barrio no hay tasas por habitante: comparamos por km²."},
+  {t: "¿Qué predios están en zona de inundación?", p: "El servidor de mapas de inundación de FEMA (F61) no respondió. Usamos el Índice Nacional de Riesgo de FEMA por sector censal, que mide riesgo pero no traza la zona inundable de cada predio."},
+  {t: "¿Dónde hay supermercados y farmacias?", p: "OpenStreetMap (F74) rechazó las consultas automáticas del navegador que usamos. No lo saltamos con espejos: queda como pendiente para saber qué barrios no tienen comercio básico cerca."},
   {t: "¿Cuánto produce la economía del área?", p: "El PIB del área está descontinuado en FRED. No lo reemplazamos por un número viejo."},
   {t: "¿Qué cargos se buscan y cuánto pagan?", p: "Las ofertas de Indeed (F19) prohíben la extracción. El índice que usamos dice si los avisos suben o bajan, no cuáles son."},
   {t: "¿Cuántos turistas llegan?", p: "Visitantes y pasajeros del aeropuerto vienen en PDF y notas de prensa (F23, F51); la ocupación hotelera es de plataformas privadas."},
@@ -623,10 +749,12 @@ $("#copiarResumen").addEventListener("click", () => copiar([
   `3. Barrios: ${frasePer} Fuente: City of Orlando Open Data.`,
   `4. Seguridad: ${fraseSeg} Fuente: Policía de Orlando (agregado por barrio).`,
   `5. Turismo: ${fraseTur} Fuente: BLS vía FRED.`,
-  `6. Clima: ${fraseClima} Fuentes: NWS y NOAA NCEI.`].join("\n"), "Resumen copiado"));
+  `6. Clima: ${fraseClima} Fuentes: NWS y NOAA NCEI.`,
+  `7. Quién vive: ${$("#r-quien").textContent} Fuente: Census ACS 5 años, estimado por barrio.`,
+  `8. Decidir: ${fraseDecidir()}`].join("\n"), "Resumen copiado"));
 
 // Mapa 3D de la portada, con recorrido guiado
-const atlasInicio = crearAtlas($("#atlasInicio"), {lentes: ["permisos", "delitos", "quejas", "negocios"], estado: {lente: "permisos"},
+const atlasInicio = crearAtlas($("#atlasInicio"), {lentes: ["poblacion", "permisos", "delitos", "quejas", "negocios", "crec45"], estado: {lente: "poblacion"}, girar: true,
   onSelect: i => { if (i != null && !recorridoActivo) { irABarrio(i); } }});
 let recorridoActivo = false;
 function paradas() {
@@ -636,13 +764,15 @@ function paradas() {
   const p3 = mejor(b => porKm2(b.delitos[U_DEL], b), b => b.km2 > .3);
   const p4 = mejor(b => b.quejas);
   const p5 = mejor(b => b.negocios);
+  const p6 = mejor(b => b.crec45, b => (b.pob17 || 0) >= 1000);
   const r = (i, lente, titulo, texto) => ({i, lente, titulo, texto});
   return [
     r(p1, "permisos", `Donde más se construye: ${B[p1].nombre}`, `${nf(B[p1].permisos[U_PERM])} permisos emitidos en ${U_PERM}, el primer puesto de la ciudad. Está en el distrito ${B[p1].distrito}, en el sureste, donde Orlando crece hacia el aeropuerto y Lake Nona.`),
     r(baja, "permisos", `Donde la construcción se frenó: ${B[baja].nombre}`, `Pasó de ${nf(B[baja].permisos[a0] ?? 0)} permisos en ${a0} a ${nf(B[baja].permisos[U_PERM] ?? 0)} en ${U_PERM}. Fue el barrio que más construyó al comienzo del periodo.`),
-    r(p3, "delitos", `Más casos de policía por km²: ${B[p3].nombre}`, `${nf(porKm2(B[p3].delitos[U_DEL], B[p3]), 0)} casos por km² en ${U_DEL} (${nf(B[p3].delitos[U_DEL])} en total). Es un barrio pequeño y concurrido: sin población por barrio, esto no es una tasa por habitante.`),
+    r(p3, "delitos", `Más casos de policía por km²: ${B[p3].nombre}`, `${nf(porKm2(B[p3].delitos[U_DEL], B[p3]), 0)} casos por km² en ${U_DEL} (${nf(B[p3].delitos[U_DEL])} en total). ${porHab(B[p3].delitos[U_DEL], B[p3]) != null ? `Por habitante serían ${nf(porHab(B[p3].delitos[U_DEL], B[p3]), 0)} por cada 1.000 vecinos estimados, pero mucha de esa actividad la genera gente de paso: quien trabaja, compra o sale de noche allí.` : "Vive poca gente: casi toda esa actividad es de gente de paso."}`),
     r(p4, "quejas", `Más quejas ciudadanas: ${B[p4].nombre}`, `${nf(B[p4].quejas)} casos de código abiertos por queja de vecinos en ${U_COD}: lotes, viviendas y avisos. Lo más cercano a «qué reclaman los vecinos» que hay abierto.`),
     r(p5, "negocios", `Más negocios: ${B[p5].nombre}`, `${nf(B[p5].negocios)} licencias de negocio vigentes. El centro concentra oficinas, comercio y servicios, y por eso aparece alto en casi todas las medidas.`),
+    r(p6, "crec45", `Donde más va a crecer: ${B[p6].nombre}`, `La proyección de la ciudad lo lleva de ${nf(B[p6].pob17)} residentes en 2017 a ${nf(B[p6].pob45)} en 2045 (${crecF(B[p6].crec45)}). Ahí se van a necesitar vías, colegios y parques.`),
   ];
 }
 function recorrido(el, atlas) {
@@ -690,6 +820,54 @@ const pobU = Object.fromEntries(PARES_C.map(([k]) => [k, ult(S("gente", `pobreza
 $("#r-pobreza").textContent = `En ${pob.vigencia}, ${nf(pobU.orange, 1)} % en Orange, frente a ${nf(pobU.florida, 1)} % en Florida y ${nf(pobU.miami_dade, 1)} % en Miami-Dade.`;
 $("#f-pobreza").innerHTML = chip("fred_saipe", "pobreza_condado", pob.vigencia);
 observar($("#g-pobreza"), () => lineas($("#g-pobreza"), {series: seriesPares("pobreza", "2005"), fmtX: s => s, fmtY: v => nf(v, 1) + " %", fmtTick: (v, d) => nf(v, d) + NB + "%", etiquetas: true, aria: "Pobreza por condado"}));
+
+// ---------- v3: ingreso por persona, crecimiento comparado e ingreso real ----------
+const PCPI = [["orange", "Orange", "var(--ink)", true], ["hillsborough", "Hillsborough", "var(--c1)"], ["miami_dade", "Miami-Dade", "var(--c2)"], ["duval", "Duval", "var(--c3)"], ["florida", "Florida", "var(--peer)"]];
+const ppc = C("gente", "ingreso_por_persona_condado"), pPpc = C("gente", "puesto_ingreso_por_persona").valor;
+$("#r-pcpi").textContent = `Todo el ingreso del condado (salarios, negocios, rentas, ayudas) dividido por su gente: ${usd(ppc.valor)} por persona en ${ppc.vigencia}, ${["", "el más alto", "el segundo", "el tercero", "el más bajo"][pPpc]} de los cuatro condados. Miami-Dade va muy arriba; Orange y Duval casi empatan.`;
+$("#f-pcpi").innerHTML = chip("fred_bea", "ingreso_por_persona_<condado>", ppc.vigencia);
+observar($("#g-pcpi"), () => lineas($("#g-pcpi"), {series: PCPI.map(([k, n, c, yo]) => ({nombre: n, puntos: S("gente", `ingreso_por_persona_${k}`).filter(p => p[0] >= "2005"), color: c, resaltar: yo})),
+  fmtX: s => s, fmtY: v => usd(v), fmtTick: v => nf(v / 1000) + NB + "mil", etiquetas: true, aria: "Ingreso por persona por condado"}));
+const NOMC = {orange: "Orange (Orlando)", hillsborough: "Hillsborough (Tampa)", duval: "Duval (Jacksonville)", miami_dade: "Miami-Dade", florida: "Florida"};
+const crecP = S("gente", "crecimiento_10_anios_condados"), pCrec = C("gente", "puesto_crecimiento_entre_pares").valor;
+$("#r-crec").textContent = `Orange ganó ${nf(crecP.find(p => p[0] === "orange")[1], 1)} % de población en diez años (${+pobC.vigencia - 10}–${pobC.vigencia}): ${pCrec === 1 ? "el que más creció" : "puesto " + pCrec} de los cuatro condados. Crecer rápido presiona la vivienda, las vías y los servicios.`;
+listaBarras($("#rankCrec"), crecP.map(([k, v]) => ({nombre: NOMC[k], valor: v, yo: k === "orange", par: k !== "orange"})).sort((a, b) => b.valor - a.valor), {fmt: v => pct(v, 1), pos: false});
+$("#f-crec").innerHTML = chip("fred_poblacion", "crecimiento_10_anios_condados", pobC.vigencia);
+const realI = L.gente.cifras.ingreso_real_10_anios;
+if (realI) $("#k-real").innerHTML = `<div class="kpi"><small>Ingreso de los hogares de Orange en 10 años, descontada la inflación</small><div class="fila"><b>${pct(realI.valor, 0)}</b>${tendencia(realI.valor, 1, "normal")}</div><span class="vig">${realI.vigencia.replace("-", "–")} · inflación de la región Sur (BLS)</span>${chip("fred_ipc", "ingreso_real_10_anios", realI.vigencia)}</div>`;
+
+// ---------- v3: ciudad contra ciudad (censo, mismas preguntas para las cuatro ciudades) ----------
+const CIUD = {orlando: "Orlando", tampa: "Tampa", miami: "Miami", jacksonville: "Jacksonville", florida: "Florida", eeuu: "EE. UU."};
+const ACS_C = [["ingreso_mediano", "Ingreso mediano de los hogares", usdF, 1], ["pct_pobreza", "Personas en pobreza", pctF, -1], ["arriendo_mediano", "Arriendo mediano al mes", usdF, -1],
+  ["pct_carga_arriendo", "Arrendatarios que gastan 30 % o más del ingreso en arriendo", pctF, -1], ["pct_arrendatarios", "Hogares que arriendan", pctF, 0], ["pct_sin_carro", "Hogares sin carro", pctF, 0],
+  ["minutos_al_trabajo", "Minutos de viaje al trabajo", v => nf(v, 1) + NB + "min", -1], ["pct_universitarios", "Mayores de 25 con título universitario", pctF, 1],
+  ["pct_espanol", "Hablan español en casa", pctF, 0], ["edad_mediana", "Edad mediana", v => nf(v, 1) + NB + "años", 0]];
+const acsC = k => Object.fromEntries(S("censo", `${k}_ciudades`));
+const puestoCiudad = (k, dir) => { const v = acsC(k), cs = ["orlando", "tampa", "miami", "jacksonville"].filter(c => v[c] != null); return [...cs].sort((a, b) => dir >= 0 ? v[b] - v[a] : v[a] - v[b]).indexOf("orlando") + 1; };
+const ARR_C = acsC("arriendo_mediano"), CARGA_C = acsC("pct_carga_arriendo");
+$("#r-ciudades").textContent = nb(`Las mismas preguntas del censo para las ciudades (no sus áreas metropolitanas), promedio ${VIG_CEN.replace("-", "–")}. Orlando paga ${usd(ARR_C.orlando)} de arriendo mediano, ${puestoCiudad("arriendo_mediano", 1) === 1 ? "el más alto" : puestoCiudad("arriendo_mediano", 1) === 2 ? "el segundo más alto" : "puesto " + puestoCiudad("arriendo_mediano", 1)} de las cuatro ciudades, y ${nf(CARGA_C.orlando, 0)} de cada 100 hogares que arriendan gastan 30 % o más de su ingreso en arriendo (en EE. UU., ${nf(CARGA_C.eeuu, 0)}).`);
+$("#f-ciudades").innerHTML = chip("censo_acs", "<medida>_ciudades", VIG_CEN);
+$("#ciudadesACS").innerHTML = ACS_C.map(([k, t, f, dir], j) => `<div class="card"><h3>${esc(t)}</h3><span class="vig">${dir > 0 ? "Más es mejor" : dir < 0 ? "Menos es mejor" : "Ni mejor ni peor: describe la ciudad"}</span><ol class="ranking sinpos" id="ac${j}"></ol></div>`).join("");
+ACS_C.forEach(([k, t, f, dir], j) => listaBarras($("#ac" + j), S("censo", `${k}_ciudades`).map(([c, v]) => ({nombre: CIUD[c], valor: v, yo: c === "orlando", par: c !== "orlando"})).sort((a, b) => b.valor - a.valor), {fmt: f, pos: false}));
+
+// ---------- v3: quién vive en cada barrio ----------
+const QUIEN = [["poblacion", "Densidad"], ["ingreso", "Ingreso"], ["arriendo", "Arriendo"], ["carga", "Carga de arriendo"], ["espanol", "Español"], ["sinCarro", "Sin carro"], ["univ", "Universitarios"], ["edad", "Edad"]];
+let quien = "poblacion";
+const modoQuien = () => quien === "poblacion" ? "km2" : "total";
+$("#segGente").innerHTML = QUIEN.map(([k, n]) => `<button type="button" data-k="${k}" aria-pressed="${k === quien}">${n}</button>`).join("");
+const mapaGente = mapaPlano($("#mapaGente"), {valores: i => valorDe(quien, B[i], undefined, modoQuien()), ley: $("#leyGente"), fmt: v => quien === "poblacion" ? nf(v) : fmtV(v, "total", quien),
+  titulo: () => quien === "poblacion" ? "Habitantes por km² (estimado)" : METRICAS[quien].nombre, onClick: i => irABarrio(i),
+  globo: i => { const v = valorDe(quien, B[i], undefined, modoQuien()); return `<b>${esc(B[i].nombre)}</b><br>${v == null ? "Sin estimación (menos de " + MIN_HAB + " habitantes)" : quien === "poblacion" ? nf(v) + " habitantes por km²" : esc(METRICAS[quien].corto) + ": " + fmtV(v, "total", quien)}<br><span class="s">${B[i].pob != null ? nf(B[i].pob) + " habitantes (estimado) · " : ""}toca para ver su ficha</span>`; }});
+function pintarQuien() {
+  mapaGente.pintar();
+  const filas = B.map((b, i) => ({nombre: b.nombre, valor: valorDe(quien, b, undefined, modoQuien()), i})).filter(f => f.valor != null).sort((a, b) => b.valor - a.valor);
+  listaBarras($("#rankGente"), filas.slice(0, 10), {fmt: v => quien === "poblacion" ? nf(v) : fmtV(v, "total", quien), onClick: f => irABarrio(f.i)});
+  const med = mediana(filas.map(f => f.valor));
+  $("#r-quien").textContent = nb(`${quien === "poblacion" ? "Habitantes por km²" : METRICAS[quien].nombre}: los más altos son ${filas.slice(0, 3).map(f => f.nombre).join(", ")}; la mediana de los barrios es ${quien === "poblacion" ? nf(med) : fmtV(med, "total", quien)}.`);
+}
+$("#segGente").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; quien = b.dataset.k; $$("#segGente button").forEach(x => x.setAttribute("aria-pressed", x === b)); pintarQuien(); });
+pintarQuien();
+$("#notaGente").innerHTML = nb(`<b>Cómo se estima.</b> El censo publica estas cifras por sector censal, no por barrio. Cubrimos la ciudad con una rejilla de puntos cada 150 m (sin lagos) y repartimos cada sector entre los barrios según qué parte de su tierra cae en cada uno. Las medianas se promedian ponderando por hogares: por eso se llaman «aproximadas». La suma de los barrios da ${nf(C("censo", "poblacion_estimada_en_barrios").valor)} habitantes, ${pct(C("censo", "diferencia_con_cifra_oficial").valor)} frente a la cifra oficial de la ciudad. Los ${B.filter(b => b.pob != null && b.pob < MIN_HAB).length} barrios con menos de ${MIN_HAB} habitantes estimados no tienen porcentajes ni medianas.`) + " " + chip("censo_acs", "poblacion_barrio", VIG_CEN) + " " + chip("censo_tiger", "", L.censo.probado, "Contornos");
 
 /* ================= ECONOMÍA Y VIVIENDA ================= */
 $("#r-eco").textContent = fraseEco;
@@ -768,17 +946,67 @@ $$(".seg[data-rango]").forEach(g => g.addEventListener("click", e => {
 }));
 $$(".seg[data-rango] button").forEach(b => { if (!b.hasAttribute("aria-pressed")) b.setAttribute("aria-pressed", "false"); });
 
+// ---------- v3: salarios por hora contra las áreas pares ----------
+const sal = C("economia", "salario_hora_ultimo_mes"), pSal = C("economia", "puesto_salario_entre_pares").valor, salP = C("economia", "salario_frente_a_pares").valor, vSal = C("economia", "variacion_salario_12_meses").valor;
+$("#r-salario").textContent = nb(`En ${fMes(sal.vigencia, true)} el sector privado del área pagó en promedio US$${NB}${nf(sal.valor, 2)} la hora, ${salP < 0 ? nf(-salP, 0) + " % menos" : nf(salP, 0) + " % más"} que el promedio de Tampa, Miami y Jacksonville: ${pSal === 4 ? "el más bajo de los cuatro" : pSal === 1 ? "el más alto de los cuatro" : "puesto " + pSal + " de 4"}. Para quien contrata es un costo menor; para quien trabaja, menos poder de compra.`);
+$("#k-salario").innerHTML = `<div class="kpi"><small>Por hora, sector privado</small><b>US$${NB}${nf(sal.valor, 2)}</b><span class="vig">${fMes(sal.vigencia)}</span></div><div class="kpi"><small>En 12 meses</small><div class="fila"><b>${pct(vSal)}</b></div><span class="vig">sin ajuste estacional</span></div>`;
+$("#f-salario").innerHTML = chip("fred_salarios", "salario_hora_<área>", sal.vigencia);
+const SAL = [["orlando", "Orlando", "var(--ink)", true], ["tampa", "Tampa", "var(--c1)"], ["miami", "Miami", "var(--c2)"], ["jacksonville", "Jacksonville", "var(--c3)"]];
+const ocultosSal = new Set();
+const dibSal = () => lineas($("#g-salario"), {series: SAL.filter(([k]) => !ocultosSal.has(k) || k === "orlando").map(([k, n, c, yo]) => ({nombre: n, puntos: S("economia", `salario_hora_${k}`).filter(p => p[0] >= "2015"), color: c, resaltar: yo})),
+  fmtX: s => fMes(s, true), fmtY: v => "US$" + NB + nf(v, 2), fmtTick: (v, d) => nf(v, d), etiquetas: true, aria: "Salario por hora en Orlando y sus pares"});
+leyToggle($("#ley-salario"), SAL.slice(1), ocultosSal, dibSal);
+observar($("#g-salario"), dibSal);
+
+// ---------- v3: arriendo típico (Zillow) contra pares ----------
+const zori = C("vivienda", "arriendo_tipico_ultimo_mes"), vZori = C("vivienda", "variacion_arriendo_12_meses").valor;
+const ZOR = [["orlando", "Orlando", "var(--ink)", true], ["tampa", "Tampa", "var(--c1)"], ["miami", "Miami", "var(--c2)"], ["jacksonville", "Jacksonville", "var(--c3)"], ["eeuu", "EE. UU.", "var(--muted)"]];
+const zUlt = Object.fromEntries(ZOR.map(([k]) => [k, ult(S("vivienda", `arriendo_tipico_${k}`))[1]]));
+$("#r-zori").textContent = nb(`Un arriendo típico en el área cuesta ${usd(zori.valor)} al mes (${fMes(zori.vigencia)}), ${Math.abs(vZori) < 1 ? "casi igual que" : vZori > 0 ? pct(vZori) + " frente a" : pct(vZori) + " frente a"} hace un año. Es casi el promedio del país (${usd(zUlt.eeuu)}); Miami está muy arriba (${usd(zUlt.miami)}) y Jacksonville abajo (${usd(zUlt.jacksonville)}).`);
+$("#f-zori").innerHTML = chip("zillow_research", "arriendo_tipico_<área>", zori.vigencia);
+const ocultosZ = new Set();
+const dibZ = () => lineas($("#g-zori"), {series: ZOR.filter(([k]) => !ocultosZ.has(k) || k === "orlando").map(([k, n, c, yo]) => ({nombre: n, puntos: S("vivienda", `arriendo_tipico_${k}`), color: c, resaltar: yo})),
+  fmtX: s => fMes(s, true), fmtY: v => usd(v), fmtTick: v => nf(v), etiquetas: true, aria: "Arriendo típico por área"});
+leyToggle($("#ley-zori"), ZOR.slice(1), ocultosZ, dibZ);
+observar($("#g-zori"), dibZ);
+
+// ---------- v3: ¿mercado de compradores o de vendedores? (regla a la vista) ----------
+const METROS_V = [["orlando", "Orlando"], ["tampa", "Tampa"], ["miami", "Miami"], ["jacksonville", "Jacksonville"]];
+const serieV = (base, c) => S("vivienda", c === "orlando" ? (base === "rebajas" ? "rebajas" : base) : `${base}_${c}`);
+function senalesMercado(c) {
+  const lista = serieV("precio_mediano_lista", c), dias = serieV("dias_en_mercado", c), inv = serieV("casas_en_venta", c), reb = serieV("rebajas", c);
+  const u = lista.length - 1, var12 = (s_, i) => (s_[i][1] / s_[i - 12][1] - 1) * 100;
+  const s = {precio: var12(lista, u), dias: dias[u][1], diasAntes: dias[u - 12][1], inventario: var12(inv, u), rebaja: reb[u][1] / inv[u][1] * 100, mes: lista[u][0], precioNivel: lista[u][1]};
+  const aFavor = [s.precio <= 0, s.dias >= 60 || s.dias > s.diasAntes * 1.1, s.inventario >= 10, s.rebaja >= 30];
+  const n = aFavor.filter(Boolean).length;
+  s.veredicto = n >= 3 ? "Favorece al comprador" : n <= 1 ? "Favorece al vendedor" : "Equilibrado";
+  s.nivel = n >= 3 ? "comprador" : n <= 1 ? "vendedor" : "equilibrio"; s.n = n;
+  return s;
+}
+const SM = Object.fromEntries(METROS_V.map(([c]) => [c, senalesMercado(c)]));
+$("#tablaMercado thead").innerHTML = `<tr><th>Área</th><th class="n">Precio de lista</th><th class="n">En un año</th><th class="n">Días para vender</th><th class="n">Con rebaja</th><th class="n">Inventario en un año</th><th>Lectura</th></tr>`;
+$("#tablaMercado tbody").innerHTML = METROS_V.map(([c, n]) => { const x = SM[c]; return `<tr${c === "orlando" ? ' style="font-weight:700"' : ""}><td>${n}</td><td class="n">${usd(x.precioNivel)}</td><td class="n">${pct(x.precio)}</td><td class="n">${nf(x.dias)} <span class="vig">(${nf(x.diasAntes)})</span></td><td class="n">${nf(x.rebaja, 0)}${NB}%</td><td class="n">${pct(x.inventario)}</td><td>${x.veredicto}</td></tr>`; }).join("");
+$("#r-mercado2").textContent = nb(`Orlando, ${fMes(SM.orlando.mes, true)}: ${SM.orlando.veredicto.toLowerCase()}. Contamos cuatro señales a favor de quien compra: precio de lista que baja, más de 60 días para vender (o 10 % más que hace un año), inventario que sube 10 % o más y 30 % o más de viviendas con rebaja. Orlando cumple ${SM.orlando.n} de 4. Entre paréntesis, los días de hace un año.`);
+$("#f-mercado2").innerHTML = chip("fred_realtor", "rebajas / casas_en_venta / dias_en_mercado", SM.orlando.mes);
+
+// ---------- v3: solicitudes de nuevos negocios en Florida ----------
+const bfs12 = C("economia", "solicitudes_negocio_florida_12_meses"), vBfs = C("economia", "variacion_solicitudes_negocio_florida").valor, shBfs = C("economia", "participacion_florida_en_negocios_eeuu").valor;
+$("#r-bfs").textContent = nb(`En los 12 meses a ${fMes(bfs12.vigencia, true)} se pidieron ${nf(bfs12.valor)} registros de negocio nuevos en Florida (${pct(vBfs)} frente a los 12 anteriores): ${nf(shBfs, 1)} de cada 100 del país, con apenas 7 de cada 100 habitantes. No hay dato mensual por condado.`);
+$("#f-bfs").innerHTML = chip("fred_bfs", "solicitudes_negocio_florida", bfs12.vigencia);
+observar($("#g-bfs"), () => lineas($("#g-bfs"), {series: [{nombre: "Florida", puntos: S("economia", "solicitudes_negocio_florida"), color: "var(--accent)"}], fmtX: s => fMes(s, true), fmtY: v => nf(v) + " solicitudes", fmtTick: v => nf(v / 1000) + NB + "mil", area: true, cero: true, aria: "Solicitudes de nuevos negocios en Florida"}));
+
 /* ================= BARRIOS ================= */
 $("#r-barrios").textContent = `${frasePer.split(". ")[0]}. ${topDel[0][0]} tiene más casos de policía y ${bonito(S("negocios", "negocios_barrio")[0][0])} más negocios. Elige qué mirar en el mapa y toca un barrio para ver su ficha.`;
 $("#listaBarrios").innerHTML = B.map(b => `<option value="${esc(b.nombre)}"></option>`).join("");
 let selB = null, compB = null;
-const atlasB = crearAtlas($("#atlasBarrios"), {estado: {lente: "permisos", anio: U_PERM}, onSelect: i => { selB = i; fichaBarrio(); rankingBarrios(); }, onLente: () => { ajustarAnio(); rankingBarrios(); }});
+const atlasB = crearAtlas($("#atlasBarrios"), {selector: true, estado: {lente: "permisos", anio: U_PERM}, onSelect: i => { selB = i; fichaBarrio(); rankingBarrios(); }, onLente: () => { ajustarAnio(); rankingBarrios(); }});
 function ajustarAnio() {
   const met = METRICAS[atlasB.st.lente], anios = met.anios.map(Number), r = $("#anioRango");
   r.min = anios[0]; r.max = ult(anios); r.disabled = anios.length < 2; $("#anioPlay").disabled = anios.length < 2;
   if (!anios.includes(+atlasB.st.anio)) atlasB.st.anio = ult(anios);
-  r.value = atlasB.st.anio; $("#anioTxt").textContent = met.k === "negocios" || met.unidad === "licencias" ? "hoy" : atlasB.st.anio;
-  $("#segMedida").style.opacity = met.sinKm2 ? .4 : 1;
+  r.value = atlasB.st.anio; $("#anioTxt").textContent = met.fuente === "orlando_negocios" && atlasB.st.lente !== "aperturas" ? "hoy" : String(met.anios.length > 1 ? atlasB.st.anio : met.anios[0]).replace("-", "–");
+  // Por km² y por 1.000 hab. solo valen para conteos; una tasa (%, mediana, puntaje) se muestra tal cual
+  $$("#segMedida button").forEach(b => { const ok = aplica(atlasB.st.lente, b.dataset.m) && !lenteDe(atlasB.st.lente).modo; b.disabled = !ok; b.title = ok ? "" : "Esta medida ya es una tasa: no se divide por área ni por población"; });
   atlasB.pintar();
 }
 $("#anioRango").addEventListener("input", e => { atlasB.st.anio = +e.target.value; $("#anioTxt").textContent = e.target.value; atlasB.pintar(); rankingBarrios(); });
@@ -789,50 +1017,66 @@ $("#anioPlay").addEventListener("click", () => {
   r.value = r.min; r.dispatchEvent(new Event("input"));
   animAnio = setInterval(() => { if (+r.value >= +r.max) { clearInterval(animAnio); animAnio = null; $("#anioPlay").innerHTML = ic("play"); return; } r.value = +r.value + 1; r.dispatchEvent(new Event("input")); }, 1300);
 });
-$("#segMedida").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; atlasB.st.km2 = b.dataset.m === "km2"; $$("#segMedida button").forEach(x => x.setAttribute("aria-pressed", x === b)); atlasB.pintar(); rankingBarrios(); });
+$("#segMedida").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || b.disabled) return; atlasB.st.modo = b.dataset.m; $$("#segMedida button").forEach(x => x.setAttribute("aria-pressed", x === b)); atlasB.pintar(); rankingBarrios(); });
 $("#buscarBarrio").addEventListener("change", e => {
   const t = norm(e.target.value); if (!t) return;
   const j = IDX.has(t) ? IDX.get(t) : B.findIndex(b => norm(b.nombre).includes(t));
   if (j >= 0) { atlasB.seleccionar(j, true); e.target.value = ""; } else aviso("No encontramos ese barrio");
 });
 function rankingBarrios() {
-  const st = atlasB.st, met = METRICAS[st.lente], km2 = st.km2 && !met.sinKm2, a = met.anios.map(Number).includes(+st.anio) ? +st.anio : undefined;
-  const filas = B.map((b, i) => ({nombre: b.nombre, valor: valorDe(st.lente, b, a, km2), i, sel: i === selB})).filter(f => f.valor != null).sort((x, y) => y.valor - x.valor).slice(0, 10);
-  $("#tRanking").textContent = st.lente === "indice" ? "Los 10 barrios con mayor puntaje en el índice" : `Los 10 barrios con más ${met.frase}${km2 ? " por km²" : ""}`;
-  listaBarras($("#ranking"), filas, {fmt: v => fmtV(v, km2), onClick: f => atlasB.seleccionar(f.i, true)});
+  const st = atlasB.st, met = METRICAS[st.lente], a = met.anios.map(Number).includes(+st.anio) ? +st.anio : undefined;
+  const modo = lenteDe(st.lente).modo || (aplica(st.lente, st.modo) ? st.modo : "total");
+  const filas = B.map((b, i) => ({nombre: b.nombre, valor: valorDe(st.lente, b, a, modo), i, sel: i === selB})).filter(f => f.valor != null && (f.valor > 0 || !met.cero)).sort((x, y) => y.valor - x.valor).slice(0, 10);
+  const que = st.lente === "indice" ? "mayor puntaje en el índice" : met.tipo === "tasa" ? `mayor ${met.corto.toLowerCase()}` : st.lente === "poblacion" ? "más habitantes por km²" : `más ${met.frase}${sufijo(modo)}`;
+  $("#tRanking").textContent = `Los 10 barrios con ${que}`;
+  listaBarras($("#ranking"), filas, {fmt: v => fmtV(v, modo, st.lente), onClick: f => atlasB.seleccionar(f.i, true)});
 }
-const MEDIDAS_FICHA = ["permisos", "delitos", "hurtos", "violencia", "drogas", "quejas", "codigo", "negocios", "restaurantes", "hospedajes", "indice"];
+const GRUPOS_FICHA = [
+  ["Qué pasa (último año)", ["permisos", "delitos", "quejas", "negocios", "aperturas", "restaurantes", "hospedajes"]],
+  ["Quién vive (censo 2020–2024, estimado)", ["poblacion", "ingreso", "arriendo", "carga", "arrend", "sinCarro", "espanol", "pobreza", "univ", "edad"]],
+  ["Qué tiene cerca", ["parques", "colegios", "ciclo", "sunrail"]],
+  ["Riesgo (FEMA)", ["rInund", "rHuracan", "rCalor", "rVulner"]],
+  ["Hacia dónde va", ["crec45", "crecEmp45", "grandes", "abiertas", "zo"]],
+  ["Índice", ["indice"]],
+];
+const MEDIDAS_FICHA = GRUPOS_FICHA.flatMap(g => g[1]);
+const MEDIANA = Object.fromEntries(Object.keys(METRICAS).map(k => [k, mediana(B.map(b => METRICAS[k].v(b)))]));
 const rango = (met, i) => { const vals = B.map(b => METRICAS[met].v(b)).map((v, k) => [k, v]).filter(x => x[1] != null).sort((a, b) => b[1] - a[1]); const p = vals.findIndex(x => x[0] === i); return {p: p + 1, n: vals.length, max: vals[0] ? vals[0][1] : 1}; };
+const vtxt = (k, v) => v == null ? "—" : METRICAS[k].fmt ? METRICAS[k].fmt(v) : k === "indice" ? nf(v, 0) : nf(v);
+let grupoAbierto = 0;
 function fichaBarrio() {
   const el = $("#fichaSel");
   if (selB == null) {
     el.innerHTML = `<p class="eyebrow">${ic("info")}Cómo usar el mapa</p><h3 style="font-size:1.25rem">Toca un barrio para ver su ficha</h3>
-      <p class="peq">Arriba eliges qué mirar (construcción, seguridad, quejas, negocios, hospedaje o el índice). Arrastra para mover, usa dos dedos o la rueda para acercar y el botón 2D/3D para inclinar. Con «Por km²» comparas barrios de distinto tamaño, y con la barra del año ves cómo cambió.</p>
-      <div class="medidas">${["permisos", "delitos", "quejas", "negocios"].map(k => { const met = METRICAS[k], t = B.reduce((s, b) => s + (met.v(b) || 0), 0); return `<div class="medida"><span class="n">${met.nombre} (suma de barrios)</span><span class="v">${nf(t)}</span><span></span></div>`; }).join("")}</div>`;
+      <p class="peq">Arriba eliges qué mirar: qué pasa (construcción, seguridad, negocios), quién vive (población, ingreso, arriendo), qué tiene cerca, riesgo y hacia dónde va. Arrastra para mover, usa dos dedos o la rueda para acercar y el botón 2D/3D para inclinar. «Por km²» y «Por 1.000 hab.» comparan barrios de distinto tamaño; la barra del año muestra cómo cambió.</p>
+      <div class="medidas">${["poblacion", "permisos", "delitos", "negocios"].map(k => { const met = METRICAS[k], t = B.reduce((s, b) => s + (met.v(b) || 0), 0); return `<div class="medida"><span class="n">${met.nombre} (suma de barrios)</span><span class="v">${nf(t)}</span><span></span></div>`; }).join("")}</div>`;
     return;
   }
   const b = B[selB], c = compB != null ? B[compB] : null;
-  const filas = MEDIDAS_FICHA.map(k => {
-    const met = METRICAS[k], v = met.v(b), r = rango(k, selB), v2 = c ? met.v(c) : undefined, kmv = met.sinKm2 ? null : porKm2(v, b);
-    // Serie por año solo si todos los años tienen dato publicable (un hueco no se dibuja como cero)
-    const serie = met.anios.length > 2 && met.anios.every(a => met.v(b, a) != null) ? `${spark(met.anios.map(a => [String(a), met.v(b, a)]), "var(--accent)", 24)}<span class="r"><span>${met.anios[0]}</span><span>${ult(met.anios)}</span></span>` : "";
-    return `<div class="medida"><span class="n">${met.nombre}${met.anios.length > 1 ? ` (${ult(met.anios)})` : ""}</span><span class="v">${v == null ? "—" : k === "indice" ? nf(v, 0) : nf(v)}</span>${c ? `<span class="v2">${v2 == null ? "—" : k === "indice" ? nf(v2, 0) : nf(v2)}</span>` : "<span></span>"}
-      ${v == null ? `<span class="r"><span>Sin dato publicable (menos de 5 o ninguno)</span></span>` : `<span class="rb"><i style="width:${v / r.max * 100}%"></i>${c && v2 != null ? `<u style="left:calc(${Math.min(99, v2 / r.max * 100)}% - 1px)"></u>` : ""}</span><span class="r"><span>Puesto ${r.p} de ${r.n}</span><span>${kmv != null ? fmtV(kmv, true) + " por km²" : ""}</span></span>`}
-      ${serie ? `<span style="grid-column:1/-1;display:grid;gap:2px">${serie}</span>` : ""}</div>`;
-  }).join("");
-  el.innerHTML = `<div class="titulo"><div><p class="eyebrow">Barrio · distrito ${b.distrito} · ${nf(b.km2, 2)} km²</p><h3>${esc(b.nombre)}</h3></div><button class="btn" type="button" id="limpiarSel" aria-label="Quitar selección">${ic("cerrar")}</button></div>
+  const fila = k => {
+    const met = METRICAS[k], v = met.v(b), r = rango(k, selB), v2 = c ? met.v(c) : undefined, med = MEDIANA[k];
+    const tasa = met.tipo === "conteo" && b.pob >= MIN_HAB && v != null ? porHab(v, b) : null;
+    const serie = met.anios.length > 2 && met.anios.every(a => met.v(b, a) != null) ? `<span style="grid-column:1/-1;display:grid;gap:2px">${spark(met.anios.map(a => [String(a), met.v(b, a)]), "var(--accent)", 24)}<span class="r"><span>${met.anios[0]}</span><span>${ult(met.anios)}</span></span></span>` : "";
+    const ancho = x => Math.max(0, Math.min(100, (x - Math.min(0, ...B.map(bb => met.v(bb) ?? 0))) / (r.max - Math.min(0, ...B.map(bb => met.v(bb) ?? 0)) || 1) * 100));
+    return `<div class="medida"><span class="n">${esc(met.nombre)}${met.anios.length > 1 ? ` (${ult(met.anios)})` : ""}</span><span class="v">${vtxt(k, v)}</span>${c ? `<span class="v2">${vtxt(k, v2)}</span>` : "<span></span>"}
+      ${v == null ? `<span class="r"><span>${met.tipo === "tasa" && met.fuente === "censo_acs" ? "Sin estimación (menos de " + MIN_HAB + " habitantes)" : "Sin dato publicable (menos de 5 o ninguno)"}</span></span>` : `<span class="rb"><i style="width:${ancho(v)}%"></i>${med != null ? `<u class="med" title="Mediana de los barrios: ${vtxt(k, med)}" style="left:calc(${ancho(med)}% - 1px)"></u>` : ""}${c && v2 != null ? `<u style="left:calc(${ancho(v2)}% - 1px)"></u>` : ""}</span><span class="r"><span>Puesto ${r.p} de ${r.n} · mediana ${vtxt(k, med)}</span><span>${tasa != null ? fmtV(tasa, "hab") + " por 1.000 hab." : ""}</span></span>`}
+      ${serie}</div>`;
+  };
+  el.innerHTML = `<div class="titulo"><div><p class="eyebrow">Barrio · distrito ${b.distrito} · ${nf(b.km2, 2)} km²${b.pob != null ? ` · ${nf(b.pob)} hab.` : ""}</p><h3>${esc(b.nombre)}</h3></div><button class="btn" type="button" id="limpiarSel" aria-label="Quitar selección">${ic("cerrar")}</button></div>
+    <div class="etiquetas-b">${[b.zo >= 5 ? "Zona de Oportunidad federal" : "", b.mainSt >= 5 ? "Área de Main Street" : "", b.cra >= 5 ? "Área de Redesarrollo (CRA)" : "", b.sunrail ? "Estación de SunRail" : ""].filter(Boolean).map(t => `<span class="etq-z">${esc(t)}</span>`).join("")}</div>
     <div class="filtros"><label class="peq" for="compSel">Comparar con</label><select class="sel" id="compSel"><option value="">— ningún barrio —</option>${B.map((x, i) => i === selB ? "" : `<option value="${i}" ${i === compB ? "selected" : ""}>${esc(x.nombre)}</option>`).join("")}</select></div>
-    ${c ? `<p class="peq"><b style="color:var(--ink)">${esc(b.nombre)}</b> en negro · <b style="color:var(--sun)">${esc(c.nombre)}</b> en amarillo</p>` : ""}
-    <div class="medidas">${filas}</div>
-    <div class="filtros"><button class="btn" type="button" id="copiarFicha">${ic("copiar")}Copiar ficha</button>${chip("orlando_barrios", "properties.nombre", C("territorio", "poligonos_barrios").vigencia)}</div>`;
+    ${c ? `<p class="peq"><b style="color:var(--ink)">${esc(b.nombre)}</b> en negro · <b style="color:var(--sun)">${esc(c.nombre)}</b> en amarillo · la raya gris es la mediana de los barrios</p>` : `<p class="peq">La raya gris en cada barra es la mediana de los 125 barrios.</p>`}
+    ${GRUPOS_FICHA.map(([t, ks], gi) => `<details class="grupo-ficha" ${gi === grupoAbierto ? "open" : ""} data-g="${gi}"><summary>${esc(t)}</summary><div class="medidas">${ks.map(fila).join("")}</div></details>`).join("")}
+    <div class="filtros"><button class="btn" type="button" id="copiarFicha">${ic("copiar")}Copiar ficha</button><a class="btn" href="#comparar/barrios/${selB}">${ic("comparar")}Comparar en detalle</a>${chip("orlando_barrios", "properties.nombre", C("territorio", "poligonos_barrios").vigencia)}</div>`;
+  $$("#fichaSel details.grupo-ficha").forEach(d => d.addEventListener("toggle", () => { if (d.open) grupoAbierto = +d.dataset.g; }));
   $("#compSel").onchange = e => { compB = e.target.value === "" ? null : +e.target.value; fichaBarrio(); };
   $("#copiarFicha").onclick = () => copiar([`${b.nombre} (distrito ${b.distrito}, ${nf(b.km2, 2)} km²) · Cerebro Orlando, datos al ${fDia(D.generado)}`,
-    ...MEDIDAS_FICHA.map(k => { const v = METRICAS[k].v(b); return `- ${METRICAS[k].nombre}: ${v == null ? "sin dato publicable" : nf(v, k === "indice" ? 0 : 0)}`; })].join("\n"), "Ficha copiada");
+    ...MEDIDAS_FICHA.map(k => { const v = METRICAS[k].v(b); return `- ${METRICAS[k].nombre}: ${v == null ? "sin dato publicable" : vtxt(k, v)}`; })].join("\n"), "Ficha copiada");
 }
 document.addEventListener("click", e => { if (e.target.closest("#limpiarSel")) { selB = null; compB = null; atlasB.seleccionar(null, false); atlasB.verTodo(); } });
 function irABarrio(i) { location.hash = "barrios"; setTimeout(() => { atlasB.seleccionar(i, true); $("#atlasBarrios").scrollIntoView({behavior: "smooth", block: "center"}); }, 120); }
 const umbrales = ["permisos", "seguridad", "codigo", "negocios"].map(t => C(t, "umbral_minimo_por_barrio").valor);
-$("#notaPrivBarrios").innerHTML = `<b>Cuidamos a las personas.</b> Los permisos traen el nombre del propietario y el contratista; los casos de policía, el número de caso y el punto exacto; los negocios, el dueño y su teléfono. Nada de eso se descarga: los servidores de la ciudad devuelven conteos por barrio, y los barrios con menos de ${Math.min(...umbrales)} casos en el año salen en gris, igual que los que no tuvieron ninguno, para no revelar cuáles son. Distrito, área y «por km²» son <button class="term" data-term="derivado">derivados</button>.`;
+$("#notaPrivBarrios").innerHTML = `<b>Cuidamos a las personas.</b> Los permisos traen el nombre del propietario y el contratista; los casos de policía, el número de caso y el punto exacto; los negocios, el dueño y su teléfono. Nada de eso se descarga: los servidores de la ciudad devuelven conteos por barrio, y los barrios con menos de ${Math.min(...umbrales)} casos en el año salen en gris, igual que los que no tuvieron ninguno, para no revelar cuáles son. Distrito, área, «por km²» y «por 1.000 habitantes» son <button class="term" data-term="derivado">derivados</button>; los habitantes de cada barrio son una <button class="term" data-term="estimacion">estimación</button> a partir del censo.`;
 
 // Índice con pesos movibles
 $("#pesos").innerHTML = `<div class="filtros">${Object.keys(PRESETS).map(n => `<button type="button" class="chip" data-p="${n}" aria-pressed="${n === "Equilibrio"}">${n}</button>`).join("")}</div>` +
@@ -853,17 +1097,20 @@ $("#pesos").addEventListener("click", e => { const c = e.target.closest(".chip")
 actualizarIndice();
 
 // Correlaciones
-const OPC = ["permisos", "delitos", "hurtos", "violencia", "drogas", "quejas", "codigo", "negocios", "restaurantes", "hospedajes"];
-$("#corrX").innerHTML = OPC.map(k => `<option value="${k}" ${k === "negocios" ? "selected" : ""}>${METRICAS[k].nombre} por km²</option>`).join("");
-$("#corrY").innerHTML = OPC.map(k => `<option value="${k}" ${k === "delitos" ? "selected" : ""}>${METRICAS[k].nombre} por km²</option>`).join("");
+// Los conteos se comparan por 1.000 habitantes (si el barrio tiene población estimada) y las tasas, tal cual
+const OPC = ["delitos", "quejas", "permisos", "negocios", "restaurantes", "aperturas", "ingreso", "arriendo", "carga", "sinCarro", "espanol", "pobreza", "univ", "rInund", "rVulner", "crec45"];
+const modoCorr = k => METRICAS[k].tipo === "conteo" ? "hab" : "total";
+const nomCorr = k => METRICAS[k].nombre + sufijo(modoCorr(k));
+$("#corrX").innerHTML = OPC.map(k => `<option value="${k}" ${k === "ingreso" ? "selected" : ""}>${esc(nomCorr(k))}</option>`).join("");
+$("#corrY").innerHTML = OPC.map(k => `<option value="${k}" ${k === "delitos" ? "selected" : ""}>${esc(nomCorr(k))}</option>`).join("");
 function rangos(v) { const o = v.map((x, i) => [x, i]).sort((a, b) => a[0] - b[0]), r = Array(v.length); for (let i = 0; i < o.length;) { let j = i; while (j < o.length && o[j][0] === o[i][0]) j++; for (let k = i; k < j; k++) r[o[k][1]] = (i + j - 1) / 2; i = j; } return r; }
 function spearman(x, y) { const rx = rangos(x), ry = rangos(y), n = x.length, mx = rx.reduce((a, b) => a + b) / n, my = ry.reduce((a, b) => a + b) / n; let s = 0, sx = 0, sy = 0; for (let i = 0; i < n; i++) { s += (rx[i] - mx) * (ry[i] - my); sx += (rx[i] - mx) ** 2; sy += (ry[i] - my) ** 2; } return s / Math.sqrt(sx * sy); }
 function dispersion() {
   const kx = $("#corrX").value, ky = $("#corrY").value, el = $("#g-corr");
-  const pts = B.map((b, i) => [valorDe(kx, b, undefined, true), valorDe(ky, b, undefined, true), i]).filter(p => p[0] > 0 && p[1] > 0);
+  const pts = B.map((b, i) => [valorDe(kx, b, undefined, modoCorr(kx)), valorDe(ky, b, undefined, modoCorr(ky)), i]).filter(p => p[0] > 0 && p[1] > 0);
   const rho = spearman(pts.map(p => p[0]), pts.map(p => p[1]));
   const fuerza = Math.abs(rho) < .2 ? "casi ninguna relación" : Math.abs(rho) < .4 ? "una relación débil" : Math.abs(rho) < .6 ? "una relación moderada" : Math.abs(rho) < .8 ? "una relación fuerte" : "una relación muy fuerte";
-  $("#r-corr").textContent = kx === ky ? "Elige dos medidas distintas." : `Entre los ${pts.length} barrios con ambos datos hay ${fuerza} ${rho > 0 ? "positiva" : "negativa"} (ρ de Spearman = ${nf(rho, 2)}): ${rho > .2 ? "donde hay más " + METRICAS[kx].frase + " tiende a haber más " + METRICAS[ky].frase : rho < -.2 ? "donde hay más de una tiende a haber menos de la otra" : "saber una no ayuda a adivinar la otra"}.`;
+  $("#r-corr").textContent = kx === ky ? "Elige dos medidas distintas." : `Entre los ${pts.length} barrios con ambos datos hay ${fuerza} ${rho > 0 ? "positiva" : "negativa"} (ρ de Spearman = ${nf(rho, 2)}): ${rho > .2 ? "donde hay más " + METRICAS[kx].frase + " tiende a haber más " + METRICAS[ky].frase : rho < -.2 ? "donde hay más " + METRICAS[kx].frase + " tiende a haber menos " + METRICAS[ky].frase : "saber una no ayuda a adivinar la otra"}.`;
   const W = el.clientWidth, H = W < 500 ? 320 : 380, m = {t: 30, r: 28, b: 40, l: 54};
   const lx = pts.map(p => Math.log10(p[0])), ly = pts.map(p => Math.log10(p[1]));
   const ex = [Math.floor(Math.min(...lx)), Math.ceil(Math.max(...lx))], ey = [Math.floor(Math.min(...ly)), Math.ceil(Math.max(...ly))];
@@ -871,12 +1118,12 @@ function dispersion() {
   let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Dispersión de barrios">`;
   for (let e = ex[0]; e <= ex[1]; e++) s += `<line x1="${X(10 ** e)}" x2="${X(10 ** e)}" y1="${m.t}" y2="${H - m.b}" style="stroke:var(--line)"/><text x="${X(10 ** e)}" y="${H - m.b + 16}" text-anchor="middle">${nf(10 ** e, e < 0 ? -e : 0)}</text>`;
   for (let e = ey[0]; e <= ey[1]; e++) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(10 ** e)}" y2="${Y(10 ** e)}" style="stroke:var(--line)"/><text x="${m.l - 8}" y="${Y(10 ** e) + 4}" text-anchor="end">${nf(10 ** e, e < 0 ? -e : 0)}</text>`;
-  s += `<text x="${W - m.r}" y="${H - 4}" text-anchor="end" class="etq" style="fill:var(--ink-2)">${esc(METRICAS[kx].corto)} por km² →</text><text x="${m.l - 46}" y="${m.t - 14}" class="etq" style="fill:var(--ink-2)">↑ ${esc(METRICAS[ky].corto)} por km²</text>`;
+  s += `<text x="${W - m.r}" y="${H - 4}" text-anchor="end" class="etq" style="fill:var(--ink-2)">${esc(METRICAS[kx].corto + sufijo(modoCorr(kx)))} →</text><text x="${m.l - 46}" y="${m.t - 14}" class="etq" style="fill:var(--ink-2)">↑ ${esc(METRICAS[ky].corto + sufijo(modoCorr(ky)))}</text>`;
   pts.forEach(([x, y, i]) => s += `<circle class="pt" data-i="${i}" cx="${X(x)}" cy="${Y(y)}" r="${i === selB ? 7 : 5}" style="fill:${i === selB ? "var(--sun)" : "var(--accent)"};fill-opacity:.75;stroke:var(--surface)" stroke-width="1.5"/>`);
   s += `</svg>`;
   el.innerHTML = s;
   const svg = el.querySelector("svg");
-  svg.addEventListener("pointermove", e => { const c = e.target.closest(".pt"); if (!c) return ocultarGlobo(); const i = +c.dataset.i; mostrarGlobo(`<b>${esc(B[i].nombre)}</b><br>${esc(METRICAS[kx].corto)}: ${fmtV(valorDe(kx, B[i], undefined, true), true)} por km²<br>${esc(METRICAS[ky].corto)}: ${fmtV(valorDe(ky, B[i], undefined, true), true)} por km²<br><span class="s">Toca para ver su ficha</span>`, e.clientX, e.clientY); });
+  svg.addEventListener("pointermove", e => { const c = e.target.closest(".pt"); if (!c) return ocultarGlobo(); const i = +c.dataset.i; mostrarGlobo(`<b>${esc(B[i].nombre)}</b><br>${esc(METRICAS[kx].corto)}: ${fmtV(valorDe(kx, B[i], undefined, modoCorr(kx)), modoCorr(kx), kx)}${sufijo(modoCorr(kx))}<br>${esc(METRICAS[ky].corto)}: ${fmtV(valorDe(ky, B[i], undefined, modoCorr(ky)), modoCorr(ky), ky)}${sufijo(modoCorr(ky))}<br><span class="s">Toca para ver su ficha</span>`, e.clientX, e.clientY); });
   svg.addEventListener("pointerleave", ocultarGlobo);
   svg.addEventListener("click", e => { const c = e.target.closest(".pt"); if (c) irABarrio(+c.dataset.i); });
 }
@@ -884,13 +1131,13 @@ $("#corrX").onchange = dispersion; $("#corrY").onchange = dispersion;
 observar($("#g-corr"), dispersion);
 
 // Tabla accesible
-const COLS = [["nombre", "Barrio"], ["distrito", "Distrito"], ["km2", "Área km²"], ["permisos", `Permisos ${U_PERM}`], ["delitos", `Casos policía ${U_DEL}`], ["quejas", `Quejas ${U_COD}`], ["negocios", "Negocios"], ["hospedajes", "Hospedajes"], ["indice", "Índice"]];
+const COLS = [["nombre", "Barrio"], ["distrito", "Distrito"], ["km2", "Área km²"], ["poblacion", "Habitantes (est.)"], ["ingreso", "Ingreso (aprox.)"], ["arriendo", "Arriendo (aprox.)"], ["permisos", `Permisos ${U_PERM}`], ["delitos", `Casos policía ${U_DEL}`], ["quejas", `Quejas ${U_COD}`], ["negocios", "Negocios"], ["rInund", "Riesgo inundación"], ["crec45", "Crecimiento 2045"], ["indice", "Índice"]];
 let ordenK = "indice", ordenAsc = false;
 const celda = (b, k) => k === "nombre" ? b.nombre : k === "distrito" ? +b.distrito : k === "km2" ? b.km2 : METRICAS[k].v(b);
 function tabla() {
   $("#tablaBarrios thead").innerHTML = `<tr>${COLS.map(([k, t]) => `<th class="${k === "nombre" ? "" : "n"}" aria-sort="${k === ordenK ? (ordenAsc ? "ascending" : "descending") : "none"}"><button type="button" data-k="${k}">${t}</button></th>`).join("")}</tr>`;
   const filas = [...B].sort((a, b) => { const x = celda(a, ordenK), y = celda(b, ordenK); if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; const r = typeof x === "string" ? x.localeCompare(y, "es") : x - y; return ordenAsc ? r : -r; });
-  $("#tablaBarrios tbody").innerHTML = filas.map(b => `<tr>${COLS.map(([k]) => { const v = celda(b, k); return `<td class="${k === "nombre" ? "" : "n"}">${k === "nombre" ? esc(v) : v == null ? "—" : k === "km2" ? nf(v, 2) : nf(v)}</td>`; }).join("")}</tr>`).join("");
+  $("#tablaBarrios tbody").innerHTML = filas.map(b => `<tr>${COLS.map(([k]) => { const v = celda(b, k); return `<td class="${k === "nombre" ? "" : "n"}">${k === "nombre" ? esc(v) : v == null ? "—" : k === "km2" ? nf(v, 2) : METRICAS[k] && METRICAS[k].fmt ? METRICAS[k].fmt(v) : nf(v, k === "indice" ? 0 : 0)}</td>`; }).join("")}</tr>`).join("");
 }
 $("#tablaBarrios thead").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; if (ordenK === b.dataset.k) ordenAsc = !ordenAsc; else { ordenK = b.dataset.k; ordenAsc = ordenK === "nombre"; } tabla(); });
 $("#sumTabla").textContent = `Ver los ${B.length} barrios en una tabla (— = sin dato publicable)`;
@@ -905,16 +1152,19 @@ $("#ley-seg").innerHTML = GRUPOS.map(([, n, c]) => `<span><i style="background:$
 $("#f-seg").innerHTML = chip("opd_casos", "hurtos_por_anio", del.vigencia);
 observar($("#g-seg"), () => lineas($("#g-seg"), {series: GRUPOS.map(([k, n, c]) => ({nombre: n.split(" ")[0], puntos: S("seguridad", `${k}_por_anio`), color: c, resaltar: true})), fmtX: s => s, fmtY: v => nf(v) + " casos", cero: true, etiquetas: true,
   ticksX: (x0, x1) => S("seguridad", "hurtos_por_anio").map(p => [tiempo(p[0]), p[0]]), aria: "Casos de policía por año y grupo"}));
-let grupoSeg = "delitos";
+let grupoSeg = "delitos", medidaSeg = "km2";
 $("#segGrupo").innerHTML = [["delitos", "Todos"], ["hurtos", "Hurtos"], ["violencia", "Violencia"], ["drogas", "Drogas"]].map(([k, n]) => `<button type="button" data-g="${k}" aria-pressed="${k === "delitos"}">${n}</button>`).join("");
-const mapaSeg = mapaPlano($("#mapaSeg"), {valores: i => porKm2(METRICAS[grupoSeg].v(B[i]), B[i]), ley: $("#leySeg"), fmt: v => nf(v, 0), titulo: () => `Casos por km² en ${U_DEL}`, onClick: i => { atlasB.setLente("delitos"); ajustarAnio(); irABarrio(i); },
-  globo: i => { const v = METRICAS[grupoSeg].v(B[i]); return `<b>${esc(B[i].nombre)}</b><br>${v == null ? "Sin dato publicable" : `${nf(v)} casos · ${fmtV(porKm2(v, B[i]), true)} por km²`}<br><span class="s">Toca para verlo en el mapa 3D</span>`; }});
+const mapaSeg = mapaPlano($("#mapaSeg"), {valores: i => valorDe(grupoSeg, B[i], undefined, medidaSeg), ley: $("#leySeg"), fmt: v => nf(v, v < 10 ? 1 : 0), titulo: () => `Casos${sufijo(medidaSeg)} en ${U_DEL}`, onClick: i => { atlasB.setLente("delitos"); ajustarAnio(); irABarrio(i); },
+  globo: i => { const v = METRICAS[grupoSeg].v(B[i]); return `<b>${esc(B[i].nombre)}</b><br>${v == null ? "Sin dato publicable" : `${nf(v)} casos · ${fmtV(porKm2(v, B[i]), "km2")} por km²${porHab(v, B[i]) != null ? ` · ${fmtV(porHab(v, B[i]), "hab")} por 1.000 hab.` : ""}`}<br><span class="s">Toca para verlo en el mapa 3D</span>`; }});
 function rankSeg() {
   const met = METRICAS[grupoSeg];
-  $("#t-rankseg").textContent = `Barrios con más ${met.frase} en ${U_DEL}`;
-  listaBarras($("#rankSeg"), B.map((b, i) => ({nombre: b.nombre, valor: met.v(b), i})).filter(f => f.valor != null).sort((a, b) => b.valor - a.valor).slice(0, 12), {onClick: f => irABarrio(f.i)});
+  $("#t-rankseg").textContent = `Barrios con más ${met.frase}${sufijo(medidaSeg)} en ${U_DEL}`;
+  $("#t-mapaseg").textContent = `Casos${sufijo(medidaSeg)} en cada barrio`;
+  listaBarras($("#rankSeg"), B.map((b, i) => ({nombre: b.nombre, valor: valorDe(grupoSeg, b, undefined, medidaSeg), i})).filter(f => f.valor != null).sort((a, b) => b.valor - a.valor).slice(0, 12),
+    {fmt: v => fmtV(v, medidaSeg), onClick: f => irABarrio(f.i)});
 }
 $("#segGrupo").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; grupoSeg = b.dataset.g; $$("#segGrupo button").forEach(x => x.setAttribute("aria-pressed", x === b)); mapaSeg.pintar(); rankSeg(); });
+$("#segMedidaSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; medidaSeg = b.dataset.m; $$("#segMedidaSeg button").forEach(x => x.setAttribute("aria-pressed", x === b)); mapaSeg.pintar(); rankSeg(); });
 rankSeg();
 $("#verSeg3d").addEventListener("click", () => { atlasB.setLente("delitos"); ajustarAnio(); });
 barrasSimples($("#tiposSeg"), S("seguridad", `tipos_${U_DEL}`).slice(0, 12));
@@ -962,6 +1212,26 @@ const dibEsc = () => lineas($("#g-escucha"), {series: ESC.filter(([k]) => !ocult
 leyToggle($("#ley-escucha"), ESC.slice(1), ocultosEsc, dibEsc);
 observar($("#g-escucha"), dibEsc);
 
+// ---------- v3: el peso del ocio contra las áreas pares, y Wikipedia en inglés ----------
+const OCP = [["orlando", "Orlando", "var(--ink)", true], ["tampa", "Tampa", "var(--c1)"], ["miami", "Miami", "var(--c2)"], ["jacksonville", "Jacksonville", "var(--c3)"]];
+const ocUlt = Object.fromEntries(OCP.map(([k]) => [k, ult(S("turismo", k === "orlando" ? "participacion_ocio_en_empleo" : `participacion_ocio_${k}`))[1]]));
+$("#r-ociopares").textContent = nb(`Orlando es ${C("turismo", "puesto_ocio_entre_pares").valor === 1 ? "el área que más depende" : "una de las áreas que más dependen"} del ocio y la hotelería: ${nf(ocUlt.orlando, 1)} % del empleo, frente a ${nf(ocUlt.miami, 1)} % en Miami, ${nf(ocUlt.tampa, 1)} % en Tampa y ${nf(ocUlt.jacksonville, 1)} % en Jacksonville. Por eso un golpe al turismo (como en 2020) pega más aquí.`);
+$("#f-ociopares").innerHTML = chip("fred_ces", "participacion_ocio_<área>", ocio.vigencia);
+const ocultosOc = new Set();
+const dibOcP = () => lineas($("#g-ociopares"), {series: OCP.filter(([k]) => !ocultosOc.has(k) || k === "orlando").map(([k, n, c, yo]) => ({nombre: n, puntos: S("turismo", k === "orlando" ? "participacion_ocio_en_empleo" : `participacion_ocio_${k}`).filter(p => p[0] >= "2000"), color: c, resaltar: yo})),
+  fmtX: s => fMes(s, true), fmtY: v => nf(v, 1) + NB + "%", fmtTick: (v, d) => nf(v, d) + NB + "%", etiquetas: true, aria: "Peso del ocio en el empleo por área"});
+leyToggle($("#ley-ociopares"), OCP.slice(1), ocultosOc, dibOcP);
+observar($("#g-ociopares"), dibOcP);
+const ven = C("escucha", "vistas_ingles_12_meses"), pVen = C("escucha", "puesto_ingles_entre_pares").valor;
+$("#r-escuchaen").textContent = nb(`En inglés, el idioma de la mayoría de visitantes, el artículo de Orlando tuvo ${nf(ven.valor)} visitas en 12 meses: ${pVen === 1 ? "el primero" : pVen === 2 ? "el segundo" : "puesto " + pVen} de las cuatro ciudades. En español queda por detrás de Miami.`);
+$("#f-escuchaen").innerHTML = chip("wikimedia_pageviews", "vistas_ingles_<ciudad>", ven.vigencia);
+const ESCEN = [["orlando", "Orlando", "var(--ink)", true], ["tampa", "Tampa", "var(--c1)"], ["miami", "Miami", "var(--c2)"], ["jacksonville", "Jacksonville", "var(--c3)"]];
+const ocultosEn = new Set();
+const dibEn = () => lineas($("#g-escuchaen"), {series: ESCEN.filter(([k]) => !ocultosEn.has(k) || k === "orlando").map(([k, n, c, yo]) => ({nombre: n, puntos: S("escucha", `vistas_ingles_${k}`), color: c, resaltar: yo})),
+  fmtX: s => fMes(s, true), fmtY: v => nf(v) + " visitas", fmtTick: v => nf(v / 1000) + NB + "mil", cero: true, etiquetas: true, aria: "Visitas en Wikipedia en inglés"});
+leyToggle($("#ley-escuchaen"), ESCEN.slice(1), ocultosEn, dibEn);
+observar($("#g-escuchaen"), dibEn);
+
 /* ================= CLIMA ================= */
 $("#r-clima").textContent = fraseClima;
 const diaDe = s => DIA[new Date(tiempo(s.slice(0, 10))).getUTCDay()];
@@ -1000,6 +1270,25 @@ $("#f-lluvia").innerHTML = chip("noaa_gsoy", "lluvia_anual", ult(S("clima_histor
 const LLUVIA = new Map(S("clima_historico", "lluvia_anual").map(p => [+p[0], p[1]]));
 observar($("#g-lluvia"), () => barras($("#g-lluvia"), {puntos: ANIOS_T.map(y => [String(y), LLUVIA.get(y) ?? null]), fmtX: s => s, fmtY: v => nf(v, 1) + " pulgadas (" + nf(v * 25.4) + " mm)", aria: "Lluvia anual"}));
 $("#notaClima").innerHTML = `<b>Dos fuentes, dos tiempos.</b> El clima de hoy es una foto del ${fDia(L.clima.probado)} (Servicio Meteorológico, en tiempo real). La historia sale de NOAA, año por año desde ${temps[0][0]}; los años sin dato completo quedan fuera. La diferencia entre periodos es de promedios, no una tendencia ajustada.`;
+
+// ---------- v3: qué barrios están más expuestos (FEMA, Índice Nacional de Riesgo) ----------
+const RIESGOS_V = [["rInund", "Inundación"], ["rHuracan", "Huracán"], ["rCalor", "Calor"], ["rTornado", "Tornado"], ["rVulner", "Vulnerabilidad social"]];
+let riesgoSel = "rInund";
+$("#segRiesgo").innerHTML = RIESGOS_V.map(([k, n]) => `<button type="button" data-k="${k}" aria-pressed="${k === riesgoSel}">${n}</button>`).join("");
+const mapaRiesgo = mapaPlano($("#mapaRiesgo"), {valores: i => METRICAS[riesgoSel].v(B[i]) ?? null, ley: $("#leyRiesgo"), fmt: v => nf(v, 0), titulo: () => `${METRICAS[riesgoSel].nombre}, 0 a 100`, onClick: i => irABarrio(i),
+  globo: i => `<b>${esc(B[i].nombre)}</b><br>${esc(METRICAS[riesgoSel].corto)}: ${nf(METRICAS[riesgoSel].v(B[i]) ?? 0, 0)} de 100<br><span class="s">Pérdida anual esperada (todos los peligros): ${usd(B[i].perdida ?? 0)}</span>`});
+function pintarRiesgo() {
+  mapaRiesgo.pintar();
+  const filas = B.map((b, i) => ({nombre: b.nombre, valor: METRICAS[riesgoSel].v(b), i})).filter(f => f.valor != null).sort((a, b) => b.valor - a.valor);
+  listaBarras($("#rankRiesgo"), filas.slice(0, 10), {fmt: v => nf(v, 0), max: 100, onClick: f => irABarrio(f.i)});
+  const prom = C("riesgo", `${{rInund: "riesgo_inundacion", rHuracan: "riesgo_huracan", rCalor: "riesgo_calor", rTornado: "riesgo_tornado", rVulner: "vulnerabilidad_social"}[riesgoSel]}_promedio_barrios`).valor;
+  $("#r-riesgo").textContent = nb(riesgoSel === "rVulner"
+    ? `La vulnerabilidad social mide qué tan difícil le queda a la gente de un lugar prepararse y recuperarse (ingreso, edad, idioma, vivienda). La más alta: ${filas.slice(0, 3).map(f => f.nombre).join(", ")}. Donde coinciden mucho riesgo y mucha vulnerabilidad es donde un desastre pega más fuerte.`
+    : `En ${METRICAS[riesgoSel].corto.toLowerCase()}, el barrio promedio de Orlando está en el puntaje ${nf(prom, 0)} de 100 (más alto que ${nf(prom, 0)} de cada 100 sectores del país). Los más expuestos: ${filas.slice(0, 3).map(f => f.nombre).join(", ")}.`);
+}
+$("#segRiesgo").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; riesgoSel = b.dataset.k; $$("#segRiesgo button").forEach(x => x.setAttribute("aria-pressed", x === b)); pintarRiesgo(); });
+pintarRiesgo();
+$("#notaRiesgo").innerHTML = nb(`<b>Qué es este puntaje.</b> El Índice Nacional de Riesgo de FEMA (versión ${esc(VIG_NRI)}) da a cada sector censal un percentil de 0 a 100 frente a todo el país. Lo llevamos a barrios promediando los sectores que lo tocan, ponderados por su población. FEMA estima además una pérdida anual esperada de ${usd(C("riesgo", "perdida_anual_esperada_ciudad").valor)} para los barrios de Orlando por todos los peligros. No es el mapa de zonas inundables de FEMA: su servidor no respondió y no lo reemplazamos por otra cosa.`) + " " + chip("fema_nri", "riesgo_<peligro>_barrio", VIG_NRI);
 
 /* ================= FUENTES ================= */
 const EST = {integrado: "En uso", candidato: "Candidata", excluido: "Descartada", caido: "No responde", inexistente: "No existe"};
@@ -1046,10 +1335,367 @@ $("#bitacora").innerHTML = D.bitacora.map(b => `<details><summary><span class="m
 $("#tablaDic tbody").innerHTML = D.diccionario.map(r => `<tr><td class="mono">${esc(r.fuente)}</td><td class="mono" style="overflow-wrap:anywhere">${esc(r.campo)}</td><td>${esc(r.significado)}</td><td>${esc(r.clasificacion)}</td></tr>`).join("");
 $("#sumDic").textContent = `Ver los ${D.diccionario.length} campos`;
 
+/* ================= DECIDIR: cuatro perfiles, cada uno con su regla a la vista ================= */
+// Percentil de 0 a 100 de cada valor dentro de una lista (empates al medio); null queda null
+function percentiles(vals) {
+  const ord = vals.filter(v => v != null).sort((a, b) => a - b), n = ord.length;
+  return vals.map(v => { if (v == null || n < 2) return v == null ? null : 50; let lo = 0; while (lo < n && ord[lo] < v) lo++; let hi = lo; while (hi < n && ord[hi] === v) hi++; return ((lo + hi - 1) / 2) / (n - 1) * 100; });
+}
+const sumaB = (lista, f) => lista.reduce((s, b) => s + (f(b) || 0), 0);
+const promPond = (lista, f, w) => { let a = 0, t = 0; for (const b of lista) { const v = f(b), p = w(b); if (v != null && p) { a += v * p; t += p; } } return t ? a / t : null; };
+const personasCerca = b => (b.pob || 0) + (b.emp17 || 0);
+const conIncentivo = b => (b.zo || 0) >= 5 || (b.mainSt || 0) >= 5 || (b.cra || 0) >= 5;
+const etiquetasIncentivo = b => [(b.zo || 0) >= 5 ? "Zona de Oportunidad" : "", (b.mainSt || 0) >= 5 ? "Main Street" : "", (b.cra || 0) >= 5 ? "CRA" : ""].filter(Boolean);
+const CIUDAD = {
+  pob: sumaB(B, b => b.pob), personas: sumaB(B, personasCerca), delitos: sumaB(B, b => b.delitos[U_DEL]), quejas: sumaB(B, b => b.quejas),
+  ingreso: C("censo", "ingreso_mediano_ciudad").valor, arriendo: C("censo", "arriendo_mediano_ciudad").valor,
+};
+const ZORI_HOY = C("vivienda", "arriendo_tipico_ultimo_mes").valor;
+const FACTOR_ARRIENDO = ZORI_HOY / CIUDAD.arriendo;        // del promedio del censo (2020-2024) al arriendo típico de hoy
+const pesoCtrl = (id, f, v) => `<div class="prioridad"><label for="${id}">${esc(f.n)}<span class="peq" style="font-weight:400"> · ${esc(f.desc)}</span></label><output id="o-${id}">${["no importa", "poco", "importa", "mucho"][v]}</output><input type="range" id="${id}" min="0" max="3" step="1" value="${v}" data-f="${f.k}"></div>`;
+const recoHTML = (k, i, puntaje, bullets, extra = "") => `<div class="reco"><span class="n">${k}</span><div><h4>${esc(B[i].nombre)}</h4><span class="vig">Distrito ${B[i].distrito}${B[i].pob != null ? ` · ${nf(B[i].pob)} habitantes (est.)` : ""}</span>
+  ${etiquetasIncentivo(B[i]).length ? `<div class="etiquetas-b" style="margin-top:4px">${etiquetasIncentivo(B[i]).map(t => `<span class="etq-z">${t}</span>`).join("")}</div>` : ""}
+  <ul>${bullets.filter(Boolean).map(t => `<li>${t}</li>`).join("")}</ul></div><span class="puntaje"><b>${nf(puntaje, 0)}</b>de 100</span>
+  <div class="acciones-r"><button class="btn" type="button" data-ir="${i}">${ic("mapa")}Ver en el mapa</button><a class="btn" href="#comparar/barrios/${i}">${ic("comparar")}Comparar</a>${extra}</div></div>`;
+function puntuar(lista, factores, pesos) {
+  // factores: {k: [valor por barrio de la lista, sentido (+1 más es mejor, −1 menos es mejor)]}
+  const p = {};
+  for (const [k, [vals, dir]] of Object.entries(factores)) p[k] = percentiles(vals).map(x => x == null ? 50 : dir > 0 ? x : 100 - x);
+  const tot = Object.keys(factores).reduce((s, k) => s + (pesos[k] || 0), 0) || 1;
+  return lista.map((_, j) => Object.keys(factores).reduce((s, k) => s + p[k][j] * (pesos[k] || 0), 0) / tot);
+}
+
+// ---------- perfil 1: emprender ----------
+const GIROS = [{k: "restaurantes", n: "Restaurante", un: "un restaurante"}, {k: "comercio", n: "Tienda o comercio", un: "una tienda o comercio"}, {k: "belleza", n: "Salón de belleza", un: "un salón de belleza"},
+  {k: "profesionales", n: "Oficina de servicios", un: "una oficina de servicios"}, {k: "hospedajes", n: "Hospedaje", un: "un hospedaje"}];
+const FACT_EMP = [{k: "demanda", n: "Mucha gente cerca", desc: "residentes y empleos"}, {k: "competencia", n: "Poca competencia", desc: "del mismo tipo por cada 10.000 personas"},
+  {k: "ingreso", n: "Clientes con buen ingreso", desc: "ingreso mediano"}, {k: "futuro", n: "Zona que va a crecer", desc: "residentes y empleos a 2045"},
+  {k: "seguridad", n: "Seguridad", desc: "casos de policía por cada 1.000 personas"}];
+const stEmp = {giro: "restaurantes", pesos: {demanda: 3, competencia: 3, ingreso: 2, futuro: 1, seguridad: 2}, incentivos: false};
+function evaluarEmprender() {
+  const lista = B.filter(b => personasCerca(b) >= 1500 && (!stEmp.incentivos || conIncentivo(b)));
+  const comp = b => ((b[stEmp.giro] ?? 2) / personasCerca(b)) * 10000;            // «sin dato» = menos de 5: se cuenta como 2
+  const fut = b => (b.pob17 || 0) + (b.emp17 || 0) >= 500 ? ((b.pob45 || 0) + (b.emp45 || 0)) / ((b.pob17 || 0) + (b.emp17 || 0)) - 1 : null;
+  const seg = b => ((b.delitos[U_DEL] ?? 2) / personasCerca(b)) * 1000;
+  const fact = {demanda: [lista.map(personasCerca), 1], competencia: [lista.map(comp), -1], ingreso: [lista.map(b => b.ingreso ?? null), 1],
+    futuro: [lista.map(fut), 1], seguridad: [lista.map(seg), -1]};
+  const pts = puntuar(lista, fact, stEmp.pesos);
+  const giroTot = sumaB(B, b => b[stEmp.giro]);
+  return {lista: lista.map((b, j) => ({i: b._i, p: pts[j], comp: comp(b), fut: fut(b), seg: seg(b)})).sort((a, b) => b.p - a.p),
+    compCiudad: giroTot / CIUDAD.personas * 10000, segCiudad: CIUDAD.delitos / CIUDAD.personas * 1000, giroTot};
+}
+function panelEmprender(el) {
+  const giro = GIROS.find(g => g.k === stEmp.giro), r = evaluarEmprender(), top = r.lista.slice(0, 5);
+  const ap = sumaB(B, b => b.aperturas);
+  el.innerHTML = `<div class="decidir-top">
+    <div class="card controles-dec">
+      <div class="grupo"><b>¿Qué negocio?</b><div class="chips">${GIROS.map(g => `<button type="button" class="chip" data-giro="${g.k}" aria-pressed="${g.k === stEmp.giro}">${g.n}</button>`).join("")}</div></div>
+      <div class="grupo"><b>¿Qué te importa?</b>${FACT_EMP.map(f => pesoCtrl("pe-" + f.k, f, stEmp.pesos[f.k])).join("")}</div>
+      <label class="casilla"><input type="checkbox" id="pe-inc" ${stEmp.incentivos ? "checked" : ""}><span>Solo barrios con incentivos: <button class="term" type="button" data-term="zona">Zona de Oportunidad</button>, Main Street o Área de Redesarrollo (CRA)</span></label>
+      <details class="como-calc"><summary>Cómo se calcula</summary><ul>
+        <li>Entran los barrios con al menos 1.500 personas cerca (residentes estimados por el censo más empleos de la proyección de la ciudad).</li>
+        <li>Cada factor se vuelve un puntaje de 0 a 100 según el puesto del barrio; «poca competencia» y «seguridad» se invierten (menos es mejor).</li>
+        <li>El puntaje final es el promedio ponderado con tus prioridades. Un barrio con menos de 5 ${esc(METRICAS[stEmp.giro].frase)} cuenta como 2.</li></ul></details>
+    </div>
+    <div class="panel">
+      <div class="barra-graf"><h3>Dónde abrir ${esc(giro.un)}: los 5 barrios que mejor encajan</h3><span class="vig">${r.lista.length} barrios evaluados</span></div>
+      <div class="recos">${top.map((x, k) => { const b = B[x.i]; const nGiro = b[stEmp.giro];
+        return recoHTML(k + 1, x.i, x.p, [
+          `${nf(b.pob || 0)} residentes y ${nf(b.emp17 || 0)} empleos cerca (estimados)`,
+          nGiro == null ? `Menos de 5 ${esc(METRICAS[stEmp.giro].frase)} con licencia: casi sin competencia directa` : `${nf(nGiro)} ${esc(METRICAS[stEmp.giro].frase)} con licencia: ${nf(x.comp, 1)} por cada 10.000 personas (ciudad: ${nf(r.compCiudad, 1)})`,
+          b.ingreso != null ? `Ingreso mediano de los hogares ≈ ${usd(b.ingreso)} (ciudad: ${usd(CIUDAD.ingreso)})` : "",
+          x.fut != null ? `Personas proyectadas a 2045: ${crecF(x.fut * 100)} frente a 2017` : "",
+          `${nf(x.seg, 1)} casos de policía por cada 1.000 personas (ciudad: ${nf(r.segCiudad, 1)})`]); }).join("")}</div>
+    </div></div>
+    <div class="grid-2"><article class="card panel"><div class="barra-graf"><h3>Puntaje de cada barrio para ${esc(giro.un)}</h3></div><svg class="svgmapa" id="mapaEmp" role="img" aria-label="Mapa del puntaje para emprender"></svg><div class="ley-mapa" id="leyEmp"></div></article>
+      <article class="card panel"><h3>El contexto para emprender</h3><div class="senales">
+        <div class="senal"><span class="t">Solicitudes de negocio en Florida (12 meses)</span><span class="v">${nf(C("economia", "solicitudes_negocio_florida_12_meses").valor)}</span><span class="c">${pct(C("economia", "variacion_solicitudes_negocio_florida").valor)} frente al año anterior</span></div>
+        <div class="senal"><span class="t">Negocios que abrieron en Orlando en ${U_AP}</span><span class="v">${nf(ap)}</span><span class="c">en barrios con 5 o más aperturas</span></div>
+        <div class="senal"><span class="t">Salario por hora (costo laboral)</span><span class="v">US$${NB}${nf(C("economia", "salario_hora_ultimo_mes").valor, 2)}</span><span class="c">${pct(C("economia", "salario_frente_a_pares").valor, 0)} frente a Tampa, Miami y Jacksonville</span></div>
+        <div class="senal"><span class="t">Empleo en ocio y hotelería</span><span class="v">${nf(ocio.valor, 1)}${NB}%</span><span class="c">${C("turismo", "puesto_ocio_entre_pares").valor === 1 ? "el área más turística de las cuatro que comparamos" : "puesto " + C("turismo", "puesto_ocio_entre_pares").valor + " de 4 áreas"}</span></div></div>
+        <div class="chips-f">${chip("fred_bfs", "solicitudes_negocio_florida", C("economia", "solicitudes_negocio_florida_12_meses").vigencia)}${chip("orlando_negocios", `${stEmp.giro}_barrio`, VIG_NEG)}${chip("orlando_sig", "empleo_2017_barrio", L.planeacion.probado)}</div></article></div>
+    <div class="limites"><b>Lo que esto no sabe</b><ul><li>El arriendo de locales comerciales y el tráfico de gente frente al local: no hay datos abiertos.</li><li>La competencia que está fuera de la ciudad (Disney, Universal y gran parte de International Drive están en el condado, no en Orlando).</li><li>Una licencia no es un local: un negocio puede tener varias, y las de menos de 5 por barrio no se publican.</li>${stEmp.giro === "hospedajes" ? "<li>Para hospedaje, la demanda la ponen los turistas, no los vecinos: mira también la cercanía a parques temáticos y al aeropuerto.</li>" : ""}</ul></div>`;
+  const mapa = new Map(r.lista.map(x => [x.i, x.p]));
+  mapaPlano($("#mapaEmp"), {valores: i => mapa.get(i) ?? null, ley: $("#leyEmp"), fmt: v => nf(v, 0), titulo: () => "Puntaje (0 a 100)", onClick: i => irABarrio(i),
+    globo: i => `<b>${esc(B[i].nombre)}</b><br>${mapa.has(i) ? "Puntaje: " + nf(mapa.get(i), 0) + " de 100" : "No evaluado (menos de 1.500 personas cerca o sin incentivo)"}`});
+  el.querySelectorAll("[data-giro]").forEach(b => b.onclick = () => { stEmp.giro = b.dataset.giro; panelEmprender(el); });
+  el.querySelectorAll(".prioridad input[type=range]").forEach(inp => inp.oninput = () => { stEmp.pesos[inp.dataset.f] = +inp.value; panelEmprender(el); requestAnimationFrame(() => { const n = $("#" + inp.id); if (n) n.focus(); }); });
+  $("#pe-inc").onchange = e => { stEmp.incentivos = e.target.checked; panelEmprender(el); };
+}
+
+// ---------- perfil 2: vivir ----------
+const FACT_VIV = [{k: "seguridad", n: "Seguridad", desc: "casos por cada 1.000 habitantes"}, {k: "tranquilidad", n: "Tranquilidad", desc: "quejas de vecinos por 1.000 hab."},
+  {k: "parques", n: "Parques", desc: "parte del barrio que es parque"}, {k: "colegios", n: "Colegios públicos", desc: "dentro del barrio"},
+  {k: "sinCarro", n: "Moverse sin carro", desc: "ciclovías y SunRail"}, {k: "inundacion", n: "Poco riesgo de inundación", desc: "índice de FEMA"},
+  {k: "espanol", n: "Comunidad hispanohablante", desc: "hablan español en casa"}];
+const stViv = {presupuesto: Math.round(ZORI_HOY / 50) * 50, pesos: {seguridad: 3, tranquilidad: 2, parques: 1, colegios: 1, sinCarro: 0, inundacion: 2, espanol: 0}};
+function evaluarVivir() {
+  const base = B.filter(b => b.pob >= MIN_HAB && b.arriendo != null);
+  const fact = {seguridad: [base.map(b => porHab(b.delitos[U_DEL] ?? 2, b)), -1], tranquilidad: [base.map(b => porHab(b.quejas ?? 2, b)), -1],
+    parques: [base.map(b => (b.parquesKm2 || 0) / b.km2), 1], colegios: [base.map(b => b.colegios || 0), 1],
+    sinCarro: [base.map(b => (b.ciclo || 0) / b.km2 + (b.sunrail || 0) * 2), 1], inundacion: [base.map(b => b.rInund ?? null), -1], espanol: [base.map(b => b.espanol ?? null), 1]};
+  const pts = puntuar(base, fact, stViv.pesos);
+  const todos = base.map((b, j) => ({i: b._i, p: pts[j], hoy: b.arriendo * FACTOR_ARRIENDO}));
+  return {todos, caben: todos.filter(x => x.hoy <= stViv.presupuesto).sort((a, b) => b.p - a.p)};
+}
+function panelVivir(el) {
+  const r = evaluarVivir(), top = r.caben.slice(0, 6), anual = stViv.presupuesto * 12 / .3, hora = anual / 2080, salH = C("economia", "salario_hora_ultimo_mes").valor;
+  el.innerHTML = `<div class="decidir-top">
+    <div class="card controles-dec">
+      <div class="grupo rango"><label for="pv-pres"><b>¿Cuánto puedes pagar de arriendo al mes?</b></label><output id="o-pv-pres">${usd(stViv.presupuesto)}</output><input type="range" id="pv-pres" min="800" max="4000" step="50" value="${stViv.presupuesto}"></div>
+      <div class="senal"><span class="t">Para que el arriendo no pase del 30 % de tu ingreso necesitas ganar</span><span class="v">${usd(Math.round(anual / 100) * 100)} al año</span>
+        <span class="c">≈ US$${NB}${nf(hora, 2)} la hora a tiempo completo: ${Math.abs(hora / salH - 1) < .03 ? "casi lo mismo que" : hora > salH ? nf((hora / salH - 1) * 100, 0) + " % más que" : nf((1 - hora / salH) * 100, 0) + " % menos que"} el salario promedio del sector privado en el área (US$${NB}${nf(salH, 2)}).</span></div>
+      <div class="grupo"><b>¿Qué te importa?</b>${FACT_VIV.map(f => pesoCtrl("pv-" + f.k, f, stViv.pesos[f.k])).join("")}</div>
+      <details class="como-calc"><summary>Cómo se calcula</summary><ul>
+        <li>El arriendo de cada barrio es la mediana del censo 2020–2024, llevada a hoy con el arriendo típico de Zillow: × ${nf(FACTOR_ARRIENDO, 2)} (${usd(ZORI_HOY)} hoy frente a ${usd(CIUDAD.arriendo)} en el censo). Es una aproximación.</li>
+        <li>Entran los barrios con ${MIN_HAB} habitantes o más y arriendo estimado igual o menor a tu presupuesto.</li>
+        <li>Cada prioridad es un puntaje de 0 a 100 según el puesto del barrio entre todos; se promedian con tus pesos.</li></ul></details>
+    </div>
+    <div class="panel">
+      <div class="barra-graf"><h3>${r.caben.length > 1 ? `${r.caben.length} barrios caben en ${usd(stViv.presupuesto)}: ${r.caben.length > 6 ? "estos encajan mejor contigo" : "así encajan contigo"}` : r.caben.length ? `Solo 1 barrio cabe en ${usd(stViv.presupuesto)}` : "Con ese presupuesto no cabe ningún barrio"}</h3><span class="vig">${r.todos.length} barrios con estimación</span></div>
+      ${r.caben.length ? `<div class="recos">${top.map((x, k) => { const b = B[x.i];
+        return recoHTML(k + 1, x.i, x.p, [
+          `Arriendo estimado hoy ≈ ${usd(Math.round(x.hoy / 10) * 10)} al mes (mediana del censo: ${usd(b.arriendo)})`,
+          b.delitos[U_DEL] != null ? `${nf(porHab(b.delitos[U_DEL], b), 1)} casos de policía por 1.000 habitantes (ciudad: ${nf(CIUDAD.delitos / CIUDAD.pob * 1000, 1)})` : "Menos de 5 casos de policía en el año",
+          b.quejas != null ? `${nf(porHab(b.quejas, b), 1)} quejas de vecinos por 1.000 habitantes` : "Menos de 5 quejas de vecinos en el año",
+          `${b.parques ? nf(b.parques) + " parque" + (b.parques > 1 ? "s" : "") : "Sin parque de la ciudad adentro"}${b.colegios ? " · " + nf(b.colegios) + " colegio" + (b.colegios > 1 ? "s" : "") + " público" + (b.colegios > 1 ? "s" : "") : ""}${b.sunrail ? " · estación de SunRail" : ""}`,
+          b.rInund != null ? `Riesgo de inundación: ${nf(b.rInund, 0)} de 100 (FEMA)` : "",
+          b.espanol != null && stViv.pesos.espanol ? `${nf(b.espanol, 0)} % habla español en casa` : ""]); }).join("")}</div>`
+        : `<div class="limites"><b>Sube el presupuesto.</b> El barrio más barato con estimación arrienda hoy por ≈ ${usd(Math.round(Math.min(...r.todos.map(x => x.hoy)) / 10) * 10)} al mes.</div>`}
+    </div></div>
+    <div class="limites"><b>Lo que esto no sabe</b><ul><li>El arriendo de un apartamento concreto: la mediana del barrio mezcla todo tipo de vivienda.</li><li>Ruido, tráfico, estado de las calles o qué tan bonito es: no hay datos abiertos por barrio.</li><li>La calidad de los colegios (solo sabemos dónde están).</li><li>Los casos de policía cuentan reportes, no delitos comprobados; en zonas comerciales los genera también quien no vive allí.</li></ul></div>`;
+  $("#pv-pres").oninput = e => { stViv.presupuesto = +e.target.value; panelVivir(el); requestAnimationFrame(() => $("#pv-pres") && $("#pv-pres").focus()); };
+  el.querySelectorAll(".prioridad input[type=range]").forEach(inp => inp.oninput = () => { stViv.pesos[inp.dataset.f] = +inp.value; panelVivir(el); requestAnimationFrame(() => { const n = $("#" + inp.id); if (n) n.focus(); }); });
+}
+
+// ---------- perfil 3: comprar o invertir ----------
+const CONDADO_DE = {orlando: "orange", tampa: "hillsborough", miami: "miami_dade", jacksonville: "duval"};
+const zUltimo = c => ult(S("vivienda", `valor_tipico_${c}`))[1], rUltimo = c => ult(S("vivienda", `arriendo_tipico_${c}`))[1];
+const aniosIngreso = c => zUltimo(c) / ult(S("gente", `ingreso_mediano_${CONDADO_DE[c]}`))[1];
+const rentab = c => rUltimo(c) * 12 / zUltimo(c) * 100;
+const FACT_INV = [{k: "crecimiento", n: "Crecimiento proyectado", desc: "residentes y empleos a 2045"}, {k: "proyectos", n: "Proyectos en camino", desc: "planes maestros, subdivisiones, rezonificaciones"},
+  {k: "precio", n: "Precio de entrada bajo", desc: "valor de vivienda del censo"}, {k: "riesgo", n: "Poco riesgo", desc: "inundación y huracán (FEMA)"}];
+const stInv = {pesos: {crecimiento: 3, proyectos: 2, precio: 2, riesgo: 2}};
+function panelInvertir(el) {
+  const m = SM.orlando, color = m.nivel === "comprador" ? "var(--good)" : m.nivel === "vendedor" ? "var(--bad)" : "var(--warn)";
+  const base = B.filter(b => b.pob >= MIN_HAB && b.valor != null);
+  const fact = {crecimiento: [base.map(b => (b.pob17 || 0) + (b.emp17 || 0) >= 500 ? ((b.pob45 || 0) + (b.emp45 || 0)) / ((b.pob17 || 0) + (b.emp17 || 0)) : null), 1],
+    proyectos: [base.map(b => (b.grandes || 0) + (b.permisos[U_PERM] || 0) / 100), 1], precio: [base.map(b => b.valor), -1],
+    riesgo: [base.map(b => b.rInund != null ? Math.max(b.rInund, b.rHuracan ?? 0) : null), -1]};
+  const pts = puntuar(base, fact, stInv.pesos), lista = base.map((b, j) => ({i: b._i, p: pts[j]})).sort((a, b) => b.p - a.p).slice(0, 6);
+  const METROS4 = ["orlando", "tampa", "miami", "jacksonville"], NOM = {orlando: "Orlando", tampa: "Tampa", miami: "Miami", jacksonville: "Jacksonville"};
+  el.innerHTML = `<div class="veredicto"><span class="bola" style="background:${color}">${ic(m.nivel === "vendedor" ? "sube" : m.nivel === "comprador" ? "baja" : "igual")}</span><div><span class="vig">Mercado de vivienda del área de Orlando · ${fMes(m.mes, true)}</span><br><b>${m.veredicto}: cumple ${m.n} de 4 señales a favor de quien compra</b></div></div>
+    <div class="senales">
+      <div class="senal"><span class="t">Precio de lista (mediana)</span><span class="v">${usd(m.precioNivel)}</span><span class="c">${pct(m.precio)} en un año</span></div>
+      <div class="senal"><span class="t">Días para vender (mediana)</span><span class="v">${nf(m.dias)}</span><span class="c">hace un año: ${nf(m.diasAntes)}</span></div>
+      <div class="senal"><span class="t">Viviendas en venta con rebaja</span><span class="v">${nf(m.rebaja, 0)}${NB}%</span><span class="c">el mes pasado bajaron de precio</span></div>
+      <div class="senal"><span class="t">Años de ingreso para comprar</span><span class="v">${nf(aniosIngreso("orlando"), 1)}</span><span class="c">valor típico ÷ ingreso mediano de un hogar de Orange</span></div>
+      <div class="senal"><span class="t">Rentabilidad bruta del arriendo</span><span class="v">${nf(rentab("orlando"), 1)}${NB}%</span><span class="c">al año, antes de impuestos, seguro y mantenimiento</span></div></div>
+    <div class="tabla-wrap card"><table><thead><tr><th>Área</th><th class="n">Valor típico</th><th class="n">Arriendo típico</th><th class="n">Años de ingreso</th><th class="n">Rentabilidad bruta</th><th>Mercado</th></tr></thead><tbody>
+      ${METROS4.map(c => `<tr${c === "orlando" ? ' style="font-weight:700"' : ""}><td>${NOM[c]}</td><td class="n">${usd(zUltimo(c))}</td><td class="n">${usd(rUltimo(c))}</td><td class="n">${nf(aniosIngreso(c), 1)}</td><td class="n">${nf(rentab(c), 1)}${NB}%</td><td>${SM[c].veredicto}</td></tr>`).join("")}
+    </tbody></table><p class="vig" style="margin-top:6px">Valor y arriendo típicos: Zillow (área metropolitana). Ingreso: mediana de los hogares del condado principal de cada área (Census, ${ult(S("gente", "ingreso_mediano_orange"))[0]}).</p>${chip("zillow_research", "valor_tipico_<área>", C("vivienda", "valor_tipico_ultimo_mes").vigencia)} ${chip("fred_realtor", "rebajas", m.mes)}</div>
+    <div class="decidir-top">
+      <div class="card controles-dec"><div class="grupo"><b>¿Qué buscas en un barrio para comprar?</b>${FACT_INV.map(f => pesoCtrl("pi-" + f.k, f, stInv.pesos[f.k])).join("")}</div>
+        <details class="como-calc"><summary>Cómo se calcula</summary><ul><li>Crecimiento: personas (residentes y empleos) proyectadas por la ciudad a 2045 sobre las de 2017.</li><li>Proyectos: solicitudes grandes de los dos últimos años más los permisos emitidos (cada 100 permisos cuentan como una solicitud).</li><li>Precio: valor declarado por los dueños en el censo (más bajo, mejor puntaje).</li><li>Riesgo: el mayor entre inundación y huracán del índice de FEMA.</li></ul></details></div>
+      <div class="panel"><div class="barra-graf"><h3>Barrios para mirar si piensas comprar</h3><span class="vig">${base.length} barrios con estimación</span></div>
+        <div class="recos">${lista.map((x, k) => { const b = B[x.i]; return recoHTML(k + 1, x.i, x.p, [
+          `Valor de la vivienda propia ≈ ${usd(b.valor)} (censo, aprox.)`,
+          b.crec45 != null ? `Residentes proyectados a 2045: ${crecF(b.crec45)}` : "",
+          b.grandes ? `${nf(b.grandes)} solicitudes de proyectos grandes en dos años` : "",
+          b.permisos[U_PERM] ? `${nf(b.permisos[U_PERM])} permisos de construcción en ${U_PERM}` : "",
+          b.rInund != null ? `Riesgo FEMA: inundación ${nf(b.rInund, 0)}, huracán ${nf(b.rHuracan, 0)} (de 100)` : ""]); }).join("")}</div></div></div>
+    <div class="limites"><b>Esto no es asesoría financiera.</b><ul><li>No sabemos el precio de una casa concreta, su estado, los impuestos (HOA, predial) ni el costo del seguro, que en Florida pesa mucho.</li><li>Las proyecciones a 2045 son de la ciudad y pueden cambiar.</li><li>La rentabilidad bruta no descuenta vacancia, mantenimiento, seguro ni impuestos.</li></ul></div>`;
+  el.querySelectorAll(".prioridad input[type=range]").forEach(inp => inp.oninput = () => { stInv.pesos[inp.dataset.f] = +inp.value; panelInvertir(el); requestAnimationFrame(() => { const n = $("#" + inp.id); if (n) n.focus(); }); });
+}
+
+// ---------- perfil 4: gobernar y planear ----------
+const DISTRITOS = M.distritos.map(d => String(d.distrito)).sort((x, y) => x - y);
+function agregado(lista) {
+  const pob = sumaB(lista, b => b.pob), w = b => b.pob || 0;
+  return {n: lista.length, pob, km2: sumaB(lista, b => b.km2), delitos: sumaB(lista, b => b.delitos[U_DEL]), delitosAntes: sumaB(lista, b => b.delitos[U_DEL - 1]),
+    quejas: sumaB(lista, b => b.quejas), permisos: sumaB(lista, b => b.permisos[U_PERM]), negocios: sumaB(lista, b => b.negocios),
+    pob17: sumaB(lista, b => b.pob17), pob45: sumaB(lista, b => b.pob45), parques: sumaB(lista, b => b.parques), colegios: sumaB(lista, b => b.colegios),
+    ciclo: sumaB(lista, b => b.ciclo), abiertas: sumaB(lista, b => b.abiertas), zo: lista.filter(b => (b.zo || 0) >= 5).length,
+    carga: promPond(lista, b => b.carga, w), sinCarro: promPond(lista, b => b.sinCarro, w), pobreza: promPond(lista, b => b.pobreza, w),
+    ingreso: promPond(lista, b => b.ingreso, b => b.pob || 0), rInund: promPond(lista, b => b.rInund, w), rVulner: promPond(lista, b => b.rVulner, w), espanol: promPond(lista, b => b.espanol, w)};
+}
+const AG_CIUDAD = agregado(B);
+const REGLAS = [
+  {k: "seg", t: "Los casos de policía subieron", icono: "sirena", regla: `subieron 20 % o más entre ${U_DEL - 1} y ${U_DEL}, con al menos 50 casos`,
+    f: b => { const a = b.delitos[U_DEL - 1], n = b.delitos[U_DEL]; return a && n && n >= 50 && n / a - 1 >= .2 ? `${b.nombre} (${pct((n / a - 1) * 100, 0)})` : null; }},
+  {k: "arr", t: "Arriendo que ahoga", icono: "casa", regla: "65 % o más de los hogares que arriendan gastan 30 % o más de su ingreso en arriendo, en barrios de 1.000 habitantes o más",
+    f: b => b.carga >= 65 && b.pob >= 1000 ? `${b.nombre} (${nf(b.carga, 0)}${NB}%)` : null},
+  {k: "mov", t: "Sin carro y sin alternativas", icono: "tren", regla: "15 % o más de hogares sin carro, sin estación de SunRail y con menos de 1 km de ciclovía",
+    f: b => b.sinCarro >= 15 && !b.sunrail && (b.ciclo || 0) < 1 ? `${b.nombre} (${nf(b.sinCarro, 0)}${NB}% sin carro)` : null},
+  {k: "par", t: "Mucha gente y ningún parque", icono: "arbol", regla: "2.000 habitantes o más y ningún parque de la ciudad dentro del barrio",
+    f: b => b.pob >= 2000 && !b.parques ? `${b.nombre} (${nf(b.pob)} hab.)` : null},
+  {k: "rie", t: "Riesgo alto y gente vulnerable", icono: "gota", regla: "riesgo de inundación de 80 o más y vulnerabilidad social de 70 o más (FEMA, de 0 a 100)",
+    f: b => b.rInund >= 80 && b.rVulner >= 70 ? `${b.nombre} (inundación ${nf(b.rInund, 0)}, vulnerabilidad ${nf(b.rVulner, 0)})` : null},
+  {k: "cre", t: "Crecimiento que va a presionar los servicios", icono: "futuro", regla: "residentes proyectados a 2045 crecen 50 % o más sobre una base de 1.000 o más",
+    f: b => b.crec45 >= 50 && (b.pob17 || 0) >= 1000 ? `${b.nombre} (${crecF(b.crec45)})` : null},
+];
+const alertasDe = lista => REGLAS.map(r => ({...r, barrios: lista.map(b => [b._i, r.f(b)]).filter(x => x[1])})).filter(r => r.barrios.length);
+const stGob = {d: "todos"};
+function panelGobernar(el) {
+  const lista = stGob.d === "todos" ? B : B.filter(b => String(b.distrito) === stGob.d), a = agregado(lista), c = AG_CIUDAD, al = alertasDe(lista);
+  const cmp = (v, ref, dir, f) => { if (v == null || ref == null || stGob.d === "todos") return ""; const d = (v / ref - 1) * 100; if (Math.abs(d) < 5 || !dir) return `<span class="c">ciudad: ${f(ref)}</span>`; const mejor = dir > 0 ? d > 0 : d < 0; return `<span class="c" style="color:${mejor ? "var(--good)" : "var(--bad)"}">${mejor ? "mejor" : "peor"} que la ciudad (${f(ref)})</span>`; };
+  const tasa = (n, p) => p ? n / p * 1000 : null;
+  const tarj = [
+    ["Habitantes (estimado)", nf(a.pob), stGob.d === "todos" ? `<span class="c">${a.n} barrios</span>` : `<span class="c">${nf(a.pob / c.pob * 100, 0)} % de la ciudad · ${a.n} barrios</span>`],
+    ["Crecimiento proyectado a 2045", crecF((a.pob45 / a.pob17 - 1) * 100), cmp((a.pob45 / a.pob17 - 1) * 100 + 100, (c.pob45 / c.pob17 - 1) * 100 + 100, 0, v => crecF(v - 100))],
+    [`Casos de policía por 1.000 hab. (${U_DEL})`, nf(tasa(a.delitos, a.pob), 1), cmp(tasa(a.delitos, a.pob), tasa(c.delitos, c.pob), -1, v => nf(v, 1))],
+    [`Cambio de casos ${U_DEL - 1} → ${U_DEL}`, pct((a.delitos / a.delitosAntes - 1) * 100, 0), cmp(a.delitos / a.delitosAntes, c.delitos / c.delitosAntes, -1, v => pct((v - 1) * 100, 0))],
+    ["Quejas de vecinos por 1.000 hab.", nf(tasa(a.quejas, a.pob), 1), cmp(tasa(a.quejas, a.pob), tasa(c.quejas, c.pob), -1, v => nf(v, 1))],
+    ["Carga de arriendo", nf(a.carga, 0) + NB + "%", cmp(a.carga, c.carga, -1, v => nf(v, 0) + NB + "%")],
+    ["Hogares sin carro", nf(a.sinCarro, 1) + NB + "%", cmp(a.sinCarro, c.sinCarro, 0, v => nf(v, 1) + NB + "%")],
+    ["Personas en pobreza", nf(a.pobreza, 1) + NB + "%", cmp(a.pobreza, c.pobreza, -1, v => nf(v, 1) + NB + "%")],
+    ["Parques por 10.000 hab.", nf(a.parques / a.pob * 10000, 1), cmp(a.parques / a.pob, c.parques / c.pob, 1, v => nf(v * 10000, 1))],
+    ["Solicitudes de planeación abiertas", nf(a.abiertas), `<span class="c">${a.zo} barrio${a.zo === 1 ? "" : "s"} en Zona de Oportunidad</span>`],
+  ];
+  el.innerHTML = `<div class="barra-graf"><div class="seg grande" id="segDistrito" role="group" aria-label="Distrito">${["todos", ...DISTRITOS].map(d => `<button type="button" data-d="${d}" aria-pressed="${d === stGob.d}">${d === "todos" ? "Toda la ciudad" : "Distrito " + d}</button>`).join("")}</div>
+      <a class="btn" href="#comparar/distritos">${ic("comparar")}Comparar los 6 distritos</a></div>
+    <div class="senales">${tarj.map(([t, v, c_]) => `<div class="senal"><span class="t">${t}</span><span class="v">${v}</span>${c_}</div>`).join("")}</div>
+    <div class="barra-graf"><h3>${al.length ? `${al.length} alerta${al.length > 1 ? "s" : ""} ${stGob.d === "todos" ? "en la ciudad" : "en el distrito " + stGob.d}, ordenadas por cuántos barrios tocan` : "Sin alertas con estas reglas"}</h3><span class="vig">Cada alerta es una regla escrita: puedes discutirla</span></div>
+    <div class="alertas">${al.sort((x, y) => y.barrios.length - x.barrios.length).map(r => `<div class="alerta-item"><h4>${ic(r.icono)}${esc(r.t)} · ${r.barrios.length}</h4><p>Regla: ${esc(r.regla)}.</p><div class="barrios-a">${r.barrios.slice(0, 8).map(([i, t]) => `<button type="button" data-ir="${i}">${esc(t)}</button>`).join("")}${r.barrios.length > 8 ? `<span class="vig">y ${r.barrios.length - 8} más</span>` : ""}</div></div>`).join("") || `<div class="alerta-item ok"><h4>${ic("ok")}Ningún barrio cumple las reglas</h4><p>Eso no quiere decir que no haya problemas: solo que no superan los umbrales escritos.</p></div>`}</div>
+    <div class="grid-2"><article class="card panel"><div class="barra-graf"><h3>Dónde se concentran las alertas</h3></div><svg class="svgmapa" id="mapaAlertas" role="img" aria-label="Mapa de alertas por barrio"></svg><div class="ley-mapa" id="leyAlertas"></div></article>
+      <article class="card panel"><h3>Qué usar para priorizar</h3><p class="peq">Las alertas mezclan seguridad (Policía de Orlando, ${U_DEL}), vivienda y movilidad (censo ${VIG_CEN.replace("-", "–")}, estimado por barrio), parques y SunRail (SIG de la ciudad), riesgo (FEMA) y crecimiento (proyección de la ciudad a 2045). Un barrio con varias alertas a la vez es candidato a mirar primero.</p>
+        <div class="limites"><b>Lo que esto no sabe</b><ul><li>Las solicitudes al 311 y los baches, alumbrado o basuras: no están publicados.</li><li>El presupuesto y la inversión ya comprometida en cada barrio.</li><li>Las estimaciones por barrio del censo tienen margen de error, mayor en barrios pequeños.</li></ul></div></article></div>`;
+  const cuenta = new Map(); for (const r of al) for (const [i] of r.barrios) cuenta.set(i, (cuenta.get(i) || 0) + 1);
+  mapaPlano($("#mapaAlertas"), {valores: i => lista.includes(B[i]) ? (cuenta.get(i) || 0) : null, ley: $("#leyAlertas"), cortes: [1, 2, 3, 4], etiquetas: ["Ninguna", "1", "2", "3", "4 o más"], titulo: () => "Alertas por barrio", onClick: i => irABarrio(i),
+    globo: i => `<b>${esc(B[i].nombre)}</b><br>${cuenta.get(i) ? cuenta.get(i) + " alerta" + (cuenta.get(i) > 1 ? "s" : "") + ": " + al.filter(r => r.barrios.some(x => x[0] === i)).map(r => r.t.toLowerCase()).join("; ") : "Sin alertas"}`});
+  $("#segDistrito").onclick = e => { const b = e.target.closest("button"); if (b) { stGob.d = b.dataset.d; panelGobernar(el); } };
+}
+
+const PERFILES = [
+  {k: "emprender", n: "Emprender", d: "Dónde abrir un negocio", icono: "tienda", fn: panelEmprender},
+  {k: "vivir", n: "Vivir", d: "Qué barrio me conviene", icono: "casa", fn: panelVivir},
+  {k: "invertir", n: "Comprar o invertir", d: "Cómo está el mercado", icono: "llave", fn: panelInvertir},
+  {k: "gobernar", n: "Gobernar", d: "Qué atender primero", icono: "capitolio", fn: panelGobernar},
+];
+let perfil = "emprender";
+function mostrarPerfil(k) {
+  perfil = PERFILES.some(p => p.k === k) ? k : "emprender";
+  $$("#perfiles button").forEach(b => b.setAttribute("aria-selected", b.dataset.p === perfil));
+  PERFILES.find(p => p.k === perfil).fn($("#panelDecidir"));
+}
+$("#perfiles").innerHTML = PERFILES.map(p => `<button type="button" role="tab" data-p="${p.k}" aria-selected="${p.k === perfil}">${ic(p.icono)}<span>${p.n}<small>${p.d}</small></span></button>`).join("");
+$("#perfiles").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (b) history.replaceState(null, "", "#decidir/" + b.dataset.p), mostrarPerfil(b.dataset.p); });
+$("#panelDecidir").addEventListener("click", e => { const b = e.target.closest("[data-ir]"); if (b) irABarrio(+b.dataset.ir); });
+$("#r-decidir").textContent = "Elige qué quieres hacer. Cada perfil cruza las mismas fuentes del tablero con una regla escrita a la vista, y te dice también lo que no sabe.";
+
+/* ================= COMPARAR: ciudades, distritos y barrios ================= */
+const RIVALES = [["tampa", "Tampa"], ["miami", "Miami"], ["jacksonville", "Jacksonville"], ["florida", "Florida"], ["eeuu", "EE. UU."]];
+const CONDADO_RIVAL = {orlando: "orange", tampa: "hillsborough", miami: "miami_dade", jacksonville: "duval", florida: "florida"};
+const ultDe = (tema, k) => { const s_ = S(tema, k); return s_.length ? ult(s_)[1] : null; };
+const enMes = (tema, k, mes) => { const s_ = S(tema, k); const p = s_.find(x => x[0] === mes); return p ? p[1] : null; };
+const sufC = c => c === "orlando" ? "orlando" : c;
+const FILAS_C = [
+  {n: "Desempleo", ambito: "área metropolitana", dir: -1, f: v => nf(v, 1) + NB + "%", v: c => enMes("economia", `desempleo_${c}`, des.vigencia), fuente: "fred_laus", vig: des.vigencia},
+  {n: "Salario por hora, sector privado", ambito: "área metropolitana", dir: 1, f: v => "US$" + NB + nf(v, 2), v: c => ultDe("economia", `salario_hora_${c}`), fuente: "fred_salarios", vig: sal.vigencia},
+  {n: "Avisos de empleo (feb 2020 = 100)", ambito: "área metropolitana", dir: 1, f: v => nf(v, 1), v: c => c === "orlando" ? enMes("empleo", "indice_mensual", empU) : enMes("empleo", `indice_mensual_${c}`, empU), fuente: "indeed_hiring_lab", vig: empU},
+  {n: "Ingreso mediano de los hogares", ambito: "ciudad", dir: 1, f: usdF, v: c => acsC("ingreso_mediano")[c], fuente: "censo_acs", vig: VIG_CEN},
+  {n: "Ingreso por persona", ambito: "condado", dir: 1, f: usdF, v: c => CONDADO_RIVAL[c] ? ultDe("gente", `ingreso_por_persona_${CONDADO_RIVAL[c]}`) : null, fuente: "fred_bea", vig: ppc.vigencia},
+  {n: "Personas en pobreza", ambito: "ciudad", dir: -1, f: pctF, v: c => acsC("pct_pobreza")[c], fuente: "censo_acs", vig: VIG_CEN},
+  {n: "Arriendo típico hoy", ambito: "área metropolitana", dir: -1, f: usdF, v: c => ["florida"].includes(c) ? null : ultDe("vivienda", `arriendo_tipico_${c}`), fuente: "zillow_research", vig: zori.vigencia},
+  {n: "Carga de arriendo (30 % o más del ingreso)", ambito: "ciudad", dir: -1, f: pctF, v: c => acsC("pct_carga_arriendo")[c], fuente: "censo_acs", vig: VIG_CEN},
+  {n: "Valor típico de vivienda", ambito: "área metropolitana", dir: 0, f: usdF, v: c => ["florida"].includes(c) ? null : ultDe("vivienda", `valor_tipico_${c}`), fuente: "zillow_research", vig: zori.vigencia},
+  {n: "Años de ingreso para comprar", ambito: "área y condado", dir: -1, f: v => nf(v, 1), v: c => CONDADO_DE[c] ? aniosIngreso(c) : null, fuente: "zillow_research", vig: zori.vigencia},
+  {n: "Rentabilidad bruta del arriendo", ambito: "área metropolitana", dir: 0, f: pctF, v: c => ["florida"].includes(c) ? null : rentab(c), fuente: "zillow_research", vig: zori.vigencia},
+  {n: "Días para vender una vivienda", ambito: "área metropolitana", dir: 0, f: v => nf(v) + NB + "días", v: c => SM[c] ? SM[c].dias : null, fuente: "fred_realtor", vig: SM.orlando.mes},
+  {n: "Minutos de viaje al trabajo", ambito: "ciudad", dir: -1, f: v => nf(v, 1), v: c => acsC("minutos_al_trabajo")[c], fuente: "censo_acs", vig: VIG_CEN},
+  {n: "Con título universitario", ambito: "ciudad", dir: 1, f: pctF, v: c => acsC("pct_universitarios")[c], fuente: "censo_acs", vig: VIG_CEN},
+  {n: "Hogares sin carro", ambito: "ciudad", dir: 0, f: pctF, v: c => acsC("pct_sin_carro")[c], fuente: "censo_acs", vig: VIG_CEN},
+  {n: "Hablan español en casa", ambito: "ciudad", dir: 0, f: pctF, v: c => acsC("pct_espanol")[c], fuente: "censo_acs", vig: VIG_CEN},
+  {n: "Edad mediana", ambito: "ciudad", dir: 0, f: v => nf(v, 1), v: c => acsC("edad_mediana")[c], fuente: "censo_acs", vig: VIG_CEN},
+  {n: "Crecimiento de la población en 10 años", ambito: "condado", dir: 0, f: v => pct(v, 1), v: c => CONDADO_RIVAL[c] ? Object.fromEntries(S("gente", "crecimiento_10_anios_condados"))[CONDADO_RIVAL[c]] : null, fuente: "fred_poblacion", vig: pobC.vigencia},
+  {n: "Peso del ocio y la hotelería en el empleo", ambito: "área metropolitana", dir: 0, f: pctF, v: c => c === "orlando" ? ocUlt.orlando : ocUlt[c] ?? null, fuente: "fred_ces", vig: ocio.vigencia},
+  {n: "Visitas en Wikipedia en inglés (12 meses)", ambito: "artículo de la ciudad", dir: 1, f: v => nf(v), v: c => ["florida", "eeuu"].includes(c) ? null : S("escucha", `vistas_ingles_${c}`).slice(-12).reduce((a, p) => a + p[1], 0), fuente: "wikimedia_pageviews", vig: ven.vigencia},
+];
+let rival = "tampa", modoComp = "ciudades", selComp = [];
+function compCiudades(el) {
+  const filas = FILAS_C.map(f => ({...f, a: f.v("orlando"), b: f.v(rival)})).filter(f => f.a != null && f.b != null);
+  const dirig = filas.filter(f => f.dir), gana = dirig.filter(f => Math.abs(f.a / f.b - 1) >= .02 && (f.dir > 0 ? f.a > f.b : f.a < f.b)), pierde = dirig.filter(f => Math.abs(f.a / f.b - 1) >= .02 && !(f.dir > 0 ? f.a > f.b : f.a < f.b));
+  const nomR = RIVALES.find(r => r[0] === rival)[1];
+  $("#r-comparar").textContent = nb(`Orlando contra ${nomR}: mejor en ${gana.length} y peor en ${pierde.length} de ${dirig.length} medidas donde «mejor» tiene sentido; ${dirig.length - gana.length - pierde.length} casi empatan (menos de 2 % de diferencia).`);
+  el.innerHTML = `<div class="barra-graf"><div class="seg" id="segRival" role="group" aria-label="Contra quién">${RIVALES.map(([k, n]) => `<button type="button" data-r="${k}" aria-pressed="${k === rival}">${n}</button>`).join("")}</div>
+      <span class="leyenda-sel"><span><i style="background:var(--accent)"></i>Orlando</span><span><i style="background:var(--peer)"></i>${nomR}</span></span></div>
+    <div class="marcador card" style="padding:16px"><span class="big" style="color:var(--good)">${gana.length}</span> mejor · <span class="big" style="color:var(--bad)">${pierde.length}</span> peor · <span class="big" style="color:var(--muted)">${dirig.length - gana.length - pierde.length}</span> empate <span class="peq" style="font:400 .9rem var(--font-body)">y ${filas.length - dirig.length} medidas que describen sin juzgar</span></div>
+    <div class="card tabla-wrap"><table class="tabla-comp"><thead><tr><th>Medida</th><th class="n">Orlando</th><th class="n">${nomR}</th><th></th><th>¿Quién sale mejor?</th></tr></thead><tbody>
+    ${filas.map(f => { const max = Math.max(f.a, f.b) || 1, d = f.a / f.b - 1, emp_ = Math.abs(d) < .02, mejor = f.dir > 0 ? f.a > f.b : f.a < f.b;
+      return `<tr><td class="med">${esc(f.n)}<small>${esc(f.ambito)} · ${esc(fVig(String(f.vig)))} ${chip(f.fuente, "", f.vig)}</small></td><td class="v" data-l="Orlando">${f.f(f.a)}</td><td class="v" data-l="${esc(nomR)}" style="color:var(--ink-2)">${f.f(f.b)}</td>
+        <td class="barra"><div class="duo"><i style="width:${f.a / max * 100}%;background:var(--accent)"></i><i style="width:${f.b / max * 100}%;background:var(--peer)"></i></div></td>
+        <td class="gana">${!f.dir ? '<span class="igual">describe</span>' : emp_ ? '<span class="igual">empate</span>' : mejor ? '<span class="si">Orlando</span>' : `<span class="no">${nomR}</span>`}</td></tr>`; }).join("")}
+    </tbody></table></div>
+    <div class="nota"><svg class="i"><use href="#i-info"/></svg><p><b>Cuidado con el ámbito.</b> Algunas medidas son de la ciudad (censo), otras del área metropolitana (empleo, vivienda) y otras del condado: cada fila lo dice. «Mejor» es una lectura nuestra (por ejemplo, menos desempleo es mejor); donde no hay una lectura obvia, la fila solo describe.</p></div>`;
+  $("#segRival").onclick = e => { const b = e.target.closest("button"); if (b) { rival = b.dataset.r; compCiudades(el); } };
+}
+const COLS_D = [["pob", "Habitantes", v => nf(v), 0], ["crec", "Crecimiento 2045", v => crecF(v), 0], ["seg", `Casos policía / 1.000 hab.`, v => nf(v, 1), -1],
+  ["queja", "Quejas / 1.000 hab.", v => nf(v, 1), -1], ["ingreso", "Ingreso (aprox.)", usdF, 1], ["carga", "Carga de arriendo", v => nf(v, 0) + NB + "%", -1],
+  ["sinCarro", "Sin carro", v => nf(v, 1) + NB + "%", 0], ["parques", "Parques / 10.000 hab.", v => nf(v, 1), 1], ["rInund", "Riesgo inundación", v => nf(v, 0), -1],
+  ["abiertas", "Solicitudes abiertas", v => nf(v), 0], ["alertas", "Alertas", v => nf(v), -1]];
+function filaDistrito(lista) {
+  const a = agregado(lista);
+  return {pob: a.pob, crec: (a.pob45 / a.pob17 - 1) * 100, seg: a.delitos / a.pob * 1000, queja: a.quejas / a.pob * 1000, ingreso: a.ingreso, carga: a.carga, sinCarro: a.sinCarro,
+    parques: a.parques / a.pob * 10000, rInund: a.rInund, abiertas: a.abiertas, alertas: alertasDe(lista).reduce((s, r) => s + r.barrios.length, 0)};
+}
+function compDistritos(el) {
+  const filas = DISTRITOS.map(d => [d, filaDistrito(B.filter(b => String(b.distrito) === d))]), ciudad = filaDistrito(B);
+  $("#r-comparar").textContent = "Los seis distritos de comisionado lado a lado. Verde: mejor que los otros distritos en esa columna; rojo: peor. Donde no hay mejor ni peor, el azul solo dice más alto. Toca un distrito para ver sus alertas.";
+  const color = (k, v, dir) => { if (v == null) return "transparent"; const vals = filas.map(f => f[1][k]).filter(x => x != null).sort((a, b) => a - b), pos = vals.indexOf(v) / Math.max(1, vals.length - 1);
+    if (!dir) return `color-mix(in srgb, var(--seq-${1 + Math.round(pos * 4)}) 50%, transparent)`;
+    const bien = dir > 0 ? pos : 1 - pos, fuerza = Math.round(Math.abs(bien - .5) * 2 * 38);
+    return fuerza < 8 ? "transparent" : `color-mix(in srgb, ${bien > .5 ? "var(--good)" : "var(--bad)"} ${fuerza}%, transparent)`; };
+  el.innerHTML = `<div class="card tabla-wrap"><table class="heat"><thead><tr><th>Distrito</th>${COLS_D.map(c => `<th class="n">${c[1]}</th>`).join("")}</tr></thead><tbody>
+    ${filas.map(([d, f]) => `<tr><td><button type="button" class="btn" data-d="${d}" aria-label="Distrito ${d}: ver sus alertas">D${d}</button></td>${COLS_D.map(([k, , fmt, dir]) => `<td class="v" style="background:${color(k, f[k], dir)}">${f[k] == null ? "—" : fmt(f[k])}</td>`).join("")}</tr>`).join("")}
+    <tr style="font-weight:700"><td>Toda la ciudad</td>${COLS_D.map(([k, , fmt]) => `<td class="v">${ciudad[k] == null ? "—" : fmt(ciudad[k])}</td>`).join("")}</tr></tbody></table></div>
+    <div class="nota"><svg class="i"><use href="#i-info"/></svg><p>Cada barrio se asigna al distrito que contiene su centro (derivado). Habitantes, ingreso, carga de arriendo y hogares sin carro son estimaciones del censo ${VIG_CEN.replace("-", "–")} por barrio; casos de ${U_DEL}; crecimiento según la proyección de la ciudad a 2045. ${chip("orlando_distritos", "", L.territorio.probado)}</p></div>`;
+  el.querySelectorAll("[data-d]").forEach(b => b.onclick = () => { stGob.d = b.dataset.d; location.hash = "decidir/gobernar"; });
+}
+const GRUPOS_COMP = GRUPOS_FICHA.filter(g => g[0] !== "Índice");
+const compDefecto = () => [...new Set([B.reduce((a, b) => (b.pob || 0) > (a.pob || 0) ? b : a)._i, IDX.get(norm("Central Business District")) ?? 0, IDX.get(norm("Lake Nona South")) ?? 1])];
+function compBarrios(el) {
+  if (!selComp.length) selComp = compDefecto();
+  const colores = ["var(--accent)", "var(--sun)", "var(--c2)"];
+  $("#r-comparar").textContent = "Elige hasta tres barrios. Cada barra se mide contra el barrio más alto de la ciudad en esa medida; la raya gris es la mediana de los 125 barrios.";
+  const sel = selComp.map(i => B[i]);
+  el.innerHTML = `<div class="lado-a-lado"><div class="card panel">
+      <div class="selector-b">${[0, 1, 2].map(k => `<label class="sr" for="cb${k}">Barrio ${k + 1}</label><select class="sel" id="cb${k}"><option value="">— ninguno —</option>${B.map((b, i) => `<option value="${i}" ${selComp[k] === i ? "selected" : ""}>${esc(b.nombre)}</option>`).join("")}</select>`).join("")}</div>
+      <div class="fila-b cab" style="--n:${sel.length}"><span>Medida</span>${sel.map((b, k) => `<span style="color:${colores[k]}">${esc(b.nombre)}</span>`).join("")}</div>
+      ${GRUPOS_COMP.map(([t, ks]) => `<div class="grupo-med"><h4>${esc(t)}</h4>${ks.map(k => { const met = METRICAS[k], max = Math.max(...B.map(b => met.v(b) ?? 0), 1), med = MEDIANA[k];
+        return `<div class="fila-b" style="--n:${sel.length}"><span>${esc(met.corto)}</span>${sel.map((b, j) => { const v = met.v(b); return `<span class="val"><b>${vtxt(k, v)}</b><span>${v != null ? `<i style="width:${Math.max(0, v) / max * 100}%;background:${colores[j]}"></i>` : ""}${med != null ? `<u style="left:${Math.max(0, med) / max * 100}%"></u>` : ""}</span></span>`; }).join("")}</div>`; }).join("")}</div>`).join("")}
+    </div>
+    <div class="card panel"><h3>Dónde quedan</h3><svg class="svgmapa" id="mapaComp" role="img" aria-label="Mapa de los barrios comparados"></svg>
+      <p class="peq">Los barrios comparados, en su color. Toca uno en el mapa para cambiar el primero.</p>
+      <div class="limites"><b>Ojo al comparar</b><ul><li>Población, ingreso y arriendo son estimaciones del censo por barrio (${VIG_CEN.replace("-", "–")}).</li><li>Un barrio pequeño puede tener pocos casos y aun así una tasa alta.</li><li>«—» es sin dato publicable: menos de 5 casos o menos de ${MIN_HAB} habitantes.</li></ul></div></div></div>`;
+  const svg = $("#mapaComp"); svg.setAttribute("viewBox", `0 0 ${M.ancho} ${M.alto}`);
+  svg.innerHTML = M.barrios.map((b, i) => { const k = selComp.indexOf(i); return `<path class="b" data-i="${i}" d="${b.d}" style="fill:${k >= 0 ? colores[k] : "var(--surface-2)"}"/>`; }).join("") + `<path class="lago" d="${M.lagos}"/><path class="lim" d="${M.limite}"/>`;
+  svg.onclick = e => { const p = e.target.closest(".b"); if (p) { selComp[0] = +p.dataset.i; compBarrios(el); } };
+  svg.onpointermove = e => { const p = e.target.closest(".b"); if (p) mostrarGlobo(`<b>${esc(B[+p.dataset.i].nombre)}</b>`, e.clientX, e.clientY); else ocultarGlobo(); };
+  svg.onpointerleave = ocultarGlobo;
+  [0, 1, 2].forEach(k => $("#cb" + k).onchange = e => { const v = e.target.value; if (v === "") selComp.splice(k, 1); else selComp[k] = +v; selComp = selComp.filter(x => x != null); compBarrios(el); });
+}
+function mostrarComparar(m, extra) {
+  modoComp = ["ciudades", "distritos", "barrios"].includes(m) ? m : "ciudades";
+  if (modoComp === "barrios" && extra != null && B[+extra]) { selComp = [+extra, ...(selComp.length > 1 ? selComp : compDefecto()).filter(i => i !== +extra)].slice(0, 3); }
+  $$("#modoComparar button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === modoComp));
+  ({ciudades: compCiudades, distritos: compDistritos, barrios: compBarrios})[modoComp]($("#panelComparar"));
+}
+$("#modoComparar").addEventListener("click", e => { const b = e.target.closest("button"); if (b) location.hash = "comparar/" + b.dataset.m; });
+
+// Portada: una tarjeta por perfil con su dato principal
+const _emp0 = evaluarEmprender(), _viv0 = evaluarVivir(), _al0 = alertasDe(B);
+const fraseDecidir = () => nb(`para un restaurante, el barrio que mejor encaja con las prioridades por defecto es ${B[_emp0.lista[0].i].nombre}; con el arriendo típico de ${usd(ZORI_HOY)} caben ${_viv0.caben.length} barrios; el mercado de vivienda está «${SM.orlando.veredicto.toLowerCase()}» y hay ${_al0.reduce((s_, r) => s_ + r.barrios.length, 0)} alertas de barrio con reglas escritas.`);
+$("#perfilesInicio").innerHTML = [
+  ["emprender", "tienda", "Emprender", "Dónde abrir un negocio según la gente cerca, la competencia, el ingreso y la seguridad.", `${B[_emp0.lista[0].i].nombre}<small>encaja mejor para un restaurante (puedes cambiar el negocio y las prioridades)</small>`],
+  ["vivir", "casa", "Vivir", "Qué barrios caben en tu arriendo y cuáles encajan con lo que te importa.", `${_viv0.caben.length} barrios<small>caben en ${usd(ZORI_HOY)} al mes, el arriendo típico de hoy</small>`],
+  ["invertir", "llave", "Comprar o invertir", "Si el mercado favorece a quien compra, cuánto rinde arrendar y qué barrios mirar.", `${SM.orlando.veredicto}<small>${SM.orlando.n} de 4 señales a favor de quien compra · ${fMes(SM.orlando.mes, true)}</small>`],
+  ["gobernar", "capitolio", "Gobernar", "Qué atender primero en cada distrito, con alertas que siguen reglas escritas.", `${_al0.reduce((s_, r) => s_ + r.barrios.length, 0)} alertas<small>en ${new Set(_al0.flatMap(r => r.barrios.map(x => x[0]))).size} barrios, ${_al0.length} tipos de problema</small>`],
+].map(([k, icono, n, d, dato]) => `<a class="perfil-card" href="#decidir/${k}"><span class="ic">${ic(icono)}</span><b>${n}</b><p>${d}</p><span class="dato">${dato}</span></a>`).join("");
+
 /* ================= MODO PRESENTACIÓN ================= */
 const LAMINAS = [
-  () => ({html: `<div class="contenido dos"><div style="display:grid;gap:18px"><p class="eyebrow">Orlando, Florida · Taller de datos · EAFIT</p><p class="q">Cerebro Orlando</p><p class="lead">Un sistema de información para el equipo de planeación de la ciudad: seis preguntas respondidas con datos abiertos, cada cifra con su fuente, su vigencia y su fecha de prueba.</p><p class="peq">Juan Esteban Alzate · Nicolás Saldarriaga · Mateo Villada</p></div>
-      <ol class="ranking" style="font-size:1.05rem">${["¿Cuánta gente vive aquí?", "¿Cómo va el empleo y cuánto cuesta vivir aquí?", "¿Dónde se construye?", "¿Qué pasa con la seguridad?", "¿Cuánto pesa el turismo?", "¿Cómo está cambiando el clima?"].map((q, k) => `<li><div class="fila"><span class="pos">${k + 1}</span><span class="nom" style="white-space:normal">${q}</span><span></span></div></li>`).join("")}</ol></div>`}),
+  () => ({html: `<div class="contenido dos"><div style="display:grid;gap:18px"><p class="eyebrow">Orlando, Florida · Taller de datos · EAFIT</p><p class="q">Cerebro Orlando</p><p class="lead">Un sistema de información para el equipo de planeación de la ciudad: seis preguntas respondidas con datos abiertos, cuatro perfiles para decidir y comparaciones contra ciudades, distritos y barrios. Cada cifra con su fuente, su vigencia y su fecha de prueba.</p><p class="peq">Juan Esteban Alzate · Nicolás Saldarriaga · Mateo Villada</p></div>
+      <ol class="ranking" style="font-size:1.05rem">${["¿Cuánta gente vive aquí?", "¿Cómo va el empleo y cuánto cuesta vivir aquí?", "¿Dónde se construye?", "¿Qué pasa con la seguridad?", "¿Cuánto pesa el turismo?", "¿Cómo está cambiando el clima?", "¿Qué decido con esto?", "¿Contra quién nos medimos?"].map((q, k) => `<li><div class="fila"><span class="pos">${k + 1}</span><span class="nom" style="white-space:normal">${q}</span><span></span></div></li>`).join("")}</ol></div>`}),
   () => ({html: `<div class="contenido dos"><div style="display:grid;gap:14px"><p class="eyebrow">1 · Gente</p><p class="q">¿Cuánta gente vive aquí?</p><p class="grande">${millones(pobC.valor).replace(NB + "millones", "")} <span style="font-size:.35em">millones</span></p><p class="lead">${esc(fraseGente)}</p>${chip("fred_poblacion", "poblacion_condado_ultimo_anio", pobC.vigencia)}</div><div style="display:grid;gap:8px;align-content:center"><p class="peq"><b style="color:var(--ink)">Ingreso mediano de los hogares, frente a condados parecidos</b> (dólares al año)</p><div class="chart" id="pg1"></div></div></div>`,
     despues: () => lineas($("#pg1"), {series: seriesPares("ingreso_mediano", "2005"), alto: 340, fmtX: s => s, fmtY: usd, fmtTick: v => nf(v / 1000) + " mil", etiquetas: true, aria: "Ingreso mediano por condado"})}),
   () => ({html: `<div class="contenido dos"><div style="display:grid;gap:14px"><p class="eyebrow">2 · Economía y vivienda</p><p class="q">¿Cómo va el empleo y cuánto cuesta vivir aquí?</p><p class="grande">${nf(des.valor, 1)} %</p><p class="lead">${esc(fraseDes)} ${esc(fraseViv.split(". ").slice(-1)[0])}</p>${chip("fred_laus", "desempleo_ultimo_mes", des.vigencia)}</div><div style="display:grid;gap:8px;align-content:center"><p class="peq"><b style="color:var(--ink)">Desempleo de Orlando frente a sus pares</b> (%, desde 2016)</p><div class="chart" id="pg2"></div></div></div>`,
@@ -1061,6 +1707,10 @@ const LAMINAS = [
   () => ({html: `<div class="contenido dos"><div style="display:grid;gap:14px"><p class="eyebrow">5 · Turismo</p><p class="q">¿Cuánto pesa el turismo?</p><p class="grande">${nf(ocio.valor, 1)} %</p><p class="lead">${esc(fraseTur)}</p>${chip("fred_ces", "participacion_ocio_ultimo_mes", ocio.vigencia)}</div><div style="display:grid;gap:8px;align-content:center"><p class="peq"><b style="color:var(--ink)">Empleos en ocio y hotelería en el área</b> (miles)</p><div class="chart" id="pg5"></div></div></div>`,
     despues: () => lineas($("#pg5"), {series: [{nombre: "Ocio", puntos: ocioS, color: "var(--accent)"}], alto: 340, fmtX: s => fMes(s, true), fmtY: v => nf(v, 1) + " mil empleos", area: true, cero: true, notas: [{x: pandO[0], texto: "Pandemia", pos: "abajo"}], aria: "Empleo en ocio y hotelería"})}),
   () => ({html: `<div class="contenido"><div style="display:grid;gap:14px"><p class="eyebrow">6 · Clima</p><p class="q">¿Cómo está cambiando el clima?</p><p class="grande">+${nf(difCal.valor, 1)} °F</p><p class="lead">${esc(fraseClima)}</p>${franjasSVG(150)}<p class="vig">Cada franja es un año, de ${temps[0][0]} a ${ult(temps)[0]}. Azul: más frío que el promedio; rojo: más caliente.</p>${chip("noaa_gsoy", "temperatura_anual", ult(temps)[0])}</div></div>`}),
+  () => ({html: `<div class="contenido"><div style="display:grid;gap:16px"><p class="eyebrow">7 · Decidir</p><p class="q">Los mismos datos, cuatro decisiones</p><p class="lead">Cada perfil cruza las fuentes con una regla escrita a la vista y dice también lo que no sabe. No es asesoría: ordena dónde mirar primero.</p><div class="perfiles-inicio">${$("#perfilesInicio").innerHTML}</div></div></div>`}),
+  () => { const f = FILAS_C.map(x => ({...x, a: x.v("orlando"), b: x.v("tampa")})).filter(x => x.a != null && x.b != null && x.dir), g = f.filter(x => Math.abs(x.a / x.b - 1) >= .02 && (x.dir > 0 ? x.a > x.b : x.a < x.b)), p = f.filter(x => Math.abs(x.a / x.b - 1) >= .02 && !(x.dir > 0 ? x.a > x.b : x.a < x.b));
+    return {html: `<div class="contenido dos"><div style="display:grid;gap:14px"><p class="eyebrow">8 · Comparar</p><p class="q">Orlando contra Tampa</p><p class="grande">${g.length} <span style="font-size:.35em">mejor</span> · ${p.length} <span style="font-size:.35em">peor</span></p><p class="lead">De ${f.length} medidas donde «mejor» tiene sentido. En el tablero se puede cambiar el rival (Miami, Jacksonville, Florida, EE. UU.), comparar los 6 distritos o hasta 3 barrios.</p></div>
+      <div class="card tabla-wrap"><table class="tabla-comp"><thead><tr><th>Medida</th><th class="n">Orlando</th><th class="n">Tampa</th><th>Mejor</th></tr></thead><tbody>${f.slice(0, 9).map(x => { const m = x.dir > 0 ? x.a > x.b : x.a < x.b, e = Math.abs(x.a / x.b - 1) < .02; return `<tr><td class="med">${esc(x.n)}<small>${esc(x.ambito)}</small></td><td class="v">${x.f(x.a)}</td><td class="v" style="color:var(--ink-2)">${x.f(x.b)}</td><td class="gana">${e ? '<span class="igual">empate</span>' : m ? '<span class="si">Orlando</span>' : '<span class="no">Tampa</span>'}</td></tr>`; }).join("")}</tbody></table></div></div>`}; },
   () => ({html: `<div class="contenido"><div style="display:grid;gap:16px"><p class="eyebrow">Lo que el cerebro no sabe, lo dice</p><p class="q">Preguntas sin respuesta abierta</p><div class="pendientes">${PENDIENTES.map(x => `<div class="pend">${ic("hueco")}<b>${esc(x.t)}</b><p>${esc(x.p)}</p></div>`).join("")}</div></div></div>`}),
   () => ({html: `<div class="contenido dos"><div style="display:grid;gap:14px"><p class="eyebrow">De dónde sale todo</p><p class="q">${D.catalogo.length} fuentes revisadas, ${cuenta.integrado} en uso</p><p class="lead">${verOk ? `${ver.pasan} comprobaciones automáticas antes de publicar, 0 fallos.` : ""} Si una cifra no tiene fuente, vigencia y fecha de prueba, no se publica. Lo que trae personas entra solo como conteos por barrio, con umbral.</p></div><div class="card panel"><div class="embudo">${$("#embudo").innerHTML}</div><div class="ley-embudo">${$("#leyEmbudo").innerHTML}</div><div class="barras-simples">${$("#motivos").innerHTML}</div></div></div>`}),
 ];
@@ -1082,9 +1732,12 @@ $("#pres-puntos").addEventListener("click", e => { const b = e.target.closest("b
 addEventListener("keydown", e => { if ($("#presentacion").hidden) return; if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); mostrarLamina(lam + 1); } else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); mostrarLamina(lam - 1); } else if (e.key === "Escape") cerrarPresentacion(); });
 
 /* ================= NAVEGACIÓN Y TEMA ================= */
-const VISTAS = ["inicio", "gente", "economia", "barrios", "seguridad", "turismo", "clima", "fuentes"];
-function mostrar(nombre, desplazar = true) {
+const VISTAS = ["inicio", "decidir", "comparar", "gente", "economia", "barrios", "seguridad", "turismo", "clima", "fuentes"];
+function mostrar(ruta, desplazar = true) {
+  let [nombre, sub, extra] = decodeURIComponent(ruta || "").split("/");
   if (!VISTAS.includes(nombre)) nombre = "inicio";
+  if (nombre === "decidir") mostrarPerfil(sub || perfil);
+  if (nombre === "comparar") mostrarComparar(sub || modoComp, extra);
   $$(".vista").forEach(s => s.hidden = s.dataset.vista !== nombre);
   $$("nav.preguntas a").forEach(a => a.dataset.v === nombre ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
   const act = $(`nav.preguntas a[data-v="${nombre}"]`); if (act && act.scrollIntoView) act.scrollIntoView({block: "nearest", inline: "center"});

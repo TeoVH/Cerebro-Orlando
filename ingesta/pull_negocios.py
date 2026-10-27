@@ -25,7 +25,12 @@ CATEGORIA_ES = {"PROFES": "Servicios profesionales", "SERREP": "Servicios y repa
                 "LAWNMT": "Jardinería", "DISTRI": "Distribución", "AUTOMO": "Automotor", "SCHOOL": "Escuelas",
                 "LAUNDR": "Lavanderías", "PHOTOG": "Fotografía", "VENDNG": "Máquinas expendedoras", "TRAVEL": "Agencias de viaje",
                 "CHILDC": "Cuidado infantil", "AMUSEM": "Entretenimiento", "CATERE": "Banquetes", "ARTIST": "Artistas",
-                "ADVERT": "Publicidad", "TOURSV": "Servicios turísticos"}
+                "ADVERT": "Publicidad", "TOURSV": "Servicios turísticos", "INSTRU": "Instructores y academias",
+                "MAILOD": "Ventas por correo o internet", "SERSTA": "Estaciones de servicio", "HELSPA": "Spas y gimnasios",
+                "WRECKR": "Grúas", "DETECT": "Seguridad privada", "LANDSC": "Paisajismo", "MANICU": "Manicura",
+                "DANCEH": "Salones de baile", "DECORA": "Decoración", "LABORT": "Laboratorios"}
+# v3: categorías que la sección «Decidir» compara por barrio (demanda contra competencia)
+GIROS = {"comercio": "MERCNT", "belleza": "PARLOR", "profesionales": "PROFES", "cuidado_infantil": "CHILDC", "automotor": "AUTOMO"}
 
 
 def soql(**partes):
@@ -52,6 +57,10 @@ actualizado = datetime.datetime.fromtimestamp(ficha["rowsUpdatedAt"], datetime.t
 total = por_barrio(ABIERTO)
 rest = por_barrio(ABIERTO + " AND license_category = 'RESTAU'")
 hosp = por_barrio(ABIERTO + " AND license_category = 'LODGES'")
+giros = {g: por_barrio(ABIERTO + f" AND license_category = '{c}'") for g, c in GIROS.items()}
+# Negocios que abrieron el último año completo, por barrio (vigentes o no): dónde se está abriendo negocio
+ult_anio = datetime.date.today().year - 1
+nuevos = por_barrio(f"business_open_date >= '{ult_anio}-01-01T00:00:00' AND business_open_date < '{ult_anio + 1}-01-01T00:00:00'")
 cats = get_json(soql(select="license_category, count(*) as n", where=ABIERTO, group="license_category", order="n DESC"))
 aperturas = get_json(soql(select="date_extract_y(business_open_date) as anio, count(*) as n",
                           where="business_open_date IS NOT NULL", group="anio", order="anio"))
@@ -61,7 +70,9 @@ series = {}
 supr = {}
 for nombre, conteo, unidad in (("negocios_barrio", total, "licencias de negocio vigentes"),
                                ("restaurantes_barrio", rest, "licencias de restaurante vigentes"),
-                               ("hospedajes_barrio", hosp, "licencias de hospedaje vigentes")):
+                               ("hospedajes_barrio", hosp, "licencias de hospedaje vigentes"),
+                               (f"aperturas_barrio_{ult_anio}", nuevos, f"licencias con fecha de apertura en {ult_anio}"),
+                               *((f"{g}_barrio", giros[g], f"licencias vigentes de la categoría {CATEGORIA_ES[c]}") for g, c in GIROS.items())):
     mostrados = {b: n for b, n in conteo.items() if b and n >= UMBRAL}
     supr[nombre] = sum(1 for b, n in conteo.items() if b and n < UMBRAL)
     series[nombre] = {"unidad": unidad, "fuente": F, "puntos": sorted(([b, n] for b, n in mostrados.items()), key=lambda p: -p[1])}

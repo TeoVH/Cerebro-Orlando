@@ -106,7 +106,7 @@
   "licencia": "Public Domain: Citation Requested",
   "personas": "no",
   "proteccion": "abierto",
-  "uso": "Cuántos empleos hay y cuánto pesa el turismo en ellos (temas economía y turismo)",
+  "uso": "Empleo total del área y empleo en ocio y hotelería de Orlando y sus pares (temas economía y turismo)",
   "nota": "Series ORLA712NA y ORLA712LEIH, en miles y ajustadas por estacionalidad. Licencia leída en la ficha de cada serie en FRED el 2026-10-20. Fuente original: U.S. Bureau of Labor Statistics, vía FRED."
  },
  {
@@ -128,7 +128,7 @@
   "licencia": "Copyrighted: Citation Required",
   "personas": "no",
   "proteccion": "abierto",
-  "uso": "Cuánto cuesta comprar hoy y qué tan movido está el mercado (tema vivienda)",
+  "uso": "Mercado de vivienda de hoy en Orlando y sus pares: precio de lista, inventario, días en el mercado y rebajas (tema vivienda)",
   "nota": "Series MEDLISPRI36740, ACTLISCOU36740 y MEDDAYONMAR36740, mensuales desde 2016-07. Tienen derechos de autor de Realtor.com y piden cita obligatoria: la vista cita «Realtor.com, Housing Inventory, vía FRED» en el mismo bloque. Licencia leída en la ficha de cada serie en FRED el 2026-10-20."
  },
  {
@@ -229,5 +229,126 @@
   "proteccion": "abierto",
   "uso": "Cómo ha cambiado la temperatura y la lluvia desde 1953 (tema clima histórico)",
   "nota": "Servicio de acceso a datos de NCEI, sin token. Probado el 2026-10-20: 1953 a 2025. Unidades estándar (°F, pulgadas)."
+ },
+ {
+  "id": "censo_acs",
+  "ficha_excel": "F12",
+  "nombre": "American Community Survey 2020-2024 (5 años) por sector censal y por ciudad, vía Census Reporter",
+  "entidad": "US Census Bureau (servido por Census Reporter)",
+  "licencia": "Dominio público (obra del gobierno de EE. UU.)",
+  "personas": "no (tablas agregadas)",
+  "proteccion": "abierto",
+  "uso": "Población, ingreso, arriendo, carga de arriendo, hogares sin carro, idioma y pobreza por barrio (estimados) y por ciudad (tema censo)",
+  "nota": "La API oficial (api.census.gov) exige llave desde 2026 (probado el 2026-10-26: «Missing Key»). Census Reporter sirve las mismas tablas del Census Bureau sin llave. Los barrios son una estimación nuestra: rejilla de 150 m sobre sectores y barrios."
+ },
+ {
+  "id": "censo_tiger",
+  "ficha_excel": "F78",
+  "nombre": "TIGER 2024 · contornos de los sectores censales del condado de Orange, vía Census Reporter",
+  "entidad": "US Census Bureau (servido por Census Reporter)",
+  "licencia": "Dominio público (obra del gobierno de EE. UU.)",
+  "personas": "no",
+  "proteccion": "abierto",
+  "uso": "Repartir las tablas del censo y el índice de riesgo entre los barrios (temas censo y riesgo)",
+  "nota": "Se cruza por GEOID (código FIPS del sector), nunca por nombre."
+ },
+ {
+  "id": "fema_nri",
+  "ficha_excel": "F108",
+  "nombre": "FEMA · National Risk Index por sector censal (servicio de FEMA en ArcGIS Online)",
+  "entidad": "FEMA",
+  "licencia": "Dominio público (obra del gobierno de EE. UU.)",
+  "personas": "no",
+  "proteccion": "abierto",
+  "uso": "Riesgo de huracán, inundación, calor y tornado, pérdida anual esperada y vulnerabilidad social por barrio (tema riesgo)",
+  "nota": "Versión diciembre 2025. Los puntajes son percentiles nacionales de 0 a 100. El servidor de mapas de inundación de FEMA (hazards.fema.gov) no respondió desde el navegador el 2026-10-26; por eso se usa el índice por sector y no los polígonos de zona inundable."
+ },
+ {
+  "id": "orlando_sig",
+  "ficha_excel": "F107",
+  "nombre": "SIG de la Ciudad de Orlando (gis.orlando.gov): parques, colegios, SunRail, ciclovías, proyecciones 2045 y zonas con incentivos",
+  "entidad": "Ciudad de Orlando (colegios: Orange County Public Schools)",
+  "licencia": "no declara",
+  "personas": "no (los colegios traen director y teléfono: no se piden)",
+  "proteccion": "abierto",
+  "uso": "Qué tiene cerca cada barrio y hacia dónde va: parques, colegios, estaciones, ciclovías, población y empleo proyectados a 2045, zonas de oportunidad, Main Street y CRA (temas servicios y planeación)",
+  "nota": "Servidor ArcGIS de la ciudad, carpetas Socrata_OpenData y Epic_Simplify_i3. Los servicios no traen texto de licencia ni de uso."
+ },
+ {
+  "id": "orlando_planeacion",
+  "ficha_excel": "F86",
+  "nombre": "Datos abiertos de Orlando · Planning Applications (bhxy-4rji)",
+  "entidad": "Ciudad de Orlando",
+  "licencia": "no declara",
+  "personas": "la fuente trae el nombre del solicitante y comentarios en texto libre: nunca se descargan",
+  "proteccion": "solo agregados",
+  "uso": "Solicitudes de planeación por barrio, tipo y año: dónde vienen proyectos (tema planeación)",
+  "nota": "Se agrupa en el servidor por barrio, prefijo del número de solicitud (tipo) y año. Barrio-año con menos de 5 no se publica."
+ },
+ {
+  "id": "orlando_anexiones",
+  "ficha_excel": "F96",
+  "nombre": "Datos abiertos de Orlando · Orlando Annexations (jg52-dz4p)",
+  "entidad": "Ciudad de Orlando",
+  "licencia": "no declara",
+  "personas": "no",
+  "proteccion": "abierto",
+  "uso": "Cuánto ha crecido el territorio de la ciudad por anexión, por década (tema planeación)",
+  "nota": "Acres según la descripción legal de cada anexión."
+ },
+ {
+  "id": "fred_salarios",
+  "ficha_excel": "F14",
+  "nombre": "FRED · Salario promedio por hora del sector privado (BLS, CES): Orlando, Tampa, Miami y Jacksonville",
+  "entidad": "Federal Reserve Bank of St. Louis (FRED), con datos de BLS",
+  "licencia": "Public Domain: Citation Requested",
+  "personas": "no",
+  "proteccion": "abierto",
+  "uso": "Cuánto se paga por hora en Orlando frente a sus pares (tema economía)",
+  "nota": "Sin ajuste estacional. Tampa empieza en 2011."
+ },
+ {
+  "id": "fred_bfs",
+  "ficha_excel": "F14",
+  "nombre": "FRED · Solicitudes de nuevos negocios (Census, Business Formation Statistics): Florida y EE. UU.",
+  "entidad": "Federal Reserve Bank of St. Louis (FRED), con datos del Census Bureau",
+  "licencia": "Public Domain: Citation Requested",
+  "personas": "no",
+  "proteccion": "abierto",
+  "uso": "Ánimo de emprender en Florida frente al país (tema economía)",
+  "nota": "No hay serie mensual por condado; es el contexto estatal."
+ },
+ {
+  "id": "fred_bea",
+  "ficha_excel": "F14",
+  "nombre": "FRED · Ingreso personal por habitante (BEA): condados de Orange, Hillsborough, Duval, Miami-Dade y Florida",
+  "entidad": "Federal Reserve Bank of St. Louis (FRED), con datos de BEA",
+  "licencia": "Public Domain: Citation Requested",
+  "personas": "no",
+  "proteccion": "abierto",
+  "uso": "Ingreso por persona frente a condados pares (tema gente)",
+  "nota": "Anual; el último año publicado va un año detrás del ingreso de los hogares."
+ },
+ {
+  "id": "fred_ipc",
+  "ficha_excel": "F14",
+  "nombre": "FRED · Índice de precios al consumidor, región Sur (BLS, CUUR0300SA0)",
+  "entidad": "Federal Reserve Bank of St. Louis (FRED), con datos de BLS",
+  "licencia": "Public Domain: Citation Requested",
+  "personas": "no",
+  "proteccion": "abierto",
+  "uso": "Descontar la inflación del ingreso de los hogares (tema gente)",
+  "nota": "Orlando no tiene IPC propio; el Sur es la región del BLS que lo contiene."
+ },
+ {
+  "id": "zillow_research",
+  "ficha_excel": "F41",
+  "nombre": "Zillow Research · arriendo típico (ZORI) y valor típico de vivienda (ZHVI) por área metropolitana",
+  "entidad": "Zillow",
+  "licencia": "no declara",
+  "personas": "no",
+  "proteccion": "abierto",
+  "uso": "Arriendo y valor de vivienda de Orlando frente a Tampa, Miami, Jacksonville y EE. UU. (tema vivienda)",
+  "nota": "La página de datos (zillow.com/research/data) dice que los archivos son «para usar en sus propios análisis» y no trae texto de licencia; se cita a Zillow junto a cada gráfico."
  }
 ]

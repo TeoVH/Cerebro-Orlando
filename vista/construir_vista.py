@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Construye la vista pública del Cerebro Orlando: vista/index.html, una sola página sin servidor.
 
-Lee:     lago/raw/<tema>/<tema>.json (13 temas), lago/territorio/*.geojson y catalogo/*.json.
+Lee:     lago/raw/<tema>/<tema>.json (17 temas), lago/territorio/*.geojson y catalogo/*.json.
 Escribe: vista/index.html = vista/plantilla.html + estilos.css + app.js + los datos incrustados en un <script type="application/json">.
 
 Uso (solo biblioteca estándar de Python 3.9+):
@@ -19,7 +19,7 @@ import argparse, datetime, json, math, pathlib, subprocess, sys
 RAIZ = pathlib.Path(__file__).resolve().parents[1]
 VISTA = RAIZ / "vista"
 TEMAS = ["gente", "economia", "empleo", "vivienda", "escucha", "permisos", "seguridad", "codigo", "negocios", "turismo",
-         "clima", "clima_historico", "territorio"]
+         "clima", "clima_historico", "territorio", "censo", "riesgo", "servicios", "planeacion"]
 ANCHO = 1000                      # ancho del mapa en unidades de pantalla (viewBox)
 REPO = "https://github.com/NSaldarriagaV/Cerebro-Orlando"
 

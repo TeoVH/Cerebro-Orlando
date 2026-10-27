@@ -128,5 +128,15 @@
   "resultado": "Parcial",
   "fuentes": "F14, F58, F70, F71, F79, F81, F83, F85, F93, F106",
   "aprendizaje": "Agregar en el servidor deja usar fuentes con personas sin bajar a nadie, pero la regla tiene que estar en el verificador, no solo en el script. Un cero en una serie puede ser «no se anotaba»: hay que mirar desde cuándo se llena el campo antes de graficarlo."
+ },
+ {
+  "n": "14",
+  "herramienta": "Claude",
+  "encargo": "v3: más fuentes y datos, comparaciones (ciudades, distritos y barrios) y una vista «Decidir» para emprendedores, residentes, compradores y gobierno, sin perder lo anterior",
+  "respuesta": "Propuso traer el censo por sector y estimar barrios por superficie compartida, el índice de riesgo de FEMA, el SIG de la ciudad (parques, colegios, SunRail, ciclovías, proyección 2045, zonas con incentivos), solicitudes de planeación, Zillow, salarios, solicitudes de negocio e ingreso por persona. Escribió reglas a la vista para cada perfil (percentiles ponderados por prioridades, señales de mercado, alertas por barrio) y un apartado «lo que esto no sabe» en cada uno.",
+  "comprobacion": "verificar.py con reglas nuevas por tema (rangos, umbral solo para fuentes de personas, ningún porcentaje en barrios de menos de 200 habitantes): 0 fallos; probar_verificador.py atrapa un barrio de 80 habitantes que publica un porcentaje. La suma de barrios da 313.636 habitantes frente a 319.758 oficiales (−1,9 %). Errores encontrados al probar: api.census.gov ahora exige llave; «latest» de Census Reporter devolvía la edición de 1 año para ciudades (se forzó la de 5 años); la serie de nombres de CRA rompía el contrato numérico (se quitó); el servidor de zonas inundables de FEMA no respondió y Overpass (OSM) rechazó el navegador (no se saltaron); la IA había fechado la temperatura en UTC (27 oct) cuando en Orlando era 26 oct.",
+  "resultado": "Parcial",
+  "fuentes": "F12, F14, F41, F71, F78, F81, F86, F96, F107, F108",
+  "aprendizaje": "Una estimación por barrio sirve para comparar si se dice cómo se hizo y cuánto se aleja de la cifra oficial. Una recomendación solo es defendible si la regla está escrita a la vista y el usuario puede mover los pesos; y cada perfil tiene que decir lo que no sabe."
  }
 ]

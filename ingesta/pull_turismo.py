@@ -21,6 +21,9 @@ def soql(dataset, **partes):
 
 
 url_f, f = fred(["ORLA712LEIH", "ORLA712NA"], desde="1990-01-01")
+# v3: el mismo cálculo para Tampa, Miami y Jacksonville, para saber si Orlando depende más del turismo que sus pares
+PARES = {"tampa": ("TAMP312LEIH", "TAMP312NA"), "miami": ("MIAM112LEIH", "MIAM112NA"), "jacksonville": ("JACK212LEIH", "JACK212NA")}
+url_fp, fp = fred([i for par in PARES.values() for i in par], desde="1990-01-01")
 ocio = [[mes(d), round(v, 1)] for d, v in f["ORLA712LEIH"]]
 total = dict((mes(d), v) for d, v in f["ORLA712NA"])
 participacion = [[mes(d), round(v / total[mes(d)] * 100, 1)] for d, v in f["ORLA712LEIH"] if mes(d) in total]
@@ -37,7 +40,14 @@ actualizado = datetime.datetime.fromtimestamp(ficha["rowsUpdatedAt"], datetime.t
 series = {"empleo_ocio_hoteleria": {"unidad": "miles de empleos (ajustado por estacionalidad)", "fuente": "fred_ces", "puntos": ocio},
           "participacion_ocio_en_empleo": {"unidad": "% del empleo no agrícola", "fuente": "fred_ces", "puntos": participacion},
           "alquiler_corto_emitidas_por_anio": {"unidad": "licencias emitidas en el año", "fuente": "orlando_alquiler_corto", "puntos": emitidas}}
-cifras = {"empleo_ocio_ultimo_mes": cifra(ocio[-1][1], "miles de empleos", ocio[-1][0], "fred_ces"),
+for c, (ocio_id, total_id) in PARES.items():
+    tot_c = dict((mes(d), v) for d, v in fp[total_id])
+    series[f"participacion_ocio_{c}"] = {"unidad": "% del empleo no agrícola", "fuente": "fred_ces",
+                                         "puntos": [[mes(d), round(v / tot_c[mes(d)] * 100, 1)] for d, v in fp[ocio_id] if mes(d) in tot_c]}
+ult_par = {c: series[f"participacion_ocio_{c}"]["puntos"][-1][1] for c in PARES} | {"orlando": participacion[-1][1]}
+cifras = {"puesto_ocio_entre_pares": cifra(sorted(ult_par, key=lambda c: -ult_par[c]).index("orlando") + 1,
+                                           "puesto entre 4 áreas por peso del ocio en el empleo (1 = el que más depende)", participacion[-1][0], "fred_ces"),
+          "empleo_ocio_ultimo_mes": cifra(ocio[-1][1], "miles de empleos", ocio[-1][0], "fred_ces"),
           "variacion_empleo_ocio_12_meses": cifra(variacion_pct(ocio[-1][1], ocio[-13][1]), "%", ocio[-1][0], "fred_ces"),
           "participacion_ocio_ultimo_mes": cifra(participacion[-1][1], "% del empleo no agrícola", participacion[-1][0], "fred_ces"),
           "alquiler_corto_activas": cifra(por_estado.get("Active", 0), "licencias activas", actualizado, "orlando_alquiler_corto"),

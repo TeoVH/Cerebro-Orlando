@@ -24,9 +24,9 @@ def rango_meses(n):
     return datetime.date(y, m, 1).strftime("%Y%m%d"), hasta.strftime("%Y%m%d")
 
 
-def canonico(titulos):
+def canonico(titulos, lang="es"):
     for t in titulos:
-        r = get_json("https://es.wikipedia.org/api/rest_v1/page/summary/" + urllib.parse.quote(t.replace(" ", "_"), safe="()_,"))
+        r = get_json(f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/" + urllib.parse.quote(t.replace(" ", "_"), safe="()_,"))
         texto = (r.get("description") or "") + " " + (r.get("extract") or "")
         if r.get("type") == "standard" and "Florida" in texto:
             return r["titles"]["canonical"]
@@ -34,8 +34,8 @@ def canonico(titulos):
     raise SystemExit(f"Ningún título candidato de {titulos} es el artículo de la ciudad: elíjanlo a mano.")
 
 
-def vistas(canon):
-    url = ("https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/es.wikipedia/all-access/user/"
+def vistas(canon, lang="es"):
+    url = (f"https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{lang}.wikipedia/all-access/user/"
            f"{urllib.parse.quote(canon, safe='()_,')}/monthly/{desde}/{hasta}")
     return url, [[i["timestamp"][:4] + "-" + i["timestamp"][4:6], i["views"]] for i in get_json(url)["items"]]
 
@@ -46,6 +46,9 @@ desde, hasta = rango_meses(MESES)
 url, puntos = vistas(canon)
 ultimo = puntos[-1]
 pares = {c: vistas(canonico(t))[1] for c, t in PARES.items()}
+# v3: la misma medida en Wikipedia en inglés, que es donde busca la mayoría de los visitantes
+EN = {"orlando": ["Orlando, Florida"], "tampa": ["Tampa, Florida"], "miami": ["Miami"], "jacksonville": ["Jacksonville, Florida"]}
+ingles = {c: vistas(canonico(t, "en"), "en")[1] for c, t in EN.items()}
 
 cifras = {"vistas_ultimo_mes": cifra(ultimo[1], "vistas de personas", ultimo[0], "wikimedia_pageviews")}
 if len(puntos) >= 13:   # mismo mes del año anterior
@@ -58,6 +61,11 @@ for c, pts in pares.items():
 doce = {c: sum(v for _, v in pts[-12:]) for c, pts in list(pares.items()) + [("orlando", puntos)]}
 prom_pares = sum(doce[c] for c in PARES) / len(PARES)
 cifras["atencion_frente_a_pares"] = cifra(round(doce["orlando"] / prom_pares, 2), "veces el promedio de Tampa, Miami y Jacksonville (12 meses)", ultimo[0], "wikimedia_pageviews")
+for c, pts in ingles.items():
+    series[f"vistas_ingles_{c}"] = {"unidad": "vistas de personas (Wikipedia en inglés)", "fuente": "wikimedia_pageviews", "puntos": pts}
+doce_en = {c: sum(v for _, v in pts[-12:]) for c, pts in ingles.items()}
+cifras["vistas_ingles_12_meses"] = cifra(doce_en["orlando"], "vistas de personas en Wikipedia en inglés (12 meses)", ultimo[0], "wikimedia_pageviews")
+cifras["puesto_ingles_entre_pares"] = cifra(sorted(doce_en, key=lambda c: -doce_en[c]).index("orlando") + 1, "puesto entre 4 ciudades en Wikipedia en inglés (12 meses)", ultimo[0], "wikimedia_pageviews")
 cifras["puesto_entre_pares"] = cifra(sorted(doce, key=lambda c: -doce[c]).index("orlando") + 1, "puesto entre 4 ciudades (1 = más vistas en 12 meses)", ultimo[0], "wikimedia_pageviews")
 ruta = escribir_lago("escucha", [fuente_lago("wikimedia_pageviews", url)], cifras, series)
 print(f"Orlando ({canon}): {len(puntos)} meses, último {ultimo[0]} con {ultimo[1]} vistas -> {ruta.name}")

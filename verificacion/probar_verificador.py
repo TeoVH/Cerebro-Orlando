@@ -7,6 +7,7 @@ con cada falla nombrada."""
 import json, os, pathlib, subprocess, sys, tempfile, datetime
 
 VERIFICAR = pathlib.Path(__file__).resolve().parent / "verificar.py"
+CATALOGO = (pathlib.Path(__file__).resolve().parents[1] / "catalogo" / "fuentes_lago.json").read_text(encoding="utf-8")
 HOY = datetime.date.today().isoformat()
 ENV = dict(os.environ, PYTHONIOENCODING="utf-8")
 
@@ -15,6 +16,9 @@ def correr(lago):
     with tempfile.TemporaryDirectory() as t:
         (pathlib.Path(t) / "lago" / "raw" / "prueba").mkdir(parents=True)
         (pathlib.Path(t) / "lago" / "raw" / "prueba" / "prueba.json").write_text(json.dumps(lago, ensure_ascii=False), encoding="utf-8")
+        # el verificador lee del catálogo qué fuentes traen personas («solo agregados»)
+        (pathlib.Path(t) / "catalogo").mkdir()
+        (pathlib.Path(t) / "catalogo" / "fuentes_lago.json").write_text(CATALOGO, encoding="utf-8")
         r = subprocess.run([sys.executable, str(VERIFICAR), "--raiz", t], capture_output=True, text=True, encoding="utf-8", env=ENV)
         return r.returncode, r.stdout
 
@@ -65,5 +69,20 @@ atrapo_bar = s_bar == 1 and any(l.startswith("FAIL") and "ninguna celda por barr
 print("seguridad correcta ->", "PASA" if s_ok == 0 else f"FALLA (código {s_ok})")
 print("seguridad con «Baker Act» ->", "ATRAPADO" if atrapo_cat else "NO LO ATRAPÓ")
 print("seguridad con un barrio de 3 casos ->", "ATRAPADO" if atrapo_bar else "NO LO ATRAPÓ")
-sys.exit(0 if ok and codigo == 1 and len(atrapadas) == len(esperadas) and cod_ok == 0 and atrapo
+# Caso del censo: un barrio con 80 habitantes estimados no puede publicar porcentajes (la estimación no dice nada)
+CE = "censo_acs"
+def lago_censo(pct):
+    c = lambda v, u="personas": {"valor": v, "unidad": u, "vigencia": "2020-2024", "fuente": CE}
+    s = lambda pts, u="%": {"unidad": u, "fuente": CE, "puntos": pts}
+    return {"tema": "censo", "probado": HOY, "fuentes": [dict(fuente, id=CE)],
+            "cifras": {"poblacion_ciudad": c(300000), "diferencia_con_cifra_oficial": c(-2, "%"), "minimo_habitantes_por_barrio": c(200)},
+            "series": {"poblacion_barrio": s([["Barrio A", 5000], ["Barrio B", 80]], "personas"), "pct_sin_carro_barrio": s(pct),
+                       "ingreso_mediano_barrio": s([["Barrio A", 60000]], "dólares"), "ingreso_mediano_ciudades": s([["orlando", 70000]], "dólares"),
+                       "arriendo_mediano_barrio": s([["Barrio A", 1500]], "dólares"), "arriendo_mediano_ciudades": s([["orlando", 1700]], "dólares")}}
+c_ok, _ = correr(lago_censo([["Barrio A", 7.5]]))
+c_mal, sal_c = correr(lago_censo([["Barrio A", 7.5], ["Barrio B", 30.0]]))
+atrapo_censo = c_mal == 1 and any(l.startswith("FAIL") and "mínimo de habitantes" in l for l in sal_c.splitlines())
+print("censo correcto ->", "PASA" if c_ok == 0 else f"FALLA (código {c_ok})")
+print("censo con porcentaje de un barrio de 80 habitantes ->", "ATRAPADO" if atrapo_censo else "NO LO ATRAPÓ")
+sys.exit(0 if ok and codigo == 1 and c_ok == 0 and atrapo_censo and len(atrapadas) == len(esperadas) and cod_ok == 0 and atrapo
          and s_ok == 0 and atrapo_cat and atrapo_bar else 1)
