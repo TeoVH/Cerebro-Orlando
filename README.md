@@ -117,9 +117,9 @@ vivienda, barrios, seguridad, turismo, clima y fuentes.
 - **Comparar:** Orlando contra Tampa, Miami, Jacksonville, Florida o EE. UU. en 20 medidas con su ámbito (ciudad, área o
   condado) y un marcador de mejor/peor; los seis distritos lado a lado (verde mejor, rojo peor); hasta tres barrios con la
   mediana de la ciudad marcada.
-- **Barrios:** mapa 3D (MapLibre GL desde cdnjs, sin teselas ni llaves: solo las capas del lago) con más de 30 lentes en
+- **Barrios:** mapa 3D (MapLibre GL desde cdnjs, sin teselas ni llaves: solo las capas del lago) con 21 lentes en
   seis grupos (qué pasa, quién vive, qué tiene cerca, riesgo, hacia dónde va, índice), total, por km² o por 1.000
-  habitantes, barra de años, buscador, ficha por barrio agrupada y con la mediana de la ciudad, ranking, un **índice de atención** con
+  habitantes, barra de años, buscador, ficha por barrio con 31 medidas agrupadas y la mediana de la ciudad, ranking, un **índice de atención** con
   pesos movibles (y cuántos barrios siguen arriba con cualquier enfoque), dispersión entre dos medidas con ρ de Spearman
   y la tabla completa. Si el navegador no tiene WebGL, el mapa cae a SVG plano.
 - **Gente, economía, turismo y clima** suman ingreso por persona e ingreso real, ciudad contra ciudad con el censo,
