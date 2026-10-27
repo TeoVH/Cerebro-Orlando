@@ -1684,10 +1684,10 @@ $("#modoComparar").addEventListener("click", e => { const b = e.target.closest("
 
 // Portada: una tarjeta por perfil con su dato principal
 const _emp0 = evaluarEmprender(), _viv0 = evaluarVivir(), _al0 = alertasDe(B);
-const fraseDecidir = () => nb(`para un restaurante, el barrio que mejor encaja con las prioridades por defecto es ${B[_emp0.lista[0].i].nombre}; con el arriendo típico de ${usd(ZORI_HOY)} caben ${_viv0.caben.length} barrios; el mercado de vivienda está «${SM.orlando.veredicto.toLowerCase()}» y hay ${_al0.reduce((s_, r) => s_ + r.barrios.length, 0)} alertas de barrio con reglas escritas.`);
+const fraseDecidir = () => nb(`para un restaurante, el barrio que mejor encaja con las prioridades por defecto es ${B[_emp0.lista[0].i].nombre}; con un arriendo de ${usd(stViv.presupuesto)} (el típico hoy es ${usd(ZORI_HOY)}) caben ${_viv0.caben.length} barrios; el mercado de vivienda está «${SM.orlando.veredicto.toLowerCase()}» y hay ${_al0.reduce((s_, r) => s_ + r.barrios.length, 0)} alertas de barrio con reglas escritas.`);
 $("#perfilesInicio").innerHTML = [
   ["emprender", "tienda", "Emprender", "Dónde abrir un negocio según la gente cerca, la competencia, el ingreso y la seguridad.", `${B[_emp0.lista[0].i].nombre}<small>encaja mejor para un restaurante (puedes cambiar el negocio y las prioridades)</small>`],
-  ["vivir", "casa", "Vivir", "Qué barrios caben en tu arriendo y cuáles encajan con lo que te importa.", `${_viv0.caben.length} barrios<small>caben en ${usd(ZORI_HOY)} al mes, el arriendo típico de hoy</small>`],
+  ["vivir", "casa", "Vivir", "Qué barrios caben en tu arriendo y cuáles encajan con lo que te importa.", `${_viv0.caben.length} barrios<small>caben en ${usd(stViv.presupuesto)} al mes, casi el arriendo típico de hoy (${usd(ZORI_HOY)})</small>`],
   ["invertir", "llave", "Comprar o invertir", "Si el mercado favorece a quien compra, cuánto rinde arrendar y qué barrios mirar.", `${SM.orlando.veredicto}<small>${SM.orlando.n} de 4 señales a favor de quien compra · ${fMes(SM.orlando.mes, true)}</small>`],
   ["gobernar", "capitolio", "Gobernar", "Qué atender primero en cada distrito, con alertas que siguen reglas escritas.", `${_al0.reduce((s_, r) => s_ + r.barrios.length, 0)} alertas<small>en ${new Set(_al0.flatMap(r => r.barrios.map(x => x[0]))).size} barrios, ${_al0.length} tipos de problema</small>`],
 ].map(([k, icono, n, d, dato]) => `<a class="perfil-card" href="#decidir/${k}"><span class="ic">${ic(icono)}</span><b>${n}</b><p>${d}</p><span class="dato">${dato}</span></a>`).join("");
