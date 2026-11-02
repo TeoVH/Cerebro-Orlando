@@ -228,7 +228,14 @@ datos = {
 }
 
 datos["verificacion"] = verificacion
-datos["lago_info"] = {"fechas": cat_lago["fechas"], "zonas": cat_lago["zonas"], "crudo_resumen": cat_lago["crudo"], "crudo": crudo_vista,
+# Resumen por zona sin el propio archivo del tablero (si no, cada construcción cambiaría el tamaño de la siguiente)
+zonas = {}
+for a in cat_lago["archivos"]:
+    if a["ruta"].startswith("consumo/tablero/"):
+        continue
+    z = zonas.setdefault(a["zona"], {"archivos": 0, "bytes": 0, "descripcion": cat_lago["zonas"].get(a["zona"], {}).get("descripcion", "")})
+    z["archivos"] += 1; z["bytes"] += a["bytes"]
+datos["lago_info"] = {"fechas": cat_lago["fechas"], "zonas": zonas, "crudo_resumen": cat_lago["crudo"], "crudo": crudo_vista,
                       "cambios": cambios, "curado": sorted(a["ruta"] for a in cat_lago["archivos"] if a["zona"] == "curado"),
                       "consumo": sorted(a["ruta"] for a in cat_lago["archivos"] if a["zona"] == "consumo" and "tablero" not in a["ruta"]),
                       "s3": "cerebro-orlando-lago-eafit"}
