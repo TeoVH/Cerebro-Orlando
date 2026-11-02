@@ -1,7 +1,7 @@
-/* Cerebro Orlando · v2 · toda cifra sale del lago incrustado en <script id="datos">; nada se escribe a mano. */
+/* Cerebro Orlando · v4 · toda cifra sale del lago (incrustado en <script id="datos"> o leído de lago/consumo/tablero/tablero.json); nada se escribe a mano. */
 (() => {
 "use strict";
-const D = JSON.parse(document.getElementById("datos").textContent);
+const D = window.__D || JSON.parse(document.getElementById("datos").textContent);
 const L = D.lago, M = D.mapa;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -78,7 +78,7 @@ function abrirTraza(fuente, campo) {
     const cl = campo.replace("<AAAA>", "");
     const c = (lago.cifras || {})[campo] || (lago.series || {})[campo] || Object.entries(lago.series || {}).find(([k]) => k.startsWith(cl))?.[1];
     if (r || c) dato = `<div class="campo"><p class="eyebrow">Este dato</p><dl>
-      <div><dt>Campo en el lago</dt><dd class="mono">${esc(r ? r.archivo : `lago/raw/${tema}/${tema}.json`)} → ${esc(campo)}</dd></div>
+      <div><dt>Campo en el lago</dt><dd class="mono">lago/curado/tema=${esc(tema)}/fecha=${esc(lago.probado || "")}/${esc(tema)}.json → ${esc(campo)}</dd></div>
       ${r ? `<div><dt>Qué significa</dt><dd>${esc(r.significado)}</dd></div>` : ""}
       ${c && c.unidad ? `<div><dt>Unidad</dt><dd>${esc(c.unidad)}</dd></div>` : ""}
       ${c && c.vigencia ? `<div><dt>A qué fecha corresponde</dt><dd>${esc(fVig(c.vigencia))}</dd></div>` : ""}
@@ -95,6 +95,7 @@ function abrirTraza(fuente, campo) {
       <div><dt>¿Trae datos de personas?</dt><dd>${esc(f.personas)}${f.proteccion ? ` · protección: ${esc(f.proteccion)}` : ""}</dd></div>
       <div><dt>Comprobada el</dt><dd>${esc(fDia(lago.probado || D.generado))} (día en que la fuente respondió y se escribió el lago)</dd></div>
       ${enLago.url ? `<div><dt>Enlace exacto que consultó el script</dt><dd class="mono"><a href="${esc(enLago.url)}" target="_blank" rel="noopener">${esc(enLago.url)}</a></dd></div>` : ""}
+      ${(enLago.crudo || []).length ? `<div><dt>Respuestas guardadas en la zona cruda (${enLago.crudo.length})</dt><dd><ul class="lista-crudo">${enLago.crudo.slice(0, 6).map(a => { const r = (D.lago_info ? D.lago_info.crudo : []).find(x => x.a === a); return r ? `<li><span class="mono">${esc(a.split("/").pop().replace(/-[0-9a-f]{10}\.(json|csv|txt)\.gz$/, ""))}</span> <span class="vig">${esc(r.s)} · ${fDia(r.f)}</span> <button type="button" class="mini" data-ver="${esc(a)}">Ver</button></li>` : ""; }).join("")}</ul>${enLago.crudo.length > 6 ? `<span class="vig">y ${enLago.crudo.length - 6} más en el explorador de la pestaña Datos y fuentes</span>` : ""}</dd></div>` : ""}
       ${ficha.frecuencia ? `<div><dt>Cada cuánto se actualiza</dt><dd>${esc(ficha.frecuencia)}</dd></div>` : ""}
       ${f.nota ? `<div><dt>Nota del equipo</dt><dd>${esc(f.nota)}</dd></div>` : ""}</dl>`;
   const dlg = $("#traza"); dlg.showModal ? dlg.showModal() : dlg.setAttribute("open", ""); $("#cerrarTraza").focus();
@@ -1080,7 +1081,7 @@ function fichaBarrio() {
       ${v == null ? `<span class="r"><span>${met.tipo === "tasa" && met.fuente === "censo_acs" ? "Sin estimación (menos de " + MIN_HAB + " habitantes)" : "Sin dato publicable (menos de 5 o ninguno)"}</span></span>` : `<span class="rb"><i style="width:${ancho(v)}%"></i>${med != null ? `<u class="med" title="Mediana de los barrios: ${vtxt(k, med)}" style="left:calc(${ancho(med)}% - 1px)"></u>` : ""}${c && v2 != null ? `<u style="left:calc(${ancho(v2)}% - 1px)"></u>` : ""}</span><span class="r"><span>Puesto ${r.p} de ${r.n} · mediana ${vtxt(k, med)}</span><span>${tasa != null ? fmtV(tasa, "hab") + " por 1.000 hab." : ""}</span></span>`}
       ${serie}</div>`;
   };
-  el.innerHTML = `<div class="titulo"><div><p class="eyebrow">Barrio · distrito ${b.distrito} · ${nf(b.km2, 2)} km²${b.pob != null ? ` · ${nf(b.pob)} hab.` : ""}</p><h3>${esc(b.nombre)}</h3></div><button class="btn" type="button" id="limpiarSel" aria-label="Quitar selección">${ic("cerrar")}</button></div>
+  el.innerHTML = `<div class="titulo"><div><p class="eyebrow">Barrio · distrito ${b.distrito} · ${nf(b.km2, 2)} km²${b.pob != null ? ` · ${nf(b.pob)} hab.` : ""}</p><h3>${esc(b.nombre)}</h3></div><div style="display:flex;gap:6px"><button class="btn" type="button" id="enlaceBarrio" aria-label="Copiar un enlace directo a este barrio" title="Copiar enlace a este barrio">${ic("copiar")}</button><button class="btn" type="button" id="limpiarSel" aria-label="Quitar selección">${ic("cerrar")}</button></div></div>
     <div class="etiquetas-b">${[b.zo >= 5 ? "Zona de Oportunidad federal" : "", b.mainSt >= 5 ? "Área de Main Street" : "", b.cra >= 5 ? "Área de Redesarrollo (CRA)" : "", b.sunrail ? "Estación de SunRail" : ""].filter(Boolean).map(t => `<span class="etq-z">${esc(t)}</span>`).join("")}</div>
     <div class="filtros"><label class="peq" for="compSel">Comparar con</label><select class="sel" id="compSel"><option value="">— ningún barrio —</option>${B.map((x, i) => i === selB ? "" : `<option value="${i}" ${i === compB ? "selected" : ""}>${esc(x.nombre)}</option>`).join("")}</select></div>
     ${c ? `<p class="peq"><b style="color:var(--ink)">${esc(b.nombre)}</b> en negro · <b style="color:var(--sun)">${esc(c.nombre)}</b> en amarillo · la raya gris es la mediana de los barrios</p>` : `<p class="peq">La raya gris en cada barra es la mediana de los 125 barrios.</p>`}
@@ -1092,6 +1093,7 @@ function fichaBarrio() {
     ...MEDIDAS_FICHA.map(k => { const v = METRICAS[k].v(b); return `- ${METRICAS[k].nombre}: ${v == null ? "sin dato publicable" : vtxt(k, v)}`; })].join("\n"), "Ficha copiada");
 }
 document.addEventListener("click", e => { if (e.target.closest("#limpiarSel")) { selB = null; compB = null; atlasB.seleccionar(null, false); atlasB.verTodo(); } });
+document.addEventListener("click", e => { if (e.target.closest("#enlaceBarrio") && selB != null) { const u = location.href.split("#")[0] + "#barrios/" + encodeURIComponent(B[selB].id); copiar(u, "Enlace al barrio copiado"); } });
 function irABarrio(i) { location.hash = "barrios"; setTimeout(() => { atlasB.seleccionar(i, true); $("#atlasBarrios").scrollIntoView({behavior: "smooth", block: "center"}); }, 120); }
 const umbrales = ["permisos", "seguridad", "codigo", "negocios"].map(t => C(t, "umbral_minimo_por_barrio").valor);
 $("#notaPrivBarrios").innerHTML = `<b>Cuidamos a las personas.</b> Los permisos traen el nombre del propietario y el contratista; los casos de policía, el número de caso y el punto exacto; los negocios, el dueño y su teléfono. Nada de eso se descarga: los servidores de la ciudad devuelven conteos por barrio, y los barrios con menos de ${Math.min(...umbrales)} casos en el año salen en gris, igual que los que no tuvieron ninguno, para no revelar cuáles son. Distrito, área, «por km²» y «por 1.000 habitantes» son <button class="term" data-term="derivado">derivados</button>; los habitantes de cada barrio son una <button class="term" data-term="estimacion">estimación</button> a partir del censo.`;
@@ -1317,7 +1319,7 @@ $("#embudo").setAttribute("aria-label", ordenEst.map(k => `${cuenta[k]} ${EST[k]
 $("#embudo").innerHTML = ordenEst.map(k => `<div class="e-${k}" style="flex:${cuenta[k]} 1 0" data-e="${k}" title="${EST[k]}: ${cuenta[k]}">${cuenta[k] >= 6 ? cuenta[k] : ""}</div>`).join("");
 $("#leyEmbudo").innerHTML = ordenEst.map(k => `<span><i class="e-${k}"></i>${EST[k]}: <b>${cuenta[k]}</b></span>`).join("");
 $("#embudo").addEventListener("click", e => { const d = e.target.closest("[data-e]"); if (d) { filtroEst = d.dataset.e; chipsEst(); fichas(); $("#fichas").scrollIntoView({behavior: "smooth", block: "start"}); } });
-$("#notaVerif p").innerHTML = verOk ? `<b>Verificación automática:</b> antes de construir esta página, <span class="mono">verificar.py</span> pasó ${ver.pasan} comprobaciones con 0 fallos: fechas, licencias, rangos de cada tema, que no haya correos ni teléfonos, que ninguna celda por barrio esté bajo el umbral y que no aparezca ninguna categoría de la policía que decidimos excluir. Dejó ${ver.avisos} avisos: las fuentes de la ciudad no declaran licencia.` : `<b>Atención:</b> esta página se construyó ${esc(ver)}.`;
+$("#notaVerif p").innerHTML = verOk ? `<b>Verificación automática:</b> antes de construir esta página, <span class="mono">verificar.py</span> pasó ${ver.pasan} comprobaciones con 0 fallos: que cada respuesta cruda exista, tenga la huella del manifiesto y no traiga datos de personas, que cada fuente apunte a sus respuestas crudas, fechas, licencias, rangos de cada tema, que no haya correos ni teléfonos, que ninguna celda por barrio esté bajo el umbral y que no aparezca ninguna categoría de la policía que decidimos excluir. Dejó ${ver.avisos} avisos: las fuentes de la ciudad no declaran licencia.` : `<b>Atención:</b> esta página se construyó ${esc(ver)}.`;
 const porFicha = {}; D.fuentes_lago.forEach(f => (porFicha[f.ficha_excel] = porFicha[f.ficha_excel] || []).push(f));
 $("#usadas").innerHTML = Object.entries(porFicha).sort((a, b) => a[0].localeCompare(b[0], "es", {numeric: true})).map(([fid, fs]) => { const fc = D.catalogo.find(c => c.id === fid) || {};
   const TN = {economia: "economía", codigo: "código urbano", clima_historico: "clima histórico", escucha: "interés en la web", empleo: "avisos de empleo"};
@@ -1352,6 +1354,300 @@ $("#bitacora").innerHTML = D.bitacora.map(b => `<details><summary><span class="m
   <div class="det"><p><b style="color:var(--ink)">Qué respondió:</b> ${esc(b.respuesta)}</p><p><b style="color:var(--ink)">Cómo lo comprobamos:</b> ${esc(b.comprobacion)}</p><p><b style="color:var(--ink)">Qué aprendimos:</b> ${esc(b.aprendizaje)}</p>${b.fuentes ? `<p class="mono">Fichas: ${esc(b.fuentes)}</p>` : ""}</div></details>`).join("");
 $("#tablaDic tbody").innerHTML = D.diccionario.map(r => `<tr><td class="mono">${esc(r.fuente)}</td><td class="mono" style="overflow-wrap:anywhere">${esc(r.campo)}</td><td>${esc(r.significado)}</td><td>${esc(r.clasificacion)}</td></tr>`).join("");
 $("#sumDic").textContent = `Ver los ${D.diccionario.length} campos`;
+
+/* ================= DATOS Y LAGO: de dónde sale cada dato, quién lo trajo y dónde vive ================= */
+const LI = D.lago_info || {fechas: [], zonas: {}, crudo: [], cambios: [], curado: [], consumo: [], crudo_resumen: {}};
+const FOTO = ult(LI.fechas) || D.generado, FOTO_ANT = LI.fechas.length > 1 ? LI.fechas[LI.fechas.length - 2] : null;
+const CRUDO_HOY = LI.crudo.filter(r => r.f === FOTO);
+const POR_ARCHIVO = Object.fromEntries(LI.crudo.filter(r => r.a).map(r => [r.a, r]));
+const SITIO = {"data.cityoforlando.net": "Datos abiertos de Orlando", "gis.orlando.gov": "Mapas (SIG) de Orlando", "fred.stlouisfed.org": "FRED (Fed de St. Louis)",
+  "api.censusreporter.org": "Census Reporter (Censo)", "services.arcgis.com": "FEMA (riesgo)", "api.weather.gov": "Servicio Meteorológico", "www.ncei.noaa.gov": "NOAA (clima histórico)",
+  "wikimedia.org": "Wikimedia (visitas)", "es.wikipedia.org": "Wikipedia en español", "en.wikipedia.org": "Wikipedia en inglés", "raw.githubusercontent.com": "Indeed Hiring Lab (GitHub)",
+  "files.zillowstatic.com": "Zillow Research"};
+const TN = {gente: "Gente", censo: "Censo por barrio", riesgo: "Riesgo (FEMA)", economia: "Economía", empleo: "Avisos de empleo", vivienda: "Vivienda", permisos: "Permisos",
+  seguridad: "Seguridad", codigo: "Código urbano", negocios: "Negocios", planeacion: "Planeación", servicios: "Servicios", turismo: "Turismo", escucha: "Interés en la web",
+  clima: "Clima hoy", clima_historico: "Clima histórico", territorio: "Territorio (mapas)"};
+const PN = {inicio: "Resumen", decidir: "Decidir", comparar: "Comparar", gente: "Gente", economia: "Economía y vivienda", barrios: "Barrios", seguridad: "Seguridad", turismo: "Turismo", clima: "Clima"};
+const TEMA_PEST = {gente: ["inicio", "gente", "comparar"], censo: ["gente", "barrios", "decidir", "comparar"], riesgo: ["clima", "barrios", "decidir"], economia: ["inicio", "economia", "comparar"],
+  empleo: ["economia", "comparar"], vivienda: ["inicio", "economia", "decidir", "comparar"], permisos: ["inicio", "barrios", "decidir"], seguridad: ["inicio", "seguridad", "barrios", "decidir"],
+  codigo: ["barrios", "decidir"], negocios: ["barrios", "decidir"], planeacion: ["barrios", "decidir"], servicios: ["barrios", "decidir"], turismo: ["inicio", "turismo", "comparar"],
+  escucha: ["turismo", "comparar"], clima: ["inicio", "clima"], clima_historico: ["clima"], territorio: ["inicio", "barrios"]};
+const kb = n => n >= 1e6 ? nf(n / 1e6, 1) + NB + "MB" : n >= 1e3 ? nf(n / 1e3, 0) + NB + "KB" : nf(n) + NB + "bytes";
+const nfx = v => typeof v === "number" ? new Intl.NumberFormat("es-CO", {maximumFractionDigits: 2}).format(v) : esc(v);
+const nombreArchivo = a => a ? a.split("/").pop().replace(/-[0-9a-f]{10}\.(json|csv|txt)\.gz$/, "") : "—";
+const temasDe = r => r.t.split(",");
+function pista(u) {
+  let q = u; try { q = decodeURIComponent(u); } catch {}
+  const anio = (q.match(/DATE '(20\d\d)-01-01'/) || q.match(/>= '(20\d\d)/) || [])[1];
+  const grupo = (q.match(/groupByFieldsForStatistics=(\w+)/) || [])[1];
+  const cat = (q.match(/license_category = '(\w+)'/) || [])[1];
+  const ids = (q.match(/[?&]id=([^&]+)/) || [])[1];
+  const tabla = (q.match(/table_ids=([^&]+)/) || [])[1];
+  const sel = (q.match(/\$select=([^&]+)/) || [])[1];
+  const partes = [anio && `año ${anio}`, grupo && `por ${grupo === "NeighborhoodName" ? "barrio" : grupo === "CaseType" ? "tipo" : grupo}`, cat && `categoría ${cat}`,
+    ids && ids.split(",").slice(0, 3).join(", ") + (ids.split(",").length > 3 ? "…" : ""), tabla && tabla.split(",").slice(0, 3).join(", ") + (tabla.split(",").length > 3 ? "…" : ""),
+    !anio && !cat && sel && sel.replace(/count\(\*\) as n/, "conteo").slice(0, 40)].filter(Boolean);
+  return partes.join(" · ");
+}
+const comoCorto = c => c.startsWith("navegador") ? "Navegador del equipo" : c.startsWith("script directo desde") ? "Script (versión recuperada de GitHub)" : "Script directo";
+
+// --- respuesta de la cabecera y las tres preguntas
+const nSitios = new Set(CRUDO_HOY.map(r => r.s)).size, nFuentes = D.fuentes_lago.length;
+const MB_ORIG = CRUDO_HOY.reduce((a, r) => a + r.bo, 0);
+$("#r-datos").textContent = nb(`Cada número de este tablero sale de una respuesta guardada en el lago: ${CRUDO_HOY.length} respuestas de ${nSitios} sitios públicos, pedidas el ${fDia(FOTO)}, con su URL exacta y su huella digital.`);
+const preg = [
+  ["fuente", "¿De dónde salen los datos?", `De ${nFuentes} fuentes abiertas en ${nSitios} sitios: la Ciudad de Orlando, FRED, la Oficina del Censo, FEMA, NOAA, Wikimedia, Indeed y Zillow. Cada pedido quedó anotado con su URL.`, "sec-flujo", "Ver el recorrido"],
+  ["robot", "¿De dónde los sacó la IA?", "De ningún lado por su cuenta: escribió los scripts y pidió esas mismas URL desde el navegador del equipo. Ninguna cifra viene de su memoria; si una cifra no tiene detrás una respuesta guardada, la verificación falla.", "sec-ia", "Ver qué hizo la IA"],
+  ["capas", "¿Dónde están guardados?", `En un lago de datos con tres zonas (cruda, curada y de consumo) y ${LI.fechas.length} fotos con fecha. Vive en el repositorio (con historial), se publica con esta página y se sube igual a Amazon S3.`, "sec-lago", "Ver el lago"]];
+$("#tresPreg").innerHTML = preg.map(([i, t, p, sec, btn], k) => `<article class="card preg"><span class="n">${k + 1}</span><div class="tema"><span class="ic">${ic(i)}</span><h3>${t}</h3></div><p>${esc(nb(p))}</p><button type="button" class="btn" data-ir="${sec}">${btn}${ic("flecha")}</button></article>`).join("");
+$("#tresPreg").addEventListener("click", e => { const b = e.target.closest("[data-ir]"); if (b) document.getElementById(b.dataset.ir).scrollIntoView({behavior: "smooth", block: "start"}); });
+
+// --- el recorrido: sitios → temas del lago → pestañas (ancho = respuestas guardadas)
+const flujo = (() => {
+  const W = 1000, NW = 12, PAD = 6, X = [228, 500, 772];
+  const peso = {}, enlaces = [];
+  const sum = (k, v) => peso[k] = (peso[k] || 0) + v;
+  const mapa = new Map();
+  for (const r of CRUDO_HOY) { const ts = temasDe(r); for (const t of ts) { const k = `s:${r.s}|t:${t}`; mapa.set(k, (mapa.get(k) || 0) + 1 / ts.length); } }
+  for (const [k, v] of mapa) { const [a, b] = k.split("|"); enlaces.push({a, b, v}); sum(a, v); }
+  const pesoT = {}; for (const e of enlaces) pesoT[e.b] = (pesoT[e.b] || 0) + e.v;
+  for (const [t, v] of Object.entries(pesoT)) { const ps = TEMA_PEST[t.slice(2)] || ["inicio"]; for (const p of ps) { enlaces.push({a: t, b: `p:${p}`, v: v / ps.length}); sum(`p:${p}`, v / ps.length); } }
+  Object.assign(peso, pesoT);
+  const col = [Object.keys(peso).filter(k => k.startsWith("s:")).sort((a, b) => peso[b] - peso[a]),
+    Object.keys(peso).filter(k => k.startsWith("t:")).sort((a, b) => peso[b] - peso[a]),
+    Object.keys(PN).map(p => `p:${p}`).filter(k => peso[k])];
+  // alto proporcional a las respuestas, con un mínimo para que cada nombre se lea; las columnas más cortas se centran
+  const K = 5.4, MIN = 17, nodos = {};
+  const altoCol = c => c.reduce((s, k) => s + Math.max(peso[k] * K, MIN), 0) + PAD * (c.length - 1);
+  const H = Math.max(...col.map(altoCol)) + 20;
+  col.forEach((c, i) => { let y = 10 + (H - 20 - altoCol(c)) / 2;
+    for (const k of c) { const h = Math.max(peso[k] * K, MIN); nodos[k] = {k, x: X[i], y, h, i, sal: 0, ent: 0, esc: K}; y += h + PAD; } });
+  const etiqueta = k => k.startsWith("s:") ? SITIO[k.slice(2)] || k.slice(2) : k.startsWith("t:") ? TN[k.slice(2)] || k.slice(2) : PN[k.slice(2)];
+  const svg = $("#flujo"); svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const links = enlaces.sort((p, q) => nodos[p.a].y - nodos[q.a].y || nodos[p.b].y - nodos[q.b].y).map(e => {
+    const A = nodos[e.a], Bn = nodos[e.b], w = Math.max(e.v * A.esc, 1);
+    const y0 = A.y + A.sal + w / 2, y1 = Bn.y + Bn.ent + w / 2; A.sal += w; Bn.ent += w;
+    const x0 = A.x + NW, x1 = Bn.x, xm = (x0 + x1) / 2;
+    return `<path class="lk z${A.i + 1}" data-a="${e.a}" data-b="${e.b}" d="M${x0},${y0.toFixed(1)} C${xm},${y0.toFixed(1)} ${xm},${y1.toFixed(1)} ${x1},${y1.toFixed(1)}" stroke-width="${w.toFixed(1)}"><title>${esc(etiqueta(e.a))} → ${esc(etiqueta(e.b))}</title></path>`; }).join("");
+  const nodosSvg = Object.values(nodos).map(n => { const lx = n.i === 0 ? n.x - 8 : n.x + NW + 8, anc = n.i === 0 ? "end" : "start";
+    const cuenta = n.i < 2 ? ` · ${nf(Math.round(peso[n.k]))}` : "";
+    return `<g class="nd z${n.i + 1}" data-k="${n.k}" tabindex="0" role="button" aria-label="${esc(etiqueta(n.k))}"><rect x="${n.x}" y="${n.y.toFixed(1)}" width="${NW}" height="${n.h.toFixed(1)}" rx="3"/>
+      <text x="${lx}" y="${(n.y + n.h / 2).toFixed(1)}" text-anchor="${anc}" dominant-baseline="middle">${esc(etiqueta(n.k))}<tspan class="cnt">${cuenta}</tspan></text></g>`; }).join("");
+  svg.innerHTML = `<g class="lks">${links}</g>${nodosSvg}
+    <text class="col" x="${X[0] + NW}" y="0" text-anchor="end" dy="-2"></text>`;
+  svg.setAttribute("aria-label", `Recorrido de ${CRUDO_HOY.length} respuestas: ${col[0].length} sitios, ${col[1].length} temas del lago y ${col[2].length} pestañas`);
+  // conectados: un sitio prende sus temas y las pestañas de esos temas; una pestaña, sus temas y los sitios de esos temas
+  const vecinos = k => { const s = new Set([k]);
+    if (k.startsWith("s:")) enlaces.filter(e => e.a === k).forEach(e => { s.add(e.b); enlaces.filter(f => f.a === e.b).forEach(f => s.add(f.b)); });
+    else if (k.startsWith("p:")) enlaces.filter(e => e.b === k).forEach(e => { s.add(e.a); enlaces.filter(f => f.b === e.a).forEach(f => s.add(f.a)); });
+    else enlaces.filter(e => e.a === k || e.b === k).forEach(e => { s.add(e.a); s.add(e.b); });
+    return s; };
+  let fijo = null;
+  const resaltar = k => { if (!k) { svg.classList.remove("foco"); $$(".on", svg).forEach(n => n.classList.remove("on")); return; }
+    const v = vecinos(k); svg.classList.add("foco");
+    $$(".nd", svg).forEach(n => n.classList.toggle("on", v.has(n.dataset.k)));
+    $$(".lk", svg).forEach(l => l.classList.toggle("on", v.has(l.dataset.a) && v.has(l.dataset.b))); };
+  svg.addEventListener("mouseover", e => { const g = e.target.closest(".nd"); if (g && !fijo) resaltar(g.dataset.k); });
+  svg.addEventListener("mouseleave", () => { if (!fijo) resaltar(null); });
+  const elegir = k => { fijo = k; resaltar(k); detalle(k); $("#flujoTodo").hidden = !k; };
+  svg.addEventListener("click", e => { const g = e.target.closest(".nd"); elegir(g && g.dataset.k !== fijo ? g.dataset.k : null); });
+  svg.addEventListener("keydown", e => { const g = e.target.closest(".nd"); if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); elegir(g.dataset.k); } });
+  $("#flujoTodo").addEventListener("click", () => elegir(null));
+  return {elegir};
+})();
+function filaCrudo(r, corto, sinSitio) {
+  const pi = pista(r.u);
+  return `<li><span class="mono">${esc(nombreArchivo(r.a))}</span>${pi ? ` <span class="pista">${esc(pi)}</span>` : ""} <span class="vig">${sinSitio ? "" : esc(SITIO[r.s] || r.s) + " · "}${kb(r.bo)}${Object.keys(r.r).length ? " · datos de personas retirados" : ""}</span>
+    ${r.a ? `<button type="button" class="mini" data-ver="${esc(r.a)}">Ver</button>` : ""}${corto ? "" : `<a class="mini" href="${esc(r.u)}" target="_blank" rel="noopener">URL</a>`}</li>`;
+}
+function detalle(k) {
+  const el = $("#flujoDet");
+  if (!k) { el.innerHTML = ""; return; }
+  const [tipo, id] = [k[0], k.slice(2)];
+  if (tipo === "s") {
+    const rs = CRUDO_HOY.filter(r => r.s === id);
+    el.innerHTML = `<h3>${esc(SITIO[id] || id)} <span class="vig">${esc(id)}</span></h3><p class="peq">${rs.length} respuestas guardadas el ${fDia(FOTO)} (${kb(rs.reduce((a, r) => a + r.bo, 0))} tal como llegaron). Cómo se pidieron: ${[...new Set(rs.map(r => comoCorto(r.c).toLowerCase()))].join(", ")}.</p><ul class="lista-crudo">${rs.slice(0, 40).map(r => filaCrudo(r, false, true)).join("")}</ul>`;
+  } else if (tipo === "t") {
+    const t = L[id], rs = CRUDO_HOY.filter(r => temasDe(r).includes(id));
+    el.innerHTML = `<h3>${esc(TN[id] || id)} <span class="vig">lago/curado/tema=${esc(id)}/fecha=${esc(t.probado)}/${esc(id)}.json</span></h3>
+      <p class="peq">${Object.keys(t.cifras).length} cifras y ${Object.keys(t.series).length} series, verificadas antes de publicar. Sale de ${t.fuentes.length} ${t.fuentes.length === 1 ? "fuente" : "fuentes"} y ${rs.length} respuestas crudas. Se ve en: ${(TEMA_PEST[id] || []).map(p => `<a href="#${p}">${PN[p]}</a>`).join(", ")}.</p>
+      <div class="chips">${t.fuentes.map(f => chip(f.id, "", t.probado)).join("")}</div><ul class="lista-crudo">${rs.map(r => filaCrudo(r)).join("")}</ul>`;
+  } else {
+    const ts = Object.keys(TEMA_PEST).filter(t => TEMA_PEST[t].includes(id));
+    el.innerHTML = `<h3>${esc(PN[id])}</h3><p class="peq">Esta pestaña usa ${ts.length} temas del lago: ${ts.map(t => `<b>${esc(TN[t])}</b>`).join(", ")}. <a href="#${id}">Ir a la pestaña</a></p>`;
+  }
+}
+
+// --- el lago, zona por zona
+const Z = LI.zonas, RES = LI.crudo_resumen || {};
+const zonaCard = (n, clase, titulo, cuerpo, pie) => `<article class="card zona ${clase}"><span class="paso">${n}</span><h3>${titulo}</h3><p>${cuerpo}</p><p class="vig">${pie}</p></article>`;
+$("#lagoSub").textContent = `${LI.fechas.length} fotos: ${LI.fechas.map(fDia).join(" y ")}`;
+$("#zonas").innerHTML = [
+  zonaCard(1, "z1", "Zona cruda", nb(`Lo que respondió cada fuente, sin tocar y comprimido: ${nf(RES.respuestas || 0)} respuestas en ${LI.fechas.length} fotos (${kb(RES.bytes_originales || 0)} tal como llegaron; el archivo de Indeed solo pesa 63 MB). Al guardar se retiran los datos de personas: en ${RES.con_campos_retirados || 0} respuestas (fichas del portal de la ciudad con nombres y correos de muestra).`), `lago/crudo/sitio=…/fecha=…/ · ${Z.crudo ? Z.crudo.archivos : 0} archivos · ${kb(Z.crudo ? Z.crudo.bytes : 0)}`),
+  `<div class="puerta" aria-hidden="true">${ic("flecha")}<span>verificar.py <br>${verOk ? ver.pasan : "—"} comprobaciones</span></div>`,
+  zonaCard(2, "z2", "Zona curada", nb(`Un archivo por tema y por fecha con la forma del contrato: cada cifra con unidad, vigencia y fuente, y cada fuente con la lista de respuestas crudas de las que salió. Si se borra, se rehace igual, byte a byte, solo con la zona cruda.`), `lago/curado/tema=…/fecha=…/ · ${LI.curado.length} archivos`),
+  `<div class="puerta" aria-hidden="true">${ic("flecha")}<span>tablas <br>y tablero</span></div>`,
+  zonaCard(3, "z3", "Zona de consumo", nb(`Tablas planas para consultar con SQL (cifras y series, una fila por dato) y el archivo que lee esta página. Se consultan con Athena en S3 o con DuckDB en cualquier computador.`), `lago/consumo/ · ${LI.consumo.length + 1} archivos`)].join("");
+const EN_WEB = location.protocol.startsWith("http") && !/claude|anthropic/.test(location.hostname);
+$("#donde").innerHTML = [
+  ["git", "Repositorio (GitHub)", "Todo el lago con historial: cada actualización queda como un cambio con fecha y autor.", `<a href="${esc(D.repo)}" target="_blank" rel="noopener">Abrir el repositorio</a>`],
+  ["pantalla", "Copia pública (Vercel)", "Esta página y el lago entero, descargables: lago/crudo, lago/curado, lago/consumo.", EN_WEB ? `<a href="lago/catalogo/catalogo_lago.json" target="_blank" rel="noopener">Ver el inventario del lago</a>` : "Disponible en la versión publicada"],
+  ["nube", "Amazon S3 (bucket privado)", `El mismo árbol de carpetas en un bucket privado, cifrado y con versiones (${esc(LI.s3)}); Athena lo consulta con SQL.`, `<span class="mono">publicar/subir_s3.py · publicar/athena.sql</span>`]]
+  .map(([i, t, p, a]) => `<div class="donde-i"><span class="ic">${ic(i)}</span><div><b>${t}</b><p class="peq">${esc(nb(p))}</p><p class="peq">${a}</p></div></div>`).join("");
+
+// --- ver una respuesta cruda (en la versión publicada se lee del lago; en un solo archivo no hay de dónde)
+async function verCrudo(archivo) {
+  const r = POR_ARCHIVO[archivo]; if (!r) return;
+  const cab = `<button class="btn cerrar" type="button" id="cerrarCrudo">${ic("cerrar")}Cerrar</button>
+    <div><p class="eyebrow">Zona cruda · ${esc(fDia(r.f))}</p><h2 id="verCrudoT" style="font-size:1.25rem;margin-top:6px">${esc(SITIO[r.s] || r.s)} · ${esc(nombreArchivo(r.a))}</h2></div>
+    <dl><div><dt>URL exacta que se pidió</dt><dd class="mono"><a href="${esc(r.u)}" target="_blank" rel="noopener">${esc(r.u)}</a></dd></div>
+    <div><dt>Cómo se pidió</dt><dd>${esc(r.c)}</dd></div>
+    <div><dt>Tamaño</dt><dd>${kb(r.bo)} como llegó · ${kb(r.bg || 0)} guardado (antes de comprimir)</dd></div>
+    <div><dt>Huella (SHA-256)</dt><dd class="mono">llegó ${esc(r.ho)}… · guardado ${esc(r.h)}…</dd></div>
+    ${Object.keys(r.r).length ? `<div><dt>Retirado al guardar</dt><dd>${Object.entries(r.r).map(([k, n]) => `${esc(k)} (${n})`).join(", ")}: nombres de quien publicó y valores de muestra con correos. El resto quedó tal cual.</dd></div>` : ""}
+    <div><dt>Archivo en el lago</dt><dd class="mono">lago/${esc(r.a)}</dd></div></dl>`;
+  $("#verCrudoIn").innerHTML = cab + `<pre class="crudo-pre" id="crudoPre">Leyendo lago/${esc(r.a)}…</pre>`;
+  const dlg = $("#verCrudo"); dlg.showModal ? dlg.showModal() : dlg.setAttribute("open", "");
+  try {
+    if (!("DecompressionStream" in window)) throw new Error("este navegador no descomprime gzip");
+    const resp = await fetch("lago/" + r.a); if (!resp.ok) throw new Error("HTTP " + resp.status);
+    // si el servidor ya lo descomprimió en el camino, llega sin la marca de gzip (1f 8b) y se lee tal cual
+    const bytes = new Uint8Array(await resp.arrayBuffer());
+    const txt = bytes[0] === 0x1f && bytes[1] === 0x8b ? await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).text() : new TextDecoder().decode(bytes);
+    let vista = txt;
+    if (r.fo === "json") { try { vista = JSON.stringify(JSON.parse(txt), null, 1); } catch {} }
+    const LIM = 7000;
+    $("#crudoPre").textContent = vista.length > LIM ? vista.slice(0, LIM) + `\n… (${nf(vista.length - LIM)} caracteres más; descárguelo completo)` : vista;
+    $("#crudoPre").insertAdjacentHTML("afterend", `<p><a class="btn" href="lago/${esc(r.a)}" download>${ic("fuente")}Descargar el archivo (.gz)</a></p>`);
+  } catch (e) {
+    $("#crudoPre").textContent = `Esta copia de la página no trae los archivos del lago (${e.message}). En la versión publicada en Vercel este botón abre la respuesta guardada; también está en el repositorio, en lago/${r.a}.`;
+  }
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-ver]"); if (b) { e.preventDefault(); verCrudo(b.dataset.ver); } if (e.target.closest("#cerrarCrudo")) $("#verCrudo").close(); });
+$("#verCrudo").addEventListener("click", e => { if (e.target.id === "verCrudo") $("#verCrudo").close(); });
+
+// --- sigue un número
+const SEGUIR = [["economia", "desempleo_ultimo_mes", "Desempleo del área", "economia"], ["gente", "poblacion_condado_ultimo_anio", "Población del condado de Orange", "gente"],
+  ["permisos", "permisos_emitidos_ultimo_anio_completo", "Permisos de construcción del último año", "barrios"], ["seguridad", "delitos_ultimo_anio", "Casos de la policía del último año", "seguridad"],
+  ["negocios", "negocios_vigentes", "Negocios con licencia vigente", "barrios"], ["vivienda", "arriendo_tipico_ultimo_mes", "Arriendo típico (Zillow)", "economia"],
+  ["empleo", "indice_ultimo_dia", "Avisos de empleo (índice de Indeed)", "economia"], ["censo", "poblacion_ciudad", "Población oficial de la ciudad", "gente"],
+  ["clima", "temperatura_actual", "Temperatura al tomar la foto", "clima"], ["turismo", "participacion_ocio_ultimo_mes", "Peso del ocio y la hotelería en el empleo", "turismo"]]
+  .filter(([t, k]) => L[t] && L[t].cifras[k]);
+$("#seguirSel").innerHTML = SEGUIR.map(([t, k, n], i) => `<option value="${i}">${esc(n)}</option>`).join("");
+let tSeguir = [];
+function seguir(i, animar = true) {
+  const [t, k, nombre, pest] = SEGUIR[i], c = L[t].cifras[k], lt = L[t], f = lt.fuentes.find(x => x.id === c.fuente) || lt.fuentes[0], fu = FUENTES[c.fuente] || {};
+  const crudos = (f.crudo || []).map(a => POR_ARCHIVO[a]).filter(Boolean);
+  const fila = {fecha: lt.probado, tema: t, clave: k, valor: c.valor, unidad: c.unidad, vigencia: String(c.vigencia), fuente: c.fuente};
+  const pasos = [
+    ["Lo que ves en el tablero", `<p class="grande">${nfx(c.valor)} <small>${esc(c.unidad)}</small></p><p class="peq">${esc(nombre)} · ${esc(fVig(String(c.vigencia)))} · pestaña <a href="#${pest}">${esc(PN[pest])}</a></p>`],
+    ["Zona de consumo: una fila de una tabla", `<p class="mono ruta">lago/consumo/cifras/fecha=${esc(lt.probado)}/cifras.jsonl.gz</p><pre class="mini-pre">${esc(JSON.stringify(fila, null, 1))}</pre>`],
+    ["Zona curada: el archivo verificado", `<p class="mono ruta">lago/curado/tema=${esc(t)}/fecha=${esc(lt.probado)}/${esc(t)}.json</p><pre class="mini-pre">${esc(`"${k}": ` + JSON.stringify(c, null, 1))}</pre><p class="peq">Pasó ${verOk ? ver.pasan : "las"} comprobaciones antes de publicarse.</p>`],
+    ["Zona cruda: lo que respondió la fuente", crudos.length ? `<ul class="lista-crudo">${crudos.slice(0, 3).map(r => filaCrudo(r, true)).join("")}</ul>${crudos.length > 3 ? `<p class="peq">y ${crudos.length - 3} respuestas más de la misma fuente</p>` : ""}` : `<p class="peq">Sin respuesta cruda registrada.</p>`],
+    ["La fuente", `<p><b>${esc(fu.entidad || f.nombre)}</b></p><p class="peq">${esc(f.nombre)} · licencia: ${esc(fu.licencia || f.licencia)}</p>${crudos[0] ? `<p class="peq">Pedida el ${fDia(crudos[0].f)} · ${esc(comoCorto(crudos[0].c).toLowerCase())}</p><p class="mono ruta"><a href="${esc(crudos[0].u)}" target="_blank" rel="noopener">${esc(crudos[0].u.length > 90 ? crudos[0].u.slice(0, 90) + "…" : crudos[0].u)}</a></p>` : ""}`]];
+  tSeguir.forEach(clearTimeout); tSeguir = [];
+  $("#cadena").innerHTML = pasos.map(([h, cuerpo], j) => `<li class="paso-c${animar ? "" : " on"}"><span class="num">${j + 1}</span><div><h4>${h}</h4>${cuerpo}</div></li>`).join("");
+  if (animar) $$("#cadena li").forEach((li, j) => tSeguir.push(setTimeout(() => li.classList.add("on"), 120 + j * (matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 420))));
+}
+$("#seguirSel").addEventListener("change", e => seguir(+e.target.value));
+$("#seguirPlay").addEventListener("click", () => seguir(+$("#seguirSel").value));
+seguir(0, false);
+
+// --- qué cambió entre fotos
+const NOMBRE_CIFRA = {desempleo_ultimo_mes: "Desempleo del área", desempleo_hace_un_anio: "Desempleo un año antes", diferencia_con_florida: "Diferencia con el desempleo de Florida",
+  indice_ultimo_dia: "Avisos de empleo (índice)", variacion_12_meses: "Variación de los avisos en 12 meses", viviendas_autorizadas_12_meses: "Viviendas nuevas autorizadas (12 meses)",
+  variacion_viviendas_autorizadas: "Variación de las viviendas autorizadas", vistas_ultimo_mes: "Visitas a Wikipedia (español) en el mes", variacion_anual: "Variación anual de las visitas",
+  atencion_frente_a_pares: "Atención frente a las ciudades pares", vistas_ingles_12_meses: "Visitas a Wikipedia en inglés (12 meses)", permisos_emitidos_anio_en_curso: "Permisos en lo que va del año",
+  delitos_anio_en_curso: "Casos de la policía en lo que va del año", casos_anio_en_curso: "Casos de código urbano en lo que va del año", negocios_vigentes: "Negocios con licencia vigente",
+  restaurantes_vigentes: "Restaurantes con licencia vigente", hospedajes_vigentes: "Hospedajes con licencia vigente", negocios_sin_barrio: "Licencias sin barrio asignado",
+  alquiler_corto_activas: "Alquileres de corto plazo activos", temperatura_actual: "Temperatura al tomar la foto (°F)", alertas_activas: "Alertas del clima vigentes", solicitudes_abiertas: "Solicitudes de planeación abiertas"};
+const nomCifra = k => NOMBRE_CIFRA[k] || cap(k.replace(/_/g, " "));
+const CAMBIOS = LI.cambios.filter(c => c.antes !== c.ahora), RECOMPROBADAS = LI.cambios.length - CAMBIOS.length;
+let filtroCambio = "todos";
+if (FOTO_ANT && LI.cambios.length) {
+  $("#cambiosSub").textContent = `${fDia(FOTO_ANT)} → ${fDia(FOTO)}`;
+  const des = CAMBIOS.find(c => c.clave === "desempleo_ultimo_mes"), neg = CAMBIOS.find(c => c.clave === "negocios_vigentes");
+  $("#cambiosTxt").textContent = nb(`El lago guarda cada foto con su fecha, así que se puede comparar. Entre una y otra cambiaron ${CAMBIOS.length} cifras${des ? `: por ejemplo, el desempleo pasó de ${nfx(des.antes)} % a ${nfx(des.ahora)} % porque la agencia publicó un mes nuevo` : ""}${neg ? `, y los negocios con licencia vigente pasaron de ${nf(neg.antes)} a ${nf(neg.ahora)}` : ""}. Otras ${RECOMPROBADAS} se volvieron a comprobar y siguen igual; lo que no aparece (el censo, por ejemplo) es porque la fuente no publicó nada nuevo.`);
+  const temasC = [...new Set(CAMBIOS.map(c => c.tema))];
+  const pintarCambios = () => {
+    $("#cambiosFiltro").innerHTML = [["todos", "Todos", CAMBIOS.length], ...temasC.map(t => [t, TN[t] || t, CAMBIOS.filter(c => c.tema === t).length])].map(([k, n, m]) => `<button type="button" class="chip" data-t="${k}" aria-pressed="${filtroCambio === k}">${esc(n)} · ${m}</button>`).join("");
+    $("#tablaCambios tbody").innerHTML = CAMBIOS.filter(c => filtroCambio === "todos" || c.tema === filtroCambio).map(c => { const d = typeof c.antes === "number" && typeof c.ahora === "number" ? c.ahora - c.antes : null;
+      return `<tr><td>${esc(TN[c.tema] || c.tema)}</td><td>${esc(nomCifra(c.clave))}<br><span class="vig">${esc(c.unidad)}</span></td><td>${nfx(c.antes)}<br><span class="vig">${esc(fVig(c.vig_antes))}</span></td><td><b>${nfx(c.ahora)}</b><br><span class="vig">${esc(fVig(c.vig_ahora))}</span></td>
+        <td class="${d > 0 ? "sube" : d < 0 ? "baja" : ""}">${d == null ? "—" : `${d > 0 ? "▲ +" : d < 0 ? "▼ −" : ""}${nfx(Math.abs(d))}`}</td></tr>`; }).join("");
+  };
+  $("#cambiosFiltro").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { filtroCambio = b.dataset.t; pintarCambios(); } });
+  pintarCambios();
+} else { $("#sec-cambios").hidden = true; }
+
+// --- explorador de la zona cruda
+const ex = {f: FOTO, s: "", t: "", q: "", r: false, n: 15};
+$("#explSub").textContent = `${nf(LI.crudo.length)} respuestas en ${LI.fechas.length} fotos`;
+$("#explFechas").innerHTML = LI.fechas.map(f => `<button type="button" class="chip" data-f="${f}">${fDia(f)}</button>`).join("");
+$("#explSitio").innerHTML = `<option value="">Todos los sitios</option>` + [...new Set(LI.crudo.map(r => r.s))].sort().map(s => `<option value="${esc(s)}">${esc(SITIO[s] || s)}</option>`).join("");
+$("#explTema").innerHTML = `<option value="">Todos los temas</option>` + Object.keys(TN).filter(t => LI.crudo.some(r => temasDe(r).includes(t))).map(t => `<option value="${t}">${esc(TN[t])}</option>`).join("");
+function explorar() {
+  $$("#explFechas button").forEach(b => b.setAttribute("aria-pressed", b.dataset.f === ex.f));
+  const q = ex.q.toLowerCase();
+  const lista = LI.crudo.filter(r => r.f === ex.f && (!ex.s || r.s === ex.s) && (!ex.t || temasDe(r).includes(ex.t)) && (!q || r.u.toLowerCase().includes(q)) && (!ex.r || Object.keys(r.r).length));
+  $("#tablaCrudo tbody").innerHTML = lista.slice(0, ex.n).map(r => `<tr><td>${esc(SITIO[r.s] || r.s)}</td><td><span class="mono">${esc(nombreArchivo(r.a))}</span>${pista(r.u) ? ` <span class="pista">${esc(pista(r.u))}</span>` : ""}${Object.keys(r.r).length ? ` <span class="pill priv" title="Se retiraron datos de personas al guardar">${ic("escudo")}retirado</span>` : ""}<br><a class="vig url" href="${esc(r.u)}" target="_blank" rel="noopener">${esc(r.u.length > 70 ? r.u.slice(0, 70) + "…" : r.u)}</a></td>
+    <td>${temasDe(r).map(t => esc(TN[t] || t)).join(", ")}</td><td class="num">${kb(r.bo)}</td><td>${esc(comoCorto(r.c))}</td><td>${r.a ? `<button type="button" class="mini" data-ver="${esc(r.a)}">Ver</button>` : `<span class="pill">${esc(r.e)}</span>`}</td></tr>`).join("");
+  $("#explCuenta").innerHTML = `${nf(lista.length)} respuestas${lista.length > ex.n ? `, se ven ${ex.n}. <button type="button" class="mini" id="explMas">Ver ${Math.min(30, lista.length - ex.n)} más</button>` : "."}`;
+}
+$("#explFechas").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { ex.f = b.dataset.f; ex.n = 15; explorar(); } });
+$("#explSitio").addEventListener("change", e => { ex.s = e.target.value; ex.n = 15; explorar(); });
+$("#explTema").addEventListener("change", e => { ex.t = e.target.value; ex.n = 15; explorar(); });
+$("#explBuscar").addEventListener("input", e => { ex.q = e.target.value; ex.n = 15; explorar(); });
+$("#explRetirado").addEventListener("change", e => { ex.r = e.target.checked; ex.n = 15; explorar(); });
+$("#explCuenta").addEventListener("click", e => { if (e.target.closest("#explMas")) { ex.n += 30; explorar(); } });
+explorar();
+
+// --- qué hizo la IA
+const RES_IA = {}; D.bitacora.forEach(b => RES_IA[b.resultado] = (RES_IA[b.resultado] || 0) + 1);
+$("#iaRegla").innerHTML = `<h3>${ic("robot")} La regla</h3>
+  <p><b>Ninguna cifra la escribió la IA.</b> La IA (Claude) escribió y corrigió los scripts, revisó documentos y pidió las URL de las fuentes desde el navegador del equipo, porque su propio entorno no tenía salida a esos sitios. Cada respuesta quedó guardada tal cual en la zona cruda, con su URL, su fecha y su huella; los scripts leen esas respuestas y escriben la zona curada.</p>
+  <p><b>Cómo se comprueba:</b> verificar.py falla si una fuente de la zona curada no apunta a una respuesta cruda que exista y tenga la huella correcta, y reconstruir.py rehace la zona curada solo con lo crudo y sale idéntica.</p>
+  <p><b>La excepción, dicha por nosotros:</b> en el primer encargo la IA llenó la hoja de fuentes de memoria (licencias, periodos); el equipo abrió cada fuente y la corrigió a mano. Está en la bitácora, encargo 1.</p>`;
+const ORDEN_R = ["Correcto", "Parcial", "Incorrecto"].filter(k => RES_IA[k]);
+$("#iaBarra").innerHTML = `<div class="barra-ia">${ORDEN_R.map(k => `<div class="r-${k}" style="flex:${RES_IA[k]}"><b>${RES_IA[k]}</b> ${k.toLowerCase()}${RES_IA[k] > 1 && k !== "Correcto" ? "es" : RES_IA[k] > 1 ? "s" : ""}</div>`).join("")}</div>`;
+$("#iaTxt").textContent = nb(`${D.bitacora.length} encargos a la IA. «Parcial» quiere decir que hubo que corregir algo antes de usarlo: una licencia que no era, una cifra que no cuadraba entre pestañas, un archivo que no existía. Cada corrección está anotada con cómo la encontramos.`);
+
+// quién encontró cada una de las fuentes del catálogo y cuántas terminaron en el lago
+const origenF = h => { h = h || ""; return h.startsWith("Búsqueda: catálogo del portal") ? "Búsqueda en el portal de Orlando" : h.startsWith("Listado del docx") ? "Documento del curso" : /IA/.test(h) ? "Propuesta por la IA" : "Otra búsqueda"; };
+const HALL = {}; D.catalogo.forEach(f => { const o = origenF(f.hallada_por); HALL[o] = HALL[o] || {n: 0, usadas: 0}; HALL[o].n++; if (f.estado === "integrado") HALL[o].usadas++; });
+const maxH = Math.max(...Object.values(HALL).map(h => h.n));
+$("#iaHallTxt").textContent = nb(`De las ${D.catalogo.length} fuentes revisadas, la IA propuso ${(HALL["Propuesta por la IA"] || {n: 0}).n}; el equipo comprobó cada una (abrió la página, leyó la licencia, probó la URL) y solo ${(HALL["Propuesta por la IA"] || {usadas: 0}).usadas} terminaron alimentando el lago. La barra clara es lo revisado; la oscura, lo que se usa.`);
+$("#iaHallazgo").innerHTML = Object.entries(HALL).sort((a, b) => b[1].n - a[1].n).map(([o, h]) => `<div class="hall"><span>${esc(o)}</span><div class="hb"><i style="width:${h.n / maxH * 100}%"></i><b style="width:${h.usadas / maxH * 100}%"></b></div><span class="vig">${h.n} revisadas · ${h.usadas} en uso</span></div>`).join("");
+
+// --- buscador global (barrios, temas, pestañas, fuentes y números)
+const INDICE_B = [
+  ...B.map((b, i) => ({t: "Barrio", n: b.nombre, d: `Distrito ${b.distrito}${b.pob != null ? ` · ${nf(b.pob)} hab.` : ""}`, ir: () => irABarrio(i)})),
+  ...Object.entries(PN).map(([k, n]) => ({t: "Pestaña", n, d: "", ir: () => location.hash = k})),
+  ...D.fuentes_lago.map(f => ({t: "Fuente", n: f.nombre, d: f.entidad, ir: () => abrirTraza(f.id)})),
+  ...SEGUIR.map(([t, k, n], i) => ({t: "Rastro", n, d: "seguir el número hasta su origen", ir: () => { location.hash = "fuentes"; setTimeout(() => { $("#seguirSel").value = i; seguir(i); $("#sec-seguir").scrollIntoView({behavior: "smooth", block: "start"}); }, 120); }})),
+  ...[["sec-lago", "El lago de datos: zonas cruda, curada y de consumo"], ["sec-explorar", "Explorador de la zona cruda"], ["sec-cambios", "Qué cambió entre fotos"], ["sec-ia", "Qué hizo la IA"]]
+    .map(([id, n]) => ({t: "Datos", n, d: "", ir: () => { location.hash = "fuentes"; setTimeout(() => document.getElementById(id).scrollIntoView({behavior: "smooth", block: "start"}), 120); }}))];
+const sinTilde = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+let resBus = [];
+function buscar(q) {
+  const t = sinTilde(q.trim());
+  resBus = !t ? INDICE_B.filter(x => x.t === "Pestaña" || x.t === "Datos").slice(0, 12) : INDICE_B.map(x => ({x, p: sinTilde(x.n).indexOf(t)})).filter(o => o.p >= 0 || sinTilde(x_d(o.x)).includes(t)).sort((a, b) => (a.p < 0) - (b.p < 0) || a.p - b.p || a.x.n.length - b.x.n.length).slice(0, 12).map(o => o.x);
+  $("#buscadorRes").innerHTML = resBus.length ? resBus.map((x, i) => `<li role="option" data-i="${i}" ${i === 0 ? 'aria-selected="true"' : ""}><span class="pill">${esc(x.t)}</span><b>${esc(x.n)}</b><span class="vig">${esc(x.d)}</span></li>`).join("") : `<li class="vacio">Nada con «${esc(q)}». Pruebe con un barrio (Lake Nona), un tema (desempleo) o una fuente (FRED).</li>`;
+}
+const x_d = x => x.d || "";
+function abrirBuscador() { const d = $("#buscador"); d.showModal ? d.showModal() : d.setAttribute("open", ""); $("#buscadorIn").value = ""; buscar(""); $("#buscadorIn").focus(); }
+const irRes = i => { const x = resBus[i]; if (!x) return; $("#buscador").close(); x.ir(); };
+$("#buscarBtn").addEventListener("click", abrirBuscador);
+$("#buscadorIn").addEventListener("input", e => buscar(e.target.value));
+$("#buscadorIn").addEventListener("keydown", e => {
+  const lis = $$("#buscadorRes li[data-i]"), act = lis.findIndex(li => li.getAttribute("aria-selected") === "true");
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); const n = Math.max(0, Math.min(lis.length - 1, act + (e.key === "ArrowDown" ? 1 : -1))); lis.forEach((li, j) => li.setAttribute("aria-selected", j === n)); lis[n] && lis[n].scrollIntoView({block: "nearest"}); }
+  if (e.key === "Enter") { e.preventDefault(); irRes(Math.max(0, act)); } });
+$("#buscadorRes").addEventListener("click", e => { const li = e.target.closest("li[data-i]"); if (li) irRes(+li.dataset.i); });
+$("#buscador").addEventListener("click", e => { if (e.target.id === "buscador") $("#buscador").close(); });
+addEventListener("keydown", e => { if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && $("#presentacion").hidden && !$("#buscador").open) { e.preventDefault(); abrirBuscador(); } });
+
+// --- en el resumen: de qué foto son los datos y qué cambió desde la anterior
+if (FOTO_ANT && CAMBIOS.length) $("#lineaInicio").insertAdjacentHTML("beforeend", `<a class="cambio-link" href="#fuentes/cambios">${ic("capas")}Foto del ${fDia(FOTO)}: ${CAMBIOS.length} cifras cambiaron desde el ${fDia(FOTO_ANT)}</a>`);
 
 /* ================= DECIDIR: cuatro perfiles, cada uno con su regla a la vista ================= */
 // Percentil de 0 a 100 de cada valor dentro de una lista (empates al medio); null queda null
@@ -1757,7 +2053,10 @@ addEventListener("keydown", e => { if ($("#presentacion").hidden) return; if (e.
 const VISTAS = ["inicio", "decidir", "comparar", "gente", "economia", "barrios", "seguridad", "turismo", "clima", "fuentes"];
 function mostrar(ruta, desplazar = true) {
   let [nombre, sub, extra] = decodeURIComponent(ruta || "").split("/");
+  if (nombre === "datos" || nombre === "lago") nombre = "fuentes";
   if (!VISTAS.includes(nombre)) nombre = "inicio";
+  if (nombre === "fuentes" && sub) { desplazar = false; setTimeout(() => { const el = document.getElementById("sec-" + sub); if (el) el.scrollIntoView({block: "start"}); }, 60); }
+  if (nombre === "barrios" && sub) { const i = B.findIndex(b => String(b.id) === sub || norm(b.nombre) === norm(sub)); if (i >= 0) { desplazar = false; setTimeout(() => { atlasB.seleccionar(i, true); $("#atlasBarrios").scrollIntoView({block: "center"}); }, 150); } }
   if (nombre === "decidir") mostrarPerfil(sub || perfil);
   if (nombre === "comparar") mostrarComparar(sub || modoComp, extra);
   $$(".vista").forEach(s => s.hidden = s.dataset.vista !== nombre);

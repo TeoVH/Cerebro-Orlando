@@ -1,26 +1,38 @@
 #!/usr/bin/env python3
-"""La puerta de salida del tramo: borrar el lago y reconstruirlo desde los scripts.
+"""Reconstruir el lago y comprobar que la ingesta es reproducible.
 
-Equivale a: rm -rf lago/raw; for s in ingesta/pull_*.py; do python3 $s; done; python3 verificacion/verificar.py; git diff --stat
-Funciona igual en Windows. Si después git muestra cambios que nadie esperaba, la ingesta no es reproducible.
-(clima.json cambia siempre: es tiempo real y es esperado.)"""
-import os, pathlib, shutil, subprocess, sys
+    python3 reconstruir.py                         pide todo a las fuentes (internet) y guarda una foto nueva con la fecha de hoy
+    python3 reconstruir.py --desde-crudo 2026-11-02   rehace la zona curada de esa fecha SIN internet, solo con la zona cruda
+
+En los dos casos corre la verificación al final y, si pasa, arma la zona de consumo (publicar/consumo.py). Con --desde-crudo, «git diff» sobre lago/ tiene que salir vacío: si cambia
+algo, lo crudo no alcanza para explicar lo publicado (el linaje está roto). Funciona igual en Windows.
+Orden: territorio va primero porque los demás reparten sus datos por barrio con esas capas."""
+import argparse, os, pathlib, shutil, subprocess, sys
 
 RAIZ = pathlib.Path(__file__).resolve().parent
-ENV = dict(os.environ, PYTHONIOENCODING="utf-8")
+ap = argparse.ArgumentParser()
+ap.add_argument("--desde-crudo", metavar="AAAA-MM-DD", help="reconstruir esa fecha desde lago/crudo, sin internet")
+args = ap.parse_args()
 
-for carpeta, patron in (("lago/raw", "*/*.json"), ("lago/territorio", "*.geojson")):
-    for f in (RAIZ / carpeta).glob(patron):
+ENV = dict(os.environ, PYTHONIOENCODING="utf-8")
+if args.desde_crudo:
+    ENV.update(CEREBRO_DESDE_CRUDO=args.desde_crudo, CEREBRO_FECHA_PRUEBA=args.desde_crudo, CEREBRO_GUARDAR_CRUDO="0")
+    for f in (RAIZ / "lago" / "curado").glob(f"tema=*/fecha={args.desde_crudo}/*.json"):
         f.unlink()
+
+scripts = sorted((RAIZ / "ingesta").glob("pull_*.py"), key=lambda s: (s.stem != "pull_territorio", s.name))
 fallaron = []
-for s in sorted((RAIZ / "ingesta").glob("pull_*.py")):
+for s in scripts:
     print(f"\n== {s.name}")
     if subprocess.run([sys.executable, str(s)], cwd=RAIZ, env=ENV).returncode != 0:
         fallaron.append(s.name)
 print("\n== verificar.py")
 verif = subprocess.run([sys.executable, str(RAIZ / "verificacion" / "verificar.py")], cwd=RAIZ, env=ENV).returncode
+if verif == 0:
+    print("\n== publicar/consumo.py (tablas para SQL e inventario del lago)")
+    subprocess.run([sys.executable, str(RAIZ / "publicar" / "consumo.py")], cwd=RAIZ, env=ENV)
 if shutil.which("git"):
-    print("\n== git diff --stat")
+    print("\n== git diff --stat -- lago")
     subprocess.run(["git", "diff", "--stat", "--", "lago"], cwd=RAIZ)
 print("\nScripts que fallaron:", ", ".join(fallaron) or "ninguno", "| verificación:", "pasó" if verif == 0 else "FALLÓ (no se publica)")
 sys.exit(1 if fallaron or verif else 0)

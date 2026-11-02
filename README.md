@@ -5,9 +5,25 @@ Responde seis preguntas con datos abiertos, ayuda a decidir (emprender, vivir, c
 Orlando con otras ciudades, sus seis distritos y sus barrios. Cada cifra trae su fuente, su vigencia y la fecha en que la
 comprobamos.
 
-Réplica del lago del Cerebro Lima: un script por tema, un contrato común, una verificación que sabe fallar y una vista
-de una sola página. Solo biblioteca estándar de Python 3.9 o superior: no hay nada que instalar ni llaves que pedir.
-(`catalogo/exportar_catalogo.py` es la excepción: usa `openpyxl` para leer el Excel, y no forma parte del lago.)
+Réplica mejorada del lago del Cerebro Lima: un script por tema, un **lago de datos con tres zonas** (cruda, curada y de
+consumo) y fotos con fecha, una verificación que sabe fallar y una vista publicada en Vercel. La ingesta, la verificación
+y la vista usan solo la biblioteca estándar de Python 3.9 o superior: no hay nada que instalar ni llaves que pedir.
+Opcionales: `boto3` para subir el lago a Amazon S3, `duckdb` para consultarlo con SQL en local y `openpyxl` para
+exportar el Excel del catálogo.
+
+**Las tres preguntas de la sustentación, en corto:**
+
+- **¿De dónde jalamos los datos?** De 32 fuentes abiertas en 12 sitios (Datos abiertos y SIG de la Ciudad de Orlando,
+  FRED, Census Reporter, FEMA, Servicio Meteorológico, NOAA, Wikimedia y Wikipedia, Indeed Hiring Lab en GitHub y Zillow).
+  Cada pedido queda en `lago/catalogo/manifiesto_crudo/manifiesto.jsonl` con su URL exacta, la fecha y su huella.
+- **¿De dónde los sacó la IA?** La IA (Claude) no puso ninguna cifra: escribió los scripts y pidió esas mismas URL desde el
+  navegador del equipo, porque su entorno no tenía salida a esos sitios. Las respuestas se guardaron tal cual en la zona
+  cruda y los scripts las leyeron. `verificar.py` falla si una fuente no apunta a una respuesta cruda con la huella
+  correcta, y `reconstruir.py --desde-crudo` rehace la zona curada sin internet y sale idéntica. La única excepción está
+  en la bitácora (encargo 1): el primer borrador del catálogo de fuentes lo llenó de memoria y el equipo lo corrigió.
+- **¿Dónde están guardados?** En `lago/`, con historial en este repositorio; publicado completo en Vercel junto a la
+  página (`/lago/…`); y listo para subirse igual a un bucket privado de Amazon S3 (`publicar/subir_s3.py`) y consultarse
+  con Athena (`publicar/athena.sql`).
 
 ## Las seis preguntas y de dónde salen
 
@@ -26,10 +42,14 @@ la ciudad; el año anterior para las tendencias; la mediana de los 125 barrios e
 ## Cómo se corre
 
 ```
-python3 reconstruir.py                       # borra el lago, corre todos los ingesta/pull_*.py y verifica (funciona en Windows)
-python3 verificacion/verificar.py            # con un solo FAIL no se publica
-python3 verificacion/probar_verificador.py   # comprueba que la verificación sepa fallar
-python3 vista/construir_vista.py             # arma vista/index.html; corre verificar.py antes y no construye si falla
+python3 reconstruir.py                           # pide todo a las fuentes, guarda una foto nueva con la fecha de hoy y verifica
+python3 reconstruir.py --desde-crudo 2026-11-02  # rehace esa foto SIN internet, solo con la zona cruda (git diff debe salir vacío)
+python3 verificacion/verificar.py                # con un solo FAIL no se publica
+python3 verificacion/probar_verificador.py       # comprueba que la verificación sepa fallar
+python3 publicar/consumo.py                      # zona de consumo (tablas para SQL) e inventario del lago
+python3 vista/construir_vista.py                 # arma el tablero (publico/ para Vercel y vista/index.html); no construye si verificar falla
+python3 publicar/probar_sql.py                   # consultas SQL de ejemplo sobre el lago, con DuckDB (pip install duckdb)
+python3 publicar/subir_s3.py --bucket NOMBRE     # sube el lago a S3 (pip install boto3 y llaves de AWS; ver abajo)
 ```
 
 Los scripts de ingesta, uno por tema (cada uno dice arriba qué lee y qué escribe):
@@ -53,11 +73,12 @@ Los scripts de ingesta, uno por tema (cada uno dice arriba qué lee y qué escri
 | `pull_clima_historico.py` | Temperatura media y lluvia de cada año desde 1953 |
 | `pull_territorio.py` | Límite de la ciudad, barrios, distritos de comisionados y lagos |
 
-**Cómo se trajeron los datos de la v3.** El contenedor donde se construyó no tiene salida a esas fuentes, así que el
-navegador del grupo pidió cada URL (las mismas que arman los scripts), las guardó en un archivo y los scripts corrieron
-contra esa copia, sin cambiar una línea. Al volver a correrlos sobre la copia, `CEREBRO_FECHA_PRUEBA=2026-10-26`
-mantiene como fecha de prueba el día en que las fuentes respondieron de verdad. En un computador con internet,
-`reconstruir.py` las pide directo.
+**Cómo se trajeron los datos de las dos fotos (26 oct y 2 nov de 2026).** El entorno donde trabajó la IA no tiene
+salida a esas fuentes, así que el navegador del equipo pidió cada URL (las mismas que arman los scripts) y los scripts
+corrieron contra esa captura sin cambiar una línea (`CEREBRO_CAPTURA=<carpeta>`, un archivo por URL). Cada respuesta
+quedó en la zona cruda anotada como «navegador del equipo». La excepción es el archivo de Indeed, que está en GitHub y el
+script lo pidió directo; el del 26 de octubre se recuperó del historial de GitHub (commit `4f4b784`, el vigente ese día).
+`CEREBRO_FECHA_PRUEBA` fija la fecha de la foto. En un computador con internet, `reconstruir.py` pide todo directo.
 
 En Windows se usa `python` o `py` en lugar de `python3`. Opcional: `set CONTACTO=correo-del-grupo@...` antes de
 correr, porque el servicio del clima pide que el cliente se identifique.
@@ -66,12 +87,81 @@ correr, porque el servicio del clima pide que el cliente se identifique.
 
 | Carpeta | Qué guarda |
 |---|---|
-| `ingesta/` | Un script por tema. `comun.py` tiene lo compartido: contrato, consultas a Socrata, ArcGIS y FRED, la supresión bajo el umbral y la geometría (índice espacial, rejilla, reparto de zonas entre barrios). |
+| `ingesta/` | Un script por tema. `comun.py` tiene lo compartido (contrato, consultas a Socrata, ArcGIS y FRED, supresión bajo el umbral, geometría); `crudo.py` guarda y relee la zona cruda; `privacidad.py` tiene las reglas de datos de personas que usan la ingesta y la verificación. |
+| `lago/` | El lago de datos (ver abajo). Va completo al repositorio. |
 | `catalogo/` | `fuentes_lago.json`: las 32 fuentes que alimentan el lago, con su licencia tal como aparece y su nivel de protección. `catalogo_completo.json`, `diccionario.json` y `bitacora_ia.json`: exportados del Excel por `exportar_catalogo.py`. |
-| `lago/` | `lago/raw/<tema>/<tema>.json` (17 temas): lo que escribe cada script, con la forma del contrato. Está en `.gitignore`. `lago/territorio/`: capas GeoJSON en WGS84, simplificadas; esta sí se publica. |
 | `verificacion/` | `verificar.py` y la prueba de que sabe fallar. |
-| `vista/` | `plantilla.html` (estructura), `estilos.css`, `app.js` y `construir_vista.py`, que junta todo con el lago en una sola página: `index.html`. |
+| `publicar/` | `consumo.py` (zona de consumo e inventario), `subir_s3.py` (lago → Amazon S3), `athena.sql` (tablas y consultas de ejemplo), `probar_sql.py` (las mismas consultas con DuckDB) y `politica_iam.json` (permisos mínimos para subir). |
+| `vista/` | `plantilla.html`, `estilos.css`, `app.js` y `construir_vista.py`. |
+| `publico/` | Lo que publica Vercel: `index.html` y `app.js`. Al construir (y en el build de Vercel) se copia `lago/` adentro. |
 | `entrega1/`, `entrega2/` | El diccionario de datos (Excel) tal como se entregó en cada corte. |
+
+## El lago de datos
+
+```
+lago/
+  crudo/sitio=<servidor>/fecha=<AAAA-MM-DD>/<nombre>-<huella>.<json|csv>.gz   lo que respondió cada fuente, tal cual
+  curado/tema=<tema>/fecha=<AAAA-MM-DD>/<tema>.json                          un archivo por tema y foto, verificado
+  territorio/*.geojson                                                       capas de referencia (barrios, distritos, límite, lagos)
+  consumo/cifras/fecha=<…>/cifras.jsonl.gz                                   una fila por cifra (para SQL)
+  consumo/series/fecha=<…>/series.jsonl.gz                                   una fila por punto de cada serie (para SQL)
+  consumo/tablero/tablero.json                                               lo que lee el tablero publicado
+  catalogo/manifiesto_crudo/manifiesto.jsonl                                 una línea por respuesta: URL, fecha, huellas, cómo se pidió, qué se retiró
+  catalogo/fuentes/fuentes.jsonl                                             las fuentes en uso, con licencia y protección
+  catalogo/catalogo_lago.json                                                inventario: cada archivo con su zona, fecha, tamaño y huella
+```
+
+- **Zona cruda.** `ingesta/crudo.py` guarda cada respuesta antes de que el script la toque, comprimida y con dos
+  huellas SHA-256: la de lo que llegó y la de lo guardado. Antes de guardar se retiran los datos de personas que traen
+  algunas respuestas (las fichas del portal de Orlando traen el nombre de quien publicó el conjunto y «valores de
+  muestra» de cada columna, con correos de personas; la capa de distritos trae el nombre de cada comisionado). El
+  manifiesto dice qué se retiró. Si después de retirar todavía aparece un correo o un teléfono, la respuesta no se
+  guarda y queda «bloqueada».
+- **Zona curada.** La forma del contrato (`tema`, `probado`, `fuentes`, `cifras`, `series`), y cada fuente con la lista
+  `crudo` de respuestas de las que salió: ese es el **linaje**. Cada foto queda en su carpeta de fecha; nada se sobrescribe.
+- **Zona de consumo.** Tablas planas para consultar con SQL y el archivo del tablero.
+- **Particiones** `clave=valor` al estilo Hive: Athena, DuckDB o Spark las leen como columnas sin configurar nada.
+- **Reproducible:** `reconstruir.py --desde-crudo <fecha>` borra la zona curada de esa fecha y la rehace leyendo solo la
+  zona cruda; sale idéntica byte a byte (probado con las dos fotos). Todo lo que depende del día usa la fecha de la foto,
+  no el reloj (`comun.fecha_prueba()`).
+- Hoy pesa ~30 MB: 27 MB de zona cruda (el archivo de Indeed, 63 MB sin comprimir, es casi la mitad), 2 MB curada,
+  2 MB de consumo.
+
+## Dónde viven los datos
+
+| Lugar | Qué hay | Para qué |
+|---|---|---|
+| Este repositorio (GitHub) | Todo `lago/` | Historial: cada foto nueva es un cambio con fecha y autor; cualquiera puede clonar y reconstruir |
+| Vercel | La página y una copia de `lago/` en `/lago/…` | Ver y descargar: el tablero lee `lago/consumo/tablero/tablero.json` y cada respuesta cruda se abre desde la pestaña «Datos y fuentes» |
+| Amazon S3 (opcional) | El mismo árbol en un bucket privado, cifrado y con versionado | Nube de verdad: Athena consulta las tablas con SQL |
+
+### Publicar en Vercel
+
+`vercel.json` ya trae todo: sin framework, sin instalación, el build copia `lago/` dentro de `publico/` y se publica
+`publico/`. Pasos: en vercel.com, *Add New → Project → Import* este repositorio (lo importa quien tenga acceso al repo en
+GitHub) y *Deploy*, sin cambiar nada. Cada push a la rama vuelve a publicar. Plan Hobby: gratis para uso personal y no
+comercial; 100 GB de transferencia al mes (el sitio pesa ~32 MB). Sin GitHub: `npx vercel deploy --prod` desde la raíz.
+
+### Subir el lago a Amazon S3 y consultarlo con Athena
+
+1. Una cuenta de AWS (o AWS Academy) y un usuario con la política de `publicar/politica_iam.json` (solo ese bucket).
+2. `pip install boto3` y `aws configure` (las llaves las escribe cada quien en su computador; nunca van al repo).
+3. `python publicar/subir_s3.py --bucket cerebro-orlando-lago-eafit --crear`: crea el bucket privado (acceso público
+   bloqueado, cifrado SSE-S3, versionado) y sube el lago. Las siguientes veces, sin `--crear`: sube solo lo que cambió.
+4. Pegar en el editor de Athena el archivo `publicar/athena_<bucket>.sql` que deja el script: crea la base
+   `cerebro_orlando`, las tablas `cifras`, `series`, `manifiesto` y `fuentes`, la vista `por_barrio` y cinco consultas
+   de ejemplo (qué cambió entre fotos, barrios con más casos, de qué sitios sale cada tema, qué se retiró por privacidad,
+   cada cifra con su licencia).
+5. Sin nube: `python publicar/probar_sql.py` corre las mismas consultas con DuckDB sobre los archivos locales.
+
+Costo: el lago pesa ~30 MB; S3 cobra centavos al año y Athena cobra por datos leídos (estas consultas leen kilobytes).
+
+### Actualización automática (experimental)
+
+`.github/workflows/actualizar-lago.yml` corre `reconstruir.py` y la vista desde los servidores de GitHub y guarda la
+foto nueva si la verificación pasa. Está en modo manual (*Actions → Actualizar el lago → Run workflow*); si sale bien, se
+le activa el horario semanal. Algunas fuentes podrían rechazar a los servidores de GitHub: en ese caso falla y no
+guarda nada.
 
 ## Cómo cuidamos a las personas
 
@@ -91,6 +181,9 @@ punto exacto), código urbano (nombres en el caso), licencias de negocio (dueño
 - El censo es agregado por diseño, pero un porcentaje de un barrio con muy poca gente se acerca a describir hogares: los
   barrios con menos de 200 habitantes estimados no publican porcentajes ni medianas, y `verificar.py` lo exige.
 - De los colegios solo se pide el tipo: el servidor trae nombre del director y teléfono, y no se descargan.
+- La zona cruda guarda respuestas enteras, así que tiene su propio filtro (`ingesta/privacidad.py`): antes de guardar
+  se retiran los campos con nombre de dato personal y los «valores de muestra» de las fichas del portal (ahí aparecían
+  correos de personas que registraron alquileres de corto plazo); `verificar.py` revisa cada respuesta guardada.
 
 Las demás fuentes son **«abierto»**: series agregadas por área sin datos de personas.
 
@@ -102,8 +195,9 @@ si la diferencia pasa de 15 %. El índice de riesgo de FEMA y la proyección 204
 
 ## La vista
 
-`vista/index.html` es una sola página sin servidor. Diez secciones: resumen, decidir, comparar, gente, economía y
-vivienda, barrios, seguridad, turismo, clima y fuentes.
+Diez secciones: resumen, decidir, comparar, gente, economía y vivienda, barrios, seguridad, turismo, clima y «datos y
+fuentes». Se publica de dos formas: `publico/` (Vercel; la página lee sus datos de `lago/consumo/tablero/tablero.json`)
+y `vista/index.html` (un solo archivo con los datos adentro: se abre sin servidor).
 
 - **Resumen:** un tablero por perfil con su dato principal; las seis respuestas con su cifra, su tendencia en palabras y
   su fuente; Orlando contra ciudades parecidas (seis medidas); las preguntas sin respuesta abierta; un mapa 3D que gira
@@ -132,8 +226,15 @@ vivienda, barrios, seguridad, turismo, clima y fuentes.
 - Cada cifra abre su ficha de trazabilidad: fuente, licencia, enlace exacto consultado, fecha de prueba y campo del
   diccionario. Lo que la vista calcula (distrito de cada barrio, área, «por km²», «por 1.000 habitantes», el índice, los
   puntajes de Decidir) está marcado como «derivado».
-- Para desplegar en Vercel: carpeta raíz `vista/`, sin comando de build.
-- `python3 vista/construir_vista.py --sin-verificar` sirve solo para probar el diseño; la página lo dice en «Fuentes».
+- **Datos y fuentes:** las tres preguntas (de dónde salen, qué hizo la IA, dónde viven); el recorrido de los datos
+  (diagrama de flujo sitio → tema del lago → pestaña: al tocar un nodo se ven sus archivos); el lago zona por zona;
+  «sigue un número» (del tablero a la fila de consumo, al archivo curado, a la respuesta cruda y a la fuente, paso a paso);
+  qué cambió entre una foto y la siguiente; un explorador de las respuestas crudas con filtros y vista previa (en la
+  versión publicada abre el archivo del lago y lo descomprime en el navegador); la bitácora de la IA; el catálogo y el
+  diccionario.
+- **Buscador** (botón «Buscar» o tecla `/`): barrios, pestañas, fuentes y números para rastrear. Cada barrio tiene un
+  enlace directo (`#barrios/<id>`) que se copia desde su ficha.
+- `python3 vista/construir_vista.py --sin-verificar` sirve solo para probar el diseño; la página lo dice en «Datos y fuentes».
 - Desde la consola del navegador, `cerebro.B` tiene el modelo de barrios que usan todas las vistas.
 
 ## Lo que sigue pendiente

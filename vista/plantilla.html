@@ -52,6 +52,10 @@
     <symbol id="i-tren" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="14" rx="3"/><path d="M6 11h12M9 21l1.5-4M15 21l-1.5-4M9.5 14h.01M14.5 14h.01"/></symbol>
     <symbol id="i-gota" viewBox="0 0 24 24"><path d="M12 3.5s6.5 7 6.5 11.2A6.5 6.5 0 0 1 5.5 14.7C5.5 10.5 12 3.5 12 3.5z"/></symbol>
     <symbol id="i-viento" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h7"/></symbol>
+    <symbol id="i-capas" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/></symbol>
+    <symbol id="i-robot" viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/></symbol>
+    <symbol id="i-nube" viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6 1.6A3.2 3.2 0 0 0 7 18Z"/></symbol>
+    <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="12" r="2.2"/><path d="M6 8.2v7.6M8.2 6H12a4 4 0 0 1 4 4v0"/></symbol>
     <symbol id="i-futuro" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
   </defs>
 </svg>
@@ -68,6 +72,7 @@
       <span><b>Cerebro Orlando</b><small>Datos abiertos de la ciudad para decidir, con la fuente de cada cifra</small></span>
     </a>
     <button class="estado-lago" id="estadoLago" type="button" aria-label="Ver cómo se comprobaron los datos"><span class="pt"></span><span id="estadoTxt"></span></button>
+    <button class="icono-btn" id="buscarBtn" type="button" aria-label="Buscar barrios, temas y fuentes (atajo: /)"><svg class="i"><use href="#i-buscar"/></svg><span class="largo">Buscar</span></button>
     <button class="icono-btn prim" id="presentarBtn" type="button" aria-label="Abrir el modo presentación"><svg class="i"><use href="#i-pantalla"/></svg><span class="largo">Presentar</span></button>
     <button class="icono-btn" id="temaBtn" type="button" aria-label="Cambiar entre modo claro y oscuro"><svg class="i"><use href="#i-tema"/></svg></button>
     <nav class="preguntas" aria-label="Preguntas que responde el tablero">
@@ -80,7 +85,7 @@
       <a href="#seguridad" data-v="seguridad"><svg class="i"><use href="#i-sirena"/></svg>Seguridad</a>
       <a href="#turismo" data-v="turismo"><svg class="i"><use href="#i-maleta"/></svg>Turismo</a>
       <a href="#clima" data-v="clima"><svg class="i"><use href="#i-sol"/></svg>Clima</a>
-      <a href="#fuentes" data-v="fuentes"><svg class="i"><use href="#i-fuente"/></svg>Fuentes</a>
+      <a href="#fuentes" data-v="fuentes"><svg class="i"><use href="#i-fuente"/></svg>Datos y fuentes</a>
     </nav>
   </div>
 </header>
@@ -383,10 +388,63 @@
 <!-- ================= FUENTES ================= -->
 <section class="vista" data-vista="fuentes" aria-labelledby="t-fue" hidden>
   <div class="cabeza">
-    <p class="eyebrow">Trazabilidad</p>
-    <h2 id="t-fue">¿De dónde sale cada dato?</h2>
-    <p class="respuesta" id="r-fuentes"></p>
+    <p class="eyebrow">Datos · trazabilidad · lago</p>
+    <h2 id="t-fue">¿De dónde sale cada dato y dónde vive?</h2>
+    <p class="respuesta" id="r-datos"></p>
   </div>
+  <div class="tres-preg" id="tresPreg"></div>
+
+  <div class="seccion" id="sec-flujo">
+    <div class="barra-graf"><h2>El recorrido de los datos</h2><span class="peq">Toca un sitio, un tema o una pestaña para ver sus archivos</span></div>
+    <div class="card panel flujo-card"><p class="peq solo-cel">Desliza a los lados para ver todo el recorrido →</p><div class="flujo-wrap"><svg id="flujo" class="flujo" role="img" aria-label="Diagrama de flujo de los datos"></svg></div>
+      <div class="flujo-ley"><span><i class="z1"></i>Sitio que respondió</span><span><i class="z2"></i>Tema del lago (zona curada)</span><span><i class="z3"></i>Pestaña del tablero</span><button type="button" class="btn" id="flujoTodo" hidden>Ver todo</button></div>
+      <div id="flujoDet" class="flujo-det" aria-live="polite"></div></div>
+  </div>
+
+  <div class="seccion" id="sec-lago">
+    <div class="barra-graf"><h2>El lago, zona por zona</h2><span class="peq" id="lagoSub"></span></div>
+    <div class="zonas" id="zonas"></div>
+    <div class="donde" id="donde"></div>
+  </div>
+
+  <div class="seccion" id="sec-seguir">
+    <div class="barra-graf"><h2>Sigue un número hasta su origen</h2><span class="peq">Del tablero a la respuesta que dio la fuente, paso a paso</span></div>
+    <div class="card panel"><div class="filtros"><label class="sr" for="seguirSel">Escoge un número</label><select id="seguirSel" class="sel"></select><button class="btn prim" type="button" id="seguirPlay"><svg class="i"><use href="#i-play"/></svg>Seguir el rastro</button></div>
+      <ol class="cadena" id="cadena"></ol></div>
+  </div>
+
+  <div class="seccion" id="sec-cambios">
+    <div class="barra-graf"><h2>Qué cambió entre una foto y la siguiente</h2><span class="peq" id="cambiosSub"></span></div>
+    <div class="card panel"><p class="peq" id="cambiosTxt"></p><div class="filtros" id="cambiosFiltro" role="group" aria-label="Filtrar por tema"></div>
+      <div class="tabla-wrap"><table id="tablaCambios"><thead><tr><th>Tema</th><th>Dato</th><th>Antes</th><th>Ahora</th><th>Cambio</th></tr></thead><tbody></tbody></table></div></div>
+  </div>
+
+  <div class="seccion" id="sec-explorar">
+    <div class="barra-graf"><h2>Explorador de la zona cruda</h2><span class="peq" id="explSub"></span></div>
+    <div class="card panel">
+      <div class="filtros explorar-filtros">
+        <div class="filtros" id="explFechas" role="group" aria-label="Fecha de la foto"></div>
+        <label class="sr" for="explSitio">Sitio</label><select id="explSitio" class="sel"></select>
+        <label class="sr" for="explTema">Tema</label><select id="explTema" class="sel"></select>
+        <div class="buscar" style="max-width:260px"><label class="sr" for="explBuscar">Buscar en las URL</label><svg class="i"><use href="#i-buscar"/></svg><input id="explBuscar" placeholder="Buscar en las URL" autocomplete="off"></div>
+        <label class="toggle"><input type="checkbox" id="explRetirado"> Solo con datos de personas retirados</label>
+      </div>
+      <div class="tabla-wrap"><table id="tablaCrudo"><thead><tr><th>Sitio</th><th>Respuesta</th><th>Tema</th><th>Tamaño</th><th>Cómo se pidió</th><th></th></tr></thead><tbody></tbody></table></div>
+      <p class="peq" id="explCuenta"></p>
+    </div>
+  </div>
+
+  <div class="seccion" id="sec-ia">
+    <div class="barra-graf"><h2>Qué hizo la inteligencia artificial y qué no</h2><span class="peq">Cada encargo, qué respondió y cómo lo comprobamos</span></div>
+    <div class="grid-2">
+      <div class="card panel ia-regla" id="iaRegla"></div>
+      <div class="card panel"><h3>Cómo salió cada encargo</h3><div id="iaBarra" class="ia-barra"></div><p class="peq" id="iaTxt"></p>
+        <h3 style="margin-top:18px">Quién encontró cada fuente</h3><p class="peq" id="iaHallTxt"></p><div class="hallazgo" id="iaHallazgo"></div></div>
+    </div>
+    <div class="card panel"><div class="ia" id="bitacora"></div></div>
+  </div>
+
+  <div class="seccion"><h2>Las fuentes que revisamos</h2><p class="peq" id="r-fuentes" style="max-width:72ch"></p></div>
   <div class="card panel"><div class="embudo" id="embudo" role="img"></div><div class="ley-embudo" id="leyEmbudo"></div></div>
   <div class="nota" id="notaVerif"><svg class="i"><use href="#i-ok"/></svg><p></p></div>
   <div class="nota" id="notaLicencias"><svg class="i"><use href="#i-escudo"/></svg><p><b>¿Por qué usamos fuentes que no declaran licencia?</b> Las de la Ciudad de Orlando (permisos, negocios, código urbano, policía, solicitudes de planeación y su SIG) no traen licencia en su ficha, y por eso la verificación deja avisos. Las usamos porque son registros públicos de un gobierno local de Florida: la Constitución de Florida (art. I, sección 24) y el <a href="https://www.flsenate.gov/Laws/Statutes/2022/Chapter119/All">capítulo 119 de los Estatutos de Florida</a> dan a cualquier persona el derecho a consultarlos y copiarlos, y un tribunal de apelaciones de Florida decidió en <a href="https://en.wikipedia.org/wiki/Microdecisions,_Inc._v._Skinner"><i>Microdecisions v. Skinner</i> (2004)</a> que una entidad pública no puede exigir licencia ni reclamar derechos de autor sobre sus registros si una ley no la autoriza. Aun así, citamos a la ciudad junto a cada dato, solo publicamos conteos agregados y revisamos la ficha de cada fuente en cada actualización: si la ciudad publicara una licencia restrictiva, la anotaríamos en el catálogo y retiraríamos o ajustaríamos esa fuente. Zillow tampoco declara licencia: publica sus archivos para análisis propios y lo citamos en cada gráfico. Esto es el criterio del equipo, no un concepto jurídico.</p></div>
@@ -402,7 +460,6 @@
     <div class="lista-fichas" id="fichas"></div>
   </div>
   <div class="grid-2">
-    <div class="card panel"><h3>Cómo usamos la IA</h3><p class="peq">Cada encargo, qué respondió y cómo lo comprobamos. Los errores quedan anotados.</p><div class="ia" id="bitacora"></div></div>
     <div class="card panel"><h3>Diccionario de datos</h3><p class="peq">Cada campo del lago con su significado. Si un campo no está aquí, el tablero no lo usa.</p>
       <details><summary id="sumDic">Ver los campos</summary><div class="tabla-wrap" style="margin-top:10px"><table id="tablaDic"><thead><tr><th>Ficha</th><th>Campo</th><th>Qué significa</th><th>Clase</th></tr></thead><tbody></tbody></table></div></details></div>
   </div>
@@ -420,6 +477,8 @@
 </footer>
 
 <dialog id="traza" aria-labelledby="trazaT"><div class="in" id="trazaIn"></div></dialog>
+<dialog id="verCrudo" aria-labelledby="verCrudoT"><div class="in" id="verCrudoIn"></div></dialog>
+<dialog id="buscador" aria-label="Buscar en el tablero"><div class="in buscador-in"><div class="buscar"><svg class="i"><use href="#i-buscar"/></svg><input id="buscadorIn" placeholder="Barrio, tema, fuente o número…" autocomplete="off" aria-label="Buscar barrios, temas y fuentes"></div><ul id="buscadorRes" class="buscador-res" role="listbox"></ul><p class="peq">Enter abre el primero · Esc cierra · atajo: tecla /</p></div></dialog>
 <div id="globo" role="tooltip"></div>
 <div id="presentacion" hidden role="dialog" aria-modal="true" aria-label="Modo presentación">
   <div class="barra"><b style="font-family:var(--font-display)">Cerebro Orlando · presentación</b><span class="vig" id="pres-n"></span><button class="btn" type="button" id="pres-cerrar"><svg class="i"><use href="#i-cerrar"/></svg>Salir</button></div>

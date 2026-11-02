@@ -148,5 +148,15 @@
   "resultado": "Parcial",
   "fuentes": "F12, F14, F41, F57, F70, F79, F81, F86",
   "aprendizaje": "Una segunda revisión, hecha por otra persona con otra sesión de IA, encontró lo que 519 comprobaciones no ven: las pruebas revisan cada dato, no si dos vistas cuentan lo mismo. Y la revisión también hay que comprobarla: dos de sus ocho hallazgos no se sostenían."
+ },
+ {
+  "n": "16",
+  "herramienta": "Claude (con el navegador del equipo para pedir las fuentes)",
+  "encargo": "Preparar la sustentación: dejar claro de dónde salen los datos, de dónde los sacó la IA y dónde viven; convertir el lago en un lago de datos con zonas listo para S3, publicarlo en Vercel, traer los datos de nuevo y mejorar la interactividad del tablero",
+  "respuesta": "Agregó la zona cruda (cada respuesta original comprimida, con URL, fecha y dos huellas en un manifiesto), el linaje en la zona curada (cada fuente apunta a sus respuestas crudas), una foto por fecha, la zona de consumo (tablas para SQL), el inventario del lago, el script para subirlo a S3 con las tablas de Athena, la configuración de Vercel y la pestaña «Datos y fuentes» (recorrido de los datos, sigue un número, qué cambió entre fotos, explorador de lo crudo y qué hizo la IA), además de un buscador. Pidió de nuevo las 108 URL desde el navegador del equipo el 2026-11-02 y rehízo la foto del 2026-10-26 desde la copia guardada ese día.",
+  "comprobacion": "verificar.py: 1056 comprobaciones, 0 fallos (nuevas: huella y privacidad de cada respuesta cruda y linaje completo). probar_verificador.py atrapa una respuesta cruda con un correo, una que cambió después de guardarse y una fuente sin respuestas crudas. reconstruir.py --desde-crudo rehízo las dos fotos sin internet, idénticas byte a byte. La foto del 26-oct rehecha coincide con la publicada ese día salvo la fecha de 4 cifras de planeación, que decían 27-oct porque el script usaba el reloj (ahora usa la fecha de la foto). subir_s3.py se probó contra un S3 simulado (262 archivos, bucket privado, cifrado y con versiones) y las consultas de athena.sql se corrieron con DuckDB. Por qué «Parcial»: el primer filtro de privacidad de la zona cruda bloqueó 17 respuestas sanas (tomó códigos de sector censal y fechas por teléfonos) y luego el buzón institucional de las alertas del clima; se ajustó a teléfonos escritos como teléfono y a buzones .gov de tipo webmaster o no-reply.",
+  "resultado": "Parcial",
+  "fuentes": "Todas las integradas (21 fichas)",
+  "aprendizaje": "Un lago no es una carpeta con archivos: es poder decir de dónde salió cada uno y rehacerlo. Guardar lo crudo destapó un riesgo que no veíamos (la ficha del portal de alquileres de corto plazo trae correos de personas en sus valores de muestra; se retiran al guardar) y un error escondido (fechas tomadas del reloj). Y «lo trajo la IA» no alcanza: hay que poder mostrar la respuesta que dio la fuente."
  }
 ]

@@ -14,7 +14,7 @@ Cómo se lleva a barrios (derivado): rejilla de puntos cada 40 m (ver comun.repa
 zona se reparten según la parte de la zona que cae en cada barrio; las zonas con incentivo se miden como «qué parte
 del barrio está adentro». Las solicitudes ya traen el barrio. Barrio-año con menos de 5 solicitudes no se publica."""
 import datetime, urllib.parse
-from comun import (get_json, fuente_lago, cifra, escribir_lago, Capa, reparto, cobertura_zona, leer_territorio, desde_esri,
+from comun import (get_json, fuente_lago, cifra, escribir_lago, Capa, reparto, cobertura_zona, leer_territorio, desde_esri, fecha_prueba,
                    arcgis, suprimir)
 
 SIG = "https://gis.orlando.gov/server/rest/services"
@@ -38,7 +38,7 @@ def soql(ds, **partes):
     return f"{PORTAL}/resource/{ds}.json?" + "&".join(f"${k}={urllib.parse.quote(v, safe='')}" for k, v in partes.items())
 
 
-hoy = datetime.date.today()
+hoy = fecha_prueba()
 nombres = [f["properties"]["nombre"] for f in leer_territorio("barrios")]
 FS, FP, FA = "orlando_sig", "orlando_planeacion", "orlando_anexiones"
 series, cifras = {}, {}
