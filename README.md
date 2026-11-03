@@ -5,6 +5,9 @@ Responde seis preguntas con datos abiertos, ayuda a decidir (emprender, vivir, c
 Orlando con otras ciudades, sus seis distritos y sus barrios. Cada cifra trae su fuente, su vigencia y la fecha en que la
 comprobamos.
 
+**Publicado en https://cerebro-orlando.vercel.app** (el lago completo, en https://cerebro-orlando.vercel.app/lago/…; el
+inventario está en `lago/catalogo/catalogo_lago.json`).
+
 Réplica mejorada del lago del Cerebro Lima: un script por tema, un **lago de datos con tres zonas** (cruda, curada y de
 consumo) y fotos con fecha, una verificación que sabe fallar y una vista publicada en Vercel. La ingesta, la verificación
 y la vista usan solo la biblioteca estándar de Python 3.9 o superior: no hay nada que instalar ni llaves que pedir.

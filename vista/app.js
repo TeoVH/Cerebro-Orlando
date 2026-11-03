@@ -1491,7 +1491,7 @@ $("#zonas").innerHTML = [
 const EN_WEB = location.protocol.startsWith("http") && !/claude|anthropic/.test(location.hostname);
 $("#donde").innerHTML = [
   ["git", "Repositorio (GitHub)", "Todo el lago con historial: cada actualización queda como un cambio con fecha y autor.", `<a href="${esc(D.repo)}" target="_blank" rel="noopener">Abrir el repositorio</a>`],
-  ["pantalla", "Copia pública (Vercel)", "Esta página y el lago entero, descargables: lago/crudo, lago/curado, lago/consumo.", EN_WEB ? `<a href="lago/catalogo/catalogo_lago.json" target="_blank" rel="noopener">Ver el inventario del lago</a>` : "Disponible en la versión publicada"],
+  ["pantalla", "Copia pública (Vercel)", "Esta página y el lago entero, descargables: lago/crudo, lago/curado, lago/consumo.", `<a href="${EN_WEB ? "" : esc(D.web || "") + "/"}lago/catalogo/catalogo_lago.json" target="_blank" rel="noopener">Ver el inventario del lago</a>${EN_WEB ? "" : ` · <a href="${esc(D.web || "")}" target="_blank" rel="noopener">abrir la versión publicada</a>`}`],
   ["nube", "Amazon S3 (bucket privado)", `El mismo árbol de carpetas en un bucket privado, cifrado y con versiones (${esc(LI.s3)}); Athena lo consulta con SQL.`, `<span class="mono">publicar/subir_s3.py · publicar/athena.sql</span>`]]
   .map(([i, t, p, a]) => `<div class="donde-i"><span class="ic">${ic(i)}</span><div><b>${t}</b><p class="peq">${esc(nb(p))}</p><p class="peq">${a}</p></div></div>`).join("");
 
@@ -1520,7 +1520,8 @@ async function verCrudo(archivo) {
     $("#crudoPre").textContent = vista.length > LIM ? vista.slice(0, LIM) + `\n… (${nf(vista.length - LIM)} caracteres más; descárguelo completo)` : vista;
     $("#crudoPre").insertAdjacentHTML("afterend", `<p><a class="btn" href="lago/${esc(r.a)}" download>${ic("fuente")}Descargar el archivo (.gz)</a></p>`);
   } catch (e) {
-    $("#crudoPre").textContent = `Esta copia de la página no trae los archivos del lago (${e.message}). En la versión publicada en Vercel este botón abre la respuesta guardada; también está en el repositorio, en lago/${r.a}.`;
+    $("#crudoPre").textContent = `Esta copia de la página no trae los archivos del lago (${e.message}). En la versión publicada (${D.web || "Vercel"}) este botón abre la respuesta guardada; también está en el repositorio, en lago/${r.a}.`;
+    if (D.web) $("#crudoPre").insertAdjacentHTML("afterend", `<p><a class="btn" href="${esc(D.web)}/lago/${esc(r.a)}" target="_blank" rel="noopener">${ic("fuente")}Abrir el archivo en la versión publicada</a></p>`);
   }
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-ver]"); if (b) { e.preventDefault(); verCrudo(b.dataset.ver); } if (e.target.closest("#cerrarCrudo")) $("#verCrudo").close(); });

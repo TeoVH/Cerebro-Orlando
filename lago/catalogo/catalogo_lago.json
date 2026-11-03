@@ -11,7 +11,7 @@
   },
   "consumo": {
    "archivos": 5,
-   "bytes": 1726075,
+   "bytes": 1726110,
    "descripcion": "Tablas planas para SQL y el archivo que lee el tablero"
   },
   "crudo": {
@@ -94,8 +94,8 @@
   {
    "ruta": "consumo/tablero/tablero.json",
    "zona": "consumo",
-   "bytes": 1425945,
-   "sha256": "a4e052b5f4a7479753aa849b6888c3f684279f796fb0c761053d951b3dd9caf5"
+   "bytes": 1425980,
+   "sha256": "88166ab2814c6d4f6bfce8bd009cf8ebf23fb26ee3b47ce2f34e910a216b9449"
   },
   {
    "ruta": "crudo/sitio=api.censusreporter.org/fecha=2026-10-26/censo-b01003-01e1e79a28.json.gz",

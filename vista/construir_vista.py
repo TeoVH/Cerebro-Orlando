@@ -24,7 +24,8 @@ VISTA = RAIZ / "vista"
 TEMAS = ["gente", "economia", "empleo", "vivienda", "escucha", "permisos", "seguridad", "codigo", "negocios", "turismo",
          "clima", "clima_historico", "territorio", "censo", "riesgo", "servicios", "planeacion"]
 ANCHO = 1000                      # ancho del mapa en unidades de pantalla (viewBox)
-REPO = "https://github.com/NSaldarriagaV/Cerebro-Orlando"
+REPO = "https://github.com/TeoVH/Cerebro-Orlando"         # fork del repo del equipo (NSaldarriagaV/Cerebro-Orlando) con la v4
+WEB = "https://cerebro-orlando.vercel.app"          # la copia publicada (Vercel), con el lago en /lago/
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--sin-verificar", action="store_true")
@@ -215,6 +216,7 @@ def geo(features, campos):
 datos = {
     "generado": max(l["probado"] for l in lago.values()),          # el día más reciente en que una fuente respondió
     "repo": REPO,
+    "web": WEB,
     "lago": lago,
     "fuentes_lago": leer(RAIZ / "catalogo" / "fuentes_lago.json"),
     "catalogo": leer(RAIZ / "catalogo" / "catalogo_completo.json"),
