@@ -25,8 +25,8 @@ exportar el Excel del catálogo.
   correcta, y `reconstruir.py --desde-crudo` rehace la zona curada sin internet y sale idéntica. La única excepción está
   en la bitácora (encargo 1): el primer borrador del catálogo de fuentes lo llenó de memoria y el equipo lo corrigió.
 - **¿Dónde están guardados?** En `lago/`, con historial en este repositorio; publicado completo en Vercel junto a la
-  página (`/lago/…`); y listo para subirse igual a un bucket privado de Amazon S3 (`publicar/subir_s3.py`) y consultarse
-  con Athena (`publicar/athena.sql`).
+  página (`/lago/…`); y en un bucket privado de Amazon S3, `cerebro-orlando-lago-eafit` (us-east-1, cifrado y con
+  versiones), donde Athena lo consulta con SQL (`publicar/athena.sql`). Subido el 2026-11-02: 264 archivos, 31 MB.
 
 ## Las seis preguntas y de dónde salen
 
@@ -53,6 +53,7 @@ python3 publicar/consumo.py                      # zona de consumo (tablas para 
 python3 vista/construir_vista.py                 # arma el tablero (publico/ para Vercel y vista/index.html); no construye si verificar falla
 python3 publicar/probar_sql.py                   # consultas SQL de ejemplo sobre el lago, con DuckDB (pip install duckdb)
 python3 publicar/subir_s3.py --bucket NOMBRE     # sube el lago a S3 (pip install boto3 y llaves de AWS; ver abajo)
+python3 publicar/correr_athena.py --bucket NOMBRE  # crea las tablas en Athena y corre las 5 consultas de ejemplo
 ```
 
 Los scripts de ingesta, uno por tema (cada uno dice arriba qué lee y qué escribe):
@@ -94,7 +95,7 @@ correr, porque el servicio del clima pide que el cliente se identifique.
 | `lago/` | El lago de datos (ver abajo). Va completo al repositorio. |
 | `catalogo/` | `fuentes_lago.json`: las 32 fuentes que alimentan el lago, con su licencia tal como aparece y su nivel de protección. `catalogo_completo.json`, `diccionario.json` y `bitacora_ia.json`: exportados del Excel por `exportar_catalogo.py`. |
 | `verificacion/` | `verificar.py` y la prueba de que sabe fallar. |
-| `publicar/` | `consumo.py` (zona de consumo e inventario), `subir_s3.py` (lago → Amazon S3), `athena.sql` (tablas y consultas de ejemplo), `probar_sql.py` (las mismas consultas con DuckDB) y `politica_iam.json` (permisos mínimos para subir). |
+| `publicar/` | `consumo.py` (zona de consumo e inventario), `subir_s3.py` (lago → Amazon S3), `athena.sql` (tablas y consultas de ejemplo), `correr_athena.py` (las crea y las corre en Athena), `probar_sql.py` (las mismas consultas con DuckDB) y `politica_iam.json` (permisos mínimos para subir). |
 | `vista/` | `plantilla.html`, `estilos.css`, `app.js` y `construir_vista.py`. |
 | `publico/` | Lo que publica Vercel: `index.html` y `app.js`. Al construir (y en el build de Vercel) se copia `lago/` adentro. |
 | `entrega1/`, `entrega2/` | El diccionario de datos (Excel) tal como se entregó en cada corte. |
@@ -136,7 +137,7 @@ lago/
 |---|---|---|
 | Este repositorio (GitHub) | Todo `lago/` | Historial: cada foto nueva es un cambio con fecha y autor; cualquiera puede clonar y reconstruir |
 | Vercel | La página y una copia de `lago/` en `/lago/…` | Ver y descargar: el tablero lee `lago/consumo/tablero/tablero.json` y cada respuesta cruda se abre desde la pestaña «Datos y fuentes» |
-| Amazon S3 (opcional) | El mismo árbol en un bucket privado, cifrado y con versionado | Nube de verdad: Athena consulta las tablas con SQL |
+| Amazon S3 | El mismo árbol en el bucket privado `cerebro-orlando-lago-eafit` (us-east-1), cifrado y con versionado | Nube de verdad: Athena consulta las tablas con SQL (base `cerebro_orlando`) |
 
 ### Publicar en Vercel
 
@@ -147,17 +148,27 @@ comercial; 100 GB de transferencia al mes (el sitio pesa ~32 MB). Sin GitHub: `n
 
 ### Subir el lago a Amazon S3 y consultarlo con Athena
 
-1. Una cuenta de AWS (o AWS Academy) y un usuario con la política de `publicar/politica_iam.json` (solo ese bucket).
-2. `pip install boto3` y `aws configure` (las llaves las escribe cada quien en su computador; nunca van al repo).
+Ya está hecho en la cuenta de AWS de Mateo Villada (2026-11-02): bucket `cerebro-orlando-lago-eafit` en us-east-1, 264 archivos
+(31 MB), base de Athena `cerebro_orlando` con sus 4 tablas y la vista; las 5 consultas de ejemplo corrieron bien. Para
+volver a subir después de una foto nueva, o para montarlo en otra cuenta:
+
+1. Lo más fácil: abrir **AWS CloudShell** en la consola (ya trae Python, boto3 y las credenciales de quien inició
+   sesión; no hay llaves que copiar) y `git clone` este repositorio. Desde un computador propio: un usuario con la
+   política de `publicar/politica_iam.json`, `pip install boto3` y `aws configure` (las llaves nunca van al repo).
+2. (Solo fuera de CloudShell) Revisar la región: el bucket está en us-east-1.
 3. `python publicar/subir_s3.py --bucket cerebro-orlando-lago-eafit --crear`: crea el bucket privado (acceso público
    bloqueado, cifrado SSE-S3, versionado) y sube el lago. Las siguientes veces, sin `--crear`: sube solo lo que cambió.
-4. Pegar en el editor de Athena el archivo `publicar/athena_<bucket>.sql` que deja el script: crea la base
+4. `python publicar/correr_athena.py --bucket cerebro-orlando-lago-eafit` (o pegar en el editor de Athena el archivo
+   `publicar/athena_<bucket>.sql` que deja el paso 3): crea la base
    `cerebro_orlando`, las tablas `cifras`, `series`, `manifiesto` y `fuentes`, la vista `por_barrio` y cinco consultas
    de ejemplo (qué cambió entre fotos, barrios con más casos, de qué sitios sale cada tema, qué se retiró por privacidad,
    cada cifra con su licencia).
 5. Sin nube: `python publicar/probar_sql.py` corre las mismas consultas con DuckDB sobre los archivos locales.
 
-Costo: el lago pesa ~30 MB; S3 cobra centavos al año y Athena cobra por datos leídos (estas consultas leen kilobytes).
+Costo: el lago pesa ~31 MB; S3 cobra centavos al año y Athena cobra por datos leídos (las 5 consultas leen menos de 1 MB).
+Los resultados de Athena quedan en `s3://<bucket>/_athena/` y se borran solos a los 7 días.
+El bucket es privado: para que otro integrante lo vea, se le crea un usuario de IAM con la política de
+`publicar/politica_iam.json`; lo público es la copia de Vercel.
 
 ### Actualización automática (experimental)
 

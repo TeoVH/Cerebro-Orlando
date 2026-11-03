@@ -8,4 +8,4 @@
 | Referencia | `territorio/` | Capas geográficas en WGS84 |
 | Catálogo | `catalogo/` | Manifiesto de lo crudo (`manifiesto_crudo/manifiesto.jsonl`), fuentes e inventario (`catalogo_lago.json`) |
 
-Cómo se llena, se verifica, se reconstruye sin internet y se sube a S3: ver el README de la raíz del repositorio.
+Cómo se llena, se verifica, se reconstruye sin internet y vive en S3: ver el README de la raíz del repositorio.

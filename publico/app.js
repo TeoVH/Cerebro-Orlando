@@ -1398,7 +1398,7 @@ $("#r-datos").textContent = nb(`Cada número de este tablero sale de una respues
 const preg = [
   ["fuente", "¿De dónde salen los datos?", `De ${nFuentes} fuentes abiertas en ${nSitios} sitios: la Ciudad de Orlando, FRED, la Oficina del Censo, FEMA, NOAA, Wikimedia, Indeed y Zillow. Cada pedido quedó anotado con su URL.`, "sec-flujo", "Ver el recorrido"],
   ["robot", "¿De dónde los sacó la IA?", "De ningún lado por su cuenta: escribió los scripts y pidió esas mismas URL desde el navegador del equipo. Ninguna cifra viene de su memoria; si una cifra no tiene detrás una respuesta guardada, la verificación falla.", "sec-ia", "Ver qué hizo la IA"],
-  ["capas", "¿Dónde están guardados?", `En un lago de datos con tres zonas (cruda, curada y de consumo) y ${LI.fechas.length} fotos con fecha. Vive en el repositorio (con historial), se publica con esta página y se sube igual a Amazon S3.`, "sec-lago", "Ver el lago"]];
+  ["capas", "¿Dónde están guardados?", `En un lago de datos con tres zonas (cruda, curada y de consumo) y ${LI.fechas.length} fotos con fecha. Vive en el repositorio (con historial), en esta página publicada y en un bucket privado de Amazon S3, donde se consulta con SQL.`, "sec-lago", "Ver el lago"]];
 $("#tresPreg").innerHTML = preg.map(([i, t, p, sec, btn], k) => `<article class="card preg"><span class="n">${k + 1}</span><div class="tema"><span class="ic">${ic(i)}</span><h3>${t}</h3></div><p>${esc(nb(p))}</p><button type="button" class="btn" data-ir="${sec}">${btn}${ic("flecha")}</button></article>`).join("");
 $("#tresPreg").addEventListener("click", e => { const b = e.target.closest("[data-ir]"); if (b) document.getElementById(b.dataset.ir).scrollIntoView({behavior: "smooth", block: "start"}); });
 
@@ -1492,7 +1492,7 @@ const EN_WEB = location.protocol.startsWith("http") && !/claude|anthropic/.test(
 $("#donde").innerHTML = [
   ["git", "Repositorio (GitHub)", "Todo el lago con historial: cada actualización queda como un cambio con fecha y autor.", `<a href="${esc(D.repo)}" target="_blank" rel="noopener">Abrir el repositorio</a>`],
   ["pantalla", "Copia pública (Vercel)", "Esta página y el lago entero, descargables: lago/crudo, lago/curado, lago/consumo.", `<a href="${EN_WEB ? "" : esc(D.web || "") + "/"}lago/catalogo/catalogo_lago.json" target="_blank" rel="noopener">Ver el inventario del lago</a>${EN_WEB ? "" : ` · <a href="${esc(D.web || "")}" target="_blank" rel="noopener">abrir la versión publicada</a>`}`],
-  ["nube", "Amazon S3 (bucket privado)", `El mismo árbol de carpetas en un bucket privado, cifrado y con versiones (${esc(LI.s3)}); Athena lo consulta con SQL.`, `<span class="mono">publicar/subir_s3.py · publicar/athena.sql</span>`]]
+  ["nube", "Amazon S3 (bucket privado)", `El mismo árbol de carpetas en el bucket privado ${esc(LI.s3)} (us-east-1), cifrado y con versiones. Athena lo consulta con SQL: base cerebro_orlando, tablas cifras, series, manifiesto y fuentes.`, `<span class="mono">publicar/subir_s3.py · publicar/correr_athena.py</span>`]]
   .map(([i, t, p, a]) => `<div class="donde-i"><span class="ic">${ic(i)}</span><div><b>${t}</b><p class="peq">${esc(nb(p))}</p><p class="peq">${a}</p></div></div>`).join("");
 
 // --- ver una respuesta cruda (en la versión publicada se lee del lago; en un solo archivo no hay de dónde)
