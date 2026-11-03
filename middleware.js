@@ -44,7 +44,8 @@ const CABECERAS = {
 
 function destinoSeguro(valor) {
   const s = String(valor || "/");
-  return s.startsWith("/") && !s.startsWith("//") && !s.includes("\\") ? s : "/";
+  if (!s.startsWith("/") || s.startsWith("//") || s.includes("\\")) return "/";
+  return /^\/(entrar|salir)(\b|$)/.test(s) ? "/" : s;   // nunca devolver a la puerta misma
 }
 
 export default async function middleware(request) {
@@ -55,7 +56,11 @@ export default async function middleware(request) {
       "set-cookie": `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax` } });
   }
 
-  if (url.pathname === "/entrar" && request.method === "POST") {
+  if (url.pathname === "/entrar" && request.method !== "POST") {   // recargar la página de error no debe dar 404
+    return new Response(null, { status: 303, headers: { location: "/", "cache-control": "no-store" } });
+  }
+
+  if (url.pathname === "/entrar") {
     let clave = "", siguiente = "/";
     try {
       const datos = await request.formData();
@@ -112,10 +117,18 @@ h1 { margin: 0; font: 900 2.25rem/1 var(--font-display); letter-spacing: -0.02em
 .lema { margin: 6px 0 0; color: var(--muted); font-size: .9375rem; line-height: 1.35; }
 form { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 24px; display: grid; gap: 14px; }
 label { font: 800 1rem/1.2 var(--font-display); }
-input[type=password] { width: 100%; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
-  padding: 12px 14px; min-height: 48px; caret-color: var(--accent); transition: border-color 120ms var(--ease-out); }
-input[type=password]:hover { border-color: var(--muted); }
-input[aria-invalid=true] { border-color: var(--bad); }
+.campo { position: relative; }
+#clave { width: 100%; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 52px 12px 14px; min-height: 48px; caret-color: var(--accent); transition: border-color 120ms var(--ease-out); }
+#clave:hover { border-color: var(--muted); }
+#clave[aria-invalid=true] { border-color: var(--bad); }
+#clave::-ms-reveal { display: none; }
+.ojo { position: absolute; top: 2px; right: 2px; width: 44px; height: 44px; min-height: 0; display: grid; place-items: center;
+  background: none; color: var(--muted); border-radius: 6px; padding: 0; transition: color 120ms var(--ease-out), transform 120ms var(--ease-out); }
+.ojo:hover { color: var(--ink); filter: none; }
+.ojo svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ojo .cerrado, .ojo[aria-pressed=true] .abierto { display: none; }
+.ojo[aria-pressed=true] .cerrado { display: block; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 button { font: 800 1rem/1 var(--font-display); color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 8px; min-height: 48px;
   cursor: pointer; transition: transform 120ms var(--ease-out), filter 120ms var(--ease-out); }
@@ -142,7 +155,13 @@ button:active { transform: scale(.97); }
   </div>
   <form method="post" action="/entrar">
     <label for="clave">Contraseña</label>
-    <input id="clave" name="clave" type="password" autocomplete="current-password" required autofocus${error ? ' aria-invalid="true" aria-describedby="error"' : ""}>
+    <div class="campo">
+      <input id="clave" name="clave" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" required autofocus${error ? ' aria-invalid="true" aria-describedby="error"' : ""}>
+      <button type="button" class="ojo" id="ojo" aria-controls="clave" aria-pressed="false" aria-label="Mostrar contraseña" title="Mostrar contraseña">
+        <svg class="abierto" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg class="cerrado" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A9.9 9.9 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+      </button>
+    </div>
     ${error ? '<p class="error" id="error" role="alert">Esa no es la contraseña. Intenta de nuevo.</p>' : ""}
     <input type="hidden" name="siguiente" id="siguiente" value="${esc(siguiente)}">
     <button type="submit">Entrar</button>
@@ -150,7 +169,17 @@ button:active { transform: scale(.97); }
   <p class="nota">Tablero del taller de datos · EAFIT</p>
 </main>
 <script>
+const clave = document.getElementById("clave"), ojo = document.getElementById("ojo");
+ojo.addEventListener("click", () => {
+  const ver = clave.type === "password";
+  const [a, b] = [clave.selectionStart, clave.selectionEnd];
+  clave.type = ver ? "text" : "password";
+  ojo.setAttribute("aria-pressed", String(ver));
+  ojo.setAttribute("aria-label", ver ? "Ocultar contraseña" : "Mostrar contraseña"); ojo.title = ojo.getAttribute("aria-label");
+  clave.focus(); try { clave.setSelectionRange(a, b); } catch {}
+});
 document.querySelector("form").addEventListener("submit", () => {
+  clave.type = "password";
   const s = document.getElementById("siguiente");
   if (location.hash && !s.value.includes("#")) s.value += location.hash;
 });
