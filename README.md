@@ -106,6 +106,7 @@ correr, porque el servicio del clima pide que el cliente se identifique.
 | `publicar/` | `consumo.py` (zona de consumo e inventario), `subir_s3.py` (lago → Amazon S3), `athena.sql` (tablas y consultas de ejemplo), `correr_athena.py` (las crea y las corre en Athena), `probar_sql.py` (las mismas consultas con DuckDB) y `politica_iam.json` (permisos mínimos para subir). |
 | `vista/` | `plantilla.html`, `estilos.css`, `app.js` y `construir_vista.py`. |
 | `publico/` | Lo que publica Vercel: `index.html` y `app.js`. Al construir (y en el build de Vercel) se copia `lago/` adentro. |
+| `middleware.js` | La puerta con contraseña de la página en Vercel. |
 | `entrega1/`, `entrega2/` | El diccionario de datos (Excel) tal como se entregó en cada corte. |
 
 ## El lago de datos
@@ -144,7 +145,7 @@ lago/
 | Lugar | Qué hay | Para qué |
 |---|---|---|
 | Este repositorio (GitHub) | Todo `lago/` | Historial: cada foto nueva es un cambio con fecha y autor; cualquiera puede clonar y reconstruir |
-| Vercel | La página y una copia de `lago/` en `/lago/…` | Ver y descargar; es el respaldo si CloudFront no responde |
+| Vercel | La página y una copia de `lago/` en `/lago/…`, detrás de una contraseña | Ver y descargar; es el respaldo si CloudFront no responde |
 | Amazon S3 | El lago maestro: el mismo árbol en el bucket privado `cerebro-orlando-lago-eafit` (us-east-1), cifrado y con versionado, más una foto nueva cada lunes | Nube de verdad: Athena consulta las tablas con SQL (base `cerebro_orlando`) |
 | CloudFront | Una puerta de solo lectura a las zonas del lago (`publicar/nube.json` tiene la dirección) | La página lee de ahí la última foto; `_athena/`, `_trabajo/` y todo lo demás responden 403 |
 
@@ -154,6 +155,12 @@ lago/
 `publico/`. Pasos: en vercel.com, *Add New → Project → Import* este repositorio (lo importa quien tenga acceso al repo en
 GitHub) y *Deploy*, sin cambiar nada. Cada push a la rama vuelve a publicar. Plan Hobby: gratis para uso personal y no
 comercial; 100 GB de transferencia al mes (el sitio pesa ~35 MB). Sin GitHub: `npx vercel deploy --prod` desde la raíz.
+
+**Contraseña de entrada.** `middleware.js` (Routing Middleware de Vercel) pide una contraseña antes de servir la página o
+su copia del lago; al acertar deja una cookie por 30 días (`/salir` la borra). El repositorio no guarda la contraseña, solo
+SHA-256 de su derivación PBKDF2; la contraseña la tiene el equipo. Siguen abiertos a propósito este repositorio y la puerta
+de CloudFront: son datos abiertos y cualquiera puede verificarlos. `package.json` existe solo para que Vercel trate
+`middleware.js` como módulo; no hay dependencias.
 
 ### Subir el lago a Amazon S3 y consultarlo con Athena
 
