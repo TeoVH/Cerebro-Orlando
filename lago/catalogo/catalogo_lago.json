@@ -99,7 +99,7 @@
    "ruta": "consumo/tablero/tablero.json",
    "zona": "consumo",
    "bytes": 1572382,
-   "sha256": "83006f6b58675b31c79b1bc0cb536afbe878737770af5551379dc47c86102623"
+   "sha256": "6d23e9512655b17386bb6a9fd9e21fa3885fc8df2d35837dd89cc0a3d7336713"
   },
   {
    "ruta": "crudo/sitio=api.censusreporter.org/fecha=2026-10-26/censo-b01003-01e1e79a28.json.gz",

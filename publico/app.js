@@ -144,7 +144,7 @@ document.addEventListener("focusin", e => { const t = e.target.closest(".term");
 document.addEventListener("focusout", e => { if (e.target.closest(".term")) ocultarGlobo(); });
 document.addEventListener("click", e => { const t = e.target.closest(".term"); if (t) termGlobo(t); });
 addEventListener("scroll", ocultarGlobo, {passive: true});
-function aviso(txt) { const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = txt; document.body.append(t); setTimeout(() => t.remove(), 2200); }
+function aviso(txt) { const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = txt; document.body.append(t); setTimeout(() => { t.classList.add("sale"); setTimeout(() => t.remove(), 160); }, 2200); }
 async function copiar(texto, ok = "Copiado") {
   try { await navigator.clipboard.writeText(texto); aviso(ok); }
   catch { const t = document.createElement("textarea"); t.value = texto; document.body.append(t); t.select(); try { document.execCommand("copy"); aviso(ok); } catch { aviso("Selecciona y copia el texto"); } t.remove(); }
@@ -705,7 +705,7 @@ function tarjeta({icono, tema, pregunta, cifra, unidad, vig, tend, frase, graf, 
     <div class="cifra"><b>${cifra}</b><span>${unidad}</span></div>
     <div class="cifra" style="gap:8px">${tend || ""}<span class="vig">${esc(vig)}</span></div>
     <p class="frase">${frase}</p>${graf || ""}
-    <div class="pie"><a class="ver" href="#${vista}">Ver la evidencia ${ic("flecha")}</a>${fuente}</div></article>`;
+    <div class="pie"><a class="ver" href="#${vista}">Ver la evidencia</a>${fuente}</div></article>`;
 }
 const mini = (valores) => { const vals = M.barrios.map((_, i) => valores(i)); const c = cortesQ(vals);
   return `<svg class="minimapa" viewBox="0 0 ${M.ancho} ${M.alto}" aria-hidden="true">${M.barrios.map((b, i) => `<path d="${b.d}" style="fill:${vals[i] == null ? "var(--nodata)" : colorBinVar(binDe(vals[i], c))}"/>`).join("")}<path d="${M.lagos}" style="fill:var(--water);stroke:none"/></svg>`; };
@@ -745,6 +745,11 @@ $("#tarjetas").innerHTML = [
   tarjeta({icono: "bus", tema: "Movilidad", pregunta: "¿Qué tan seguras son las vías?", cifra: nf(C("trafico", "muertes_ultimo_anio").valor), unidad: `muertes en choques de tránsito en la ciudad en ${C("trafico", "muertes_ultimo_anio").vigencia}`, vig: C("trafico", "muertes_ultimo_anio").vigencia,
     tend: tendencia(C("trafico", "variacion_muertes_ultimo_anio").valor, 1, "inverso"), frase: `En ${nf(C("trafico", "pct_choques_mortales_con_peaton").valor, 0)} de cada 100 choques mortales había un peatón. ${nf(C("transporte", "paradas_en_la_ciudad").valor)} paradas de bus; ${nf(C("transporte", "barrios_sin_parada").valor)} barrios sin ninguna.`,
     graf: spark(S("trafico", "muertes_por_anio")), vista: "movilidad", fuente: chip("nhtsa_fars", "muertes_ultimo_anio", C("trafico", "muertes_ultimo_anio").vigencia)}),
+  // La octava casilla cierra la retícula con las tres preguntas de la sustentación: de dónde salen, quién los trajo, dónde viven
+  (() => { const li = D.lago_info || {fechas: [], crudo: []}, fu = ult(li.fechas || []) || D.generado, hoy = (li.crudo || []).filter(r => r.f === fu);
+    return tarjeta({icono: "capas", tema: "Datos", pregunta: "¿De dónde salen estos datos?", cifra: nf(enUso), unidad: `fuentes abiertas en uso, de ${nf(D.catalogo.length)} revisadas`, vig: `foto del ${fDia(fu)}`,
+      tend: "", frase: nb(`${nf(hoy.length)} respuestas de ${nf(new Set(hoy.map(r => r.s)).size)} sitios públicos, cada una guardada con su enlace y su huella. La IA escribió los programas, no las cifras. El lago vive en Amazon S3 y se actualiza solo cada lunes.`),
+      graf: "", vista: "fuentes", fuente: verOk ? `<span class="vig">${nf(ver.pasan)} comprobaciones, 0 fallos</span>` : ""}); })(),
 ].join("");
 
 // Contra qué: Orlando frente a sus pares en cuatro medidas
@@ -1493,7 +1498,7 @@ const SITIO = {"data.cityoforlando.net": "Datos abiertos de Orlando", "gis.orlan
   "api.censusreporter.org": "Census Reporter (Censo)", "services.arcgis.com": "FEMA (riesgo)", "api.weather.gov": "Servicio Meteorológico", "www.ncei.noaa.gov": "NOAA (clima histórico)",
   "wikimedia.org": "Wikimedia (visitas)", "es.wikipedia.org": "Wikipedia en español", "en.wikipedia.org": "Wikipedia en inglés", "raw.githubusercontent.com": "Indeed Hiring Lab (GitHub)",
   "files.zillowstatic.com": "Zillow Research", "services1.arcgis.com": "FDOT (conteos de tráfico)", "gis.fdot.gov": "FDOT (nombres de vías)",
-  "geo.dot.gov": "NHTSA FARS (choques mortales)", "files.mobilitydatabase.org": "LYNX (vía Mobility Database)", "gtfsrt.golynx.com": "LYNX (horario de buses)"};
+  "geo.dot.gov": "NHTSA (choques mortales)", "files.mobilitydatabase.org": "LYNX (vía Mobility Database)", "gtfsrt.golynx.com": "LYNX (horario de buses)"};
 const TN = {gente: "Gente", censo: "Censo por barrio", riesgo: "Riesgo (FEMA)", economia: "Economía", empleo: "Avisos de empleo", vivienda: "Vivienda", permisos: "Permisos",
   seguridad: "Seguridad", codigo: "Código urbano", negocios: "Negocios", planeacion: "Planeación", servicios: "Servicios", turismo: "Turismo", escucha: "Interés en la web",
   clima: "Clima hoy", clima_historico: "Clima histórico", territorio: "Territorio (mapas)", trafico: "Tráfico", transporte: "Transporte público"};
@@ -1530,12 +1535,12 @@ const preg = [
   ["fuente", "¿De dónde salen los datos?", `De ${nFuentes} fuentes abiertas en ${nSitios} sitios: la Ciudad de Orlando, FRED, la Oficina del Censo, FEMA, NOAA, Wikimedia, Indeed y Zillow. Cada pedido quedó anotado con su URL.`, "sec-flujo", "Ver el recorrido"],
   ["robot", "¿De dónde los sacó la IA?", "De ningún lado por su cuenta: escribió los scripts y pidió esas mismas URL desde el navegador del equipo. Ninguna cifra viene de su memoria; si una cifra no tiene detrás una respuesta guardada, la verificación falla.", "sec-ia", "Ver qué hizo la IA"],
   ["capas", "¿Dónde están guardados?", `En un lago de datos con tres zonas (cruda, curada y de consumo) y ${LI.fechas.length} fotos con fecha. Vive en el repositorio (con historial), en esta página publicada y en un bucket privado de Amazon S3, donde se consulta con SQL.`, "sec-lago", "Ver el lago"]];
-$("#tresPreg").innerHTML = preg.map(([i, t, p, sec, btn], k) => `<article class="card preg"><span class="n">${k + 1}</span><div class="tema"><span class="ic">${ic(i)}</span><h3>${t}</h3></div><p>${esc(nb(p))}</p><button type="button" class="btn" data-ir="${sec}">${btn}${ic("flecha")}</button></article>`).join("");
+$("#tresPreg").innerHTML = preg.map(([i, t, p, sec, btn], k) => `<article class="card preg"><span class="n">${k + 1}</span><div class="tema"><span class="ic">${ic(i)}</span><h3>${t}</h3></div><p>${esc(nb(p))}</p><button type="button" class="btn" data-ir="${sec}">${btn}</button></article>`).join("");
 $("#tresPreg").addEventListener("click", e => { const b = e.target.closest("[data-ir]"); if (b) document.getElementById(b.dataset.ir).scrollIntoView({behavior: "smooth", block: "start"}); });
 
 // --- el recorrido: sitios → temas del lago → pestañas (ancho = respuestas guardadas)
 const flujo = (() => {
-  const W = 1000, NW = 12, PAD = 6, X = [228, 500, 772];
+  const W = 1000, NW = 12, PAD = 6, X = [240, 506, 772];
   const peso = {}, enlaces = [];
   const sum = (k, v) => peso[k] = (peso[k] || 0) + v;
   const mapa = new Map();

@@ -251,12 +251,19 @@ si la diferencia pasa de 15 %. El índice de riesgo de FEMA y la proyección 204
 
 ## La vista
 
-Diez secciones: resumen, decidir, comparar, gente, economía y vivienda, barrios, seguridad, turismo, clima y «datos y
-fuentes». Se publica de dos formas: `publico/` (Vercel; la página lee sus datos de `lago/consumo/tablero/tablero.json`)
-y `vista/index.html` (un solo archivo con los datos adentro: se abre sin servidor).
+Once secciones: resumen, decidir, comparar, gente, economía y vivienda, barrios, seguridad, turismo, clima, movilidad y
+«datos y fuentes». Se publica de dos formas: `publico/` (Vercel; la página lee sus datos de la última foto en CloudFront o,
+si no, de `lago/consumo/tablero/tablero.json`) y `vista/index.html` (un solo archivo con los datos adentro: se abre sin servidor).
 
-- **Resumen:** un tablero por perfil con su dato principal; las seis respuestas con su cifra, su tendencia en palabras y
-  su fuente; Orlando contra ciudades parecidas (seis medidas); las preguntas sin respuesta abierta; un mapa 3D que gira
+**Diseño «señal y lago».** Overpass (derivada de la letra de las señales viales de EE. UU.) para títulos, cifras y
+etiquetas; Atkinson Hyperlegible para el texto. Color solo en los datos: verde azulado de lago para Orlando, ámbar para
+lo comparado, rojo y verde para peor y mejor. Superficies planas, sin etiquetas en mayúsculas encima de los títulos.
+Contraste AA en los dos temas. Animación corta solo cuando responde a algo (cambio de pestaña, ficha de un barrio,
+diálogos, avisos, presionar un botón); con «reducir movimiento» queda solo el cambio de opacidad. Los tokens están en
+`:root` de `vista/estilos.css`.
+
+- **Resumen:** un tablero por perfil con su dato principal; las siete respuestas y la casilla de los datos, con su cifra,
+  su tendencia en palabras y su fuente; Orlando contra ciudades parecidas (seis medidas); las preguntas sin respuesta abierta; un mapa 3D que gira
   despacio, con recorrido guiado por seis barrios elegidos por los datos.
 - **Decidir:** cuatro perfiles, cada uno con su regla escrita a la vista («Cómo se calcula») y lo que no sabe.
   *Emprender* ordena barrios para cinco tipos de negocio por gente cerca, competencia por cada 10.000 personas, ingreso,

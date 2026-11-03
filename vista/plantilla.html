@@ -3,7 +3,7 @@
 <meta name="description" content="Siete preguntas sobre Orlando, Florida, respondidas con datos abiertos: gente, economía y vivienda, barrios, seguridad, turismo, clima y movilidad. Cada cifra con su fuente.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Overpass:wght@400..900&family=Overpass+Mono:wght@400;600&display=swap">
 <style>/*__ESTILOS__*/</style>
 <!--CUERPO-->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -99,7 +99,6 @@
 <section class="vista" data-vista="inicio" aria-labelledby="t-inicio">
   <div class="hero">
     <div class="texto">
-      <p class="eyebrow">Orlando, Florida · para quien decide en la ciudad</p>
       <h1 id="t-inicio">¿Cómo va Orlando?</h1>
       <p class="lead">Siete preguntas sobre la ciudad y cuatro decisiones (emprender, vivir, comprar, gobernar) respondidas con datos abiertos. Cada cifra trae su fuente, su vigencia y la fecha en que la comprobamos: tócala y lo ves.</p>
       <div class="linea" id="lineaInicio"></div>
@@ -119,7 +118,7 @@
 
   <div class="seccion">
     <div class="barra-graf"><h2>Siete preguntas, siete respuestas</h2><span class="peq">Toca una tarjeta para ver la evidencia</span></div>
-    <div class="grid-3" id="tarjetas"></div>
+    <div class="grid-preguntas" id="tarjetas"></div>
   </div>
 
   <div class="seccion">
@@ -147,7 +146,6 @@
 <!-- ================= DECIDIR ================= -->
 <section class="vista" data-vista="decidir" aria-labelledby="t-decidir" hidden>
   <div class="cabeza">
-    <p class="eyebrow">Para decidir</p>
     <h2 id="t-decidir">¿Qué decisión quieres tomar en Orlando?</h2>
     <p class="respuesta" id="r-decidir"></p>
   </div>
@@ -159,7 +157,6 @@
 <!-- ================= COMPARAR ================= -->
 <section class="vista" data-vista="comparar" aria-labelledby="t-comparar" hidden>
   <div class="cabeza">
-    <p class="eyebrow">Contra qué</p>
     <h2 id="t-comparar">¿Orlando está mejor o peor que…?</h2>
     <p class="respuesta" id="r-comparar"></p>
   </div>
@@ -172,12 +169,11 @@
 <!-- ================= GENTE ================= -->
 <section class="vista" data-vista="gente" aria-labelledby="t-gente" hidden>
   <div class="cabeza">
-    <p class="eyebrow">Pregunta 1 · gente</p>
     <h2 id="t-gente">¿Cuánta gente vive aquí y cómo le va frente a ciudades parecidas?</h2>
     <p class="respuesta" id="r-gente"></p>
   </div>
   <article class="card bloque">
-    <div class="lado"><p class="eyebrow">Población</p><div class="kpis" id="k-poblacion"></div>
+    <div class="lado"><h3 class="titulo-bloque">Población</h3><div class="kpis" id="k-poblacion"></div>
       <div class="nota"><svg class="i"><use href="#i-info"/></svg><p id="notaEscala"><b>Escala:</b> la ciudad de Orlando no tiene serie anual de población abierta y sin llave. El condado de Orange la contiene; el área metropolitana suma además los condados de Osceola, Seminole y Lake.</p></div></div>
     <div class="grafico"><div class="barra-graf"><h3>Población residente, en millones de personas</h3></div><div class="chart" id="g-poblacion"></div><div class="barra-graf"><span class="leyenda" id="ley-poblacion"></span><span id="f-poblacion"></span></div></div>
   </article>
@@ -206,27 +202,26 @@
 <!-- ================= ECONOMÍA Y VIVIENDA ================= -->
 <section class="vista" data-vista="economia" aria-labelledby="t-eco" hidden>
   <div class="cabeza">
-    <p class="eyebrow">Pregunta 2 · economía y vivienda</p>
     <h2 id="t-eco">¿Cómo se mueve la economía de Orlando y cuánto cuesta vivir aquí?</h2>
     <p class="respuesta" id="r-eco"></p>
   </div>
   <article class="card bloque">
-    <div class="lado"><p class="eyebrow"><svg class="i"><use href="#i-empleo"/></svg>Desempleo</p><p class="respuesta" id="r-desempleo" style="font-size:1.2rem"></p><div class="kpis" id="k-desempleo"></div></div>
+    <div class="lado"><h3 class="titulo-bloque">Desempleo</h3><p class="respuesta" id="r-desempleo" style="font-size:1.2rem"></p><div class="kpis" id="k-desempleo"></div></div>
     <div class="grafico"><div class="barra-graf"><h3>Tasa de desempleo (%), sin ajuste estacional</h3><div class="seg" data-rango="desempleo" role="group" aria-label="Periodo"><button type="button" data-r="3">3 años</button><button type="button" data-r="10" aria-pressed="true">10 años</button><button type="button" data-r="0">Desde 2000</button></div></div>
       <div class="chart" id="g-desempleo"></div><div class="barra-graf"><span class="leyenda" id="ley-desempleo"></span><span id="f-desempleo"></span></div></div>
   </article>
   <article class="card bloque">
-    <div class="lado"><p class="eyebrow"><svg class="i"><use href="#i-empleo"/></svg>Avisos de empleo</p><p class="respuesta" id="r-empleo" style="font-size:1.2rem"></p><div class="kpis" id="k-empleo"></div>
+    <div class="lado"><h3 class="titulo-bloque">Avisos de empleo</h3><p class="respuesta" id="r-empleo" style="font-size:1.2rem"></p><div class="kpis" id="k-empleo"></div>
       <div class="nota"><svg class="i"><use href="#i-info"/></svg><p><b>Lo que no dice:</b> cuenta avisos publicados en Indeed, no personas empleadas ni salarios.</p></div></div>
     <div class="grafico"><div class="barra-graf"><h3>Avisos de empleo en Indeed, <button class="term" data-term="indice100">índice</button> (feb 2020 = 100)</h3></div>
       <div class="chart" id="g-empleo"></div><div class="barra-graf"><span class="leyenda" id="ley-empleo"></span><span id="f-empleo"></span></div></div>
   </article>
   <article class="card bloque">
-    <div class="lado"><p class="eyebrow"><svg class="i"><use href="#i-empleo"/></svg>Salarios</p><p class="respuesta" id="r-salario" style="font-size:1.2rem"></p><div class="kpis" id="k-salario"></div></div>
+    <div class="lado"><h3 class="titulo-bloque">Salarios</h3><p class="respuesta" id="r-salario" style="font-size:1.2rem"></p><div class="kpis" id="k-salario"></div></div>
     <div class="grafico"><div class="barra-graf"><h3>Salario promedio por hora, sector privado (dólares)</h3></div><div class="chart" id="g-salario"></div><div class="barra-graf"><span class="leyenda" id="ley-salario"></span><span id="f-salario"></span></div></div>
   </article>
   <article class="card bloque">
-    <div class="lado"><p class="eyebrow"><svg class="i"><use href="#i-casa"/></svg>Precio de la vivienda</p><p class="respuesta" id="r-vivienda" style="font-size:1.2rem"></p><div class="kpis" id="k-vivienda"></div></div>
+    <div class="lado"><h3 class="titulo-bloque">Precio de la vivienda</h3><p class="respuesta" id="r-vivienda" style="font-size:1.2rem"></p><div class="kpis" id="k-vivienda"></div></div>
     <div class="grafico"><div class="barra-graf"><h3 id="t-vivienda">Precio de la vivienda</h3><div class="seg" data-rango="vivienda" role="group" aria-label="Vista"><button type="button" data-r="pares" aria-pressed="true">Contra pares</button><button type="button" data-r="largo">Orlando desde 1978</button></div></div>
       <div class="chart" id="g-vivienda"></div><div class="barra-graf"><span class="leyenda" id="ley-vivienda"></span><span id="f-vivienda"></span></div></div>
   </article>
@@ -246,14 +241,14 @@
   </div>
   <div class="grid-2">
     <article class="card grafico"><div class="barra-graf"><h3>Viviendas nuevas autorizadas en el área, por año</h3></div><p class="peq" id="r-autorizadas"></p><div class="chart" id="g-autorizadas"></div><div class="barra-graf"><span class="leyenda"><span><i style="background:var(--accent);height:10px;width:10px"></i>Último año completo</span></span><span id="f-autorizadas"></span></div></article>
-    <article class="card grafico"><div class="barra-graf"><h3>Permisos de construcción emitidos en la ciudad, por año</h3></div><p class="peq" id="r-permisosanio"></p><div class="chart" id="g-permisosanio"></div><div class="barra-graf"><a class="ver" href="#barrios">Ver por barrio en el mapa <svg class="i"><use href="#i-flecha"/></svg></a><span id="f-permisosanio"></span></div></article>
+    <article class="card grafico"><div class="barra-graf"><h3>Permisos de construcción emitidos en la ciudad, por año</h3></div><p class="peq" id="r-permisosanio"></p><div class="chart" id="g-permisosanio"></div><div class="barra-graf"><a class="ver" href="#barrios">Ver por barrio en el mapa</a><span id="f-permisosanio"></span></div></article>
   </div>
   <article class="card bloque">
-    <div class="lado"><p class="eyebrow"><svg class="i"><use href="#i-empleo"/></svg>Empleo total</p><p class="respuesta" id="r-empleototal" style="font-size:1.2rem"></p></div>
+    <div class="lado"><h3 class="titulo-bloque">Empleo total</h3><p class="respuesta" id="r-empleototal" style="font-size:1.2rem"></p></div>
     <div class="grafico"><div class="barra-graf"><h3>Empleos no agrícolas del área, en miles</h3></div><div class="chart" id="g-empleototal"></div><div class="barra-graf"><span></span><span id="f-empleototal"></span></div></div>
   </article>
   <article class="card bloque">
-    <div class="lado"><p class="eyebrow"><svg class="i"><use href="#i-tienda"/></svg>Nuevos negocios</p><p class="respuesta" id="r-bfs" style="font-size:1.2rem"></p></div>
+    <div class="lado"><h3 class="titulo-bloque">Nuevos negocios</h3><p class="respuesta" id="r-bfs" style="font-size:1.2rem"></p></div>
     <div class="grafico"><div class="barra-graf"><h3>Solicitudes de nuevos negocios en Florida, por mes</h3></div><div class="chart" id="g-bfs"></div><div class="barra-graf"><span></span><span id="f-bfs"></span></div></div>
   </article>
   <div class="nota"><svg class="i"><use href="#i-hueco"/></svg><p><b>Lo que falta:</b> el PIB del área. Las series de FRED (NGMP36740 y RGMP36740) están descontinuadas y no las reemplazamos por un número viejo.</p></div>
@@ -262,7 +257,6 @@
 <!-- ================= BARRIOS ================= -->
 <section class="vista" data-vista="barrios" aria-labelledby="t-barrios" hidden>
   <div class="cabeza">
-    <p class="eyebrow">Pregunta 3 · barrios</p>
     <h2 id="t-barrios">¿Qué pasa en cada barrio: dónde se construye, dónde hay más casos y dónde se concentran los negocios?</h2>
     <p class="respuesta" id="r-barrios"></p>
   </div>
@@ -305,7 +299,6 @@
 <!-- ================= SEGURIDAD ================= -->
 <section class="vista" data-vista="seguridad" aria-labelledby="t-seg" hidden>
   <div class="cabeza">
-    <p class="eyebrow">Pregunta 4 · seguridad y convivencia</p>
     <h2 id="t-seg">¿Qué pasa con la seguridad y la convivencia en cada barrio?</h2>
     <p class="respuesta" id="r-seg"></p>
   </div>
@@ -318,12 +311,12 @@
     <article class="card panel"><div class="barra-graf"><h3 id="t-mapaseg">Casos por km² en cada barrio</h3><div class="seg" id="segGrupo" role="group" aria-label="Grupo de delitos"></div></div>
       <div class="seg" id="segMedidaSeg" role="group" aria-label="Medida"><button type="button" data-m="km2" aria-pressed="true">Por km²</button><button type="button" data-m="hab" aria-pressed="false">Por 1.000 hab.</button></div>
       <svg class="svgmapa" id="mapaSeg" role="img" aria-label="Mapa de casos de policía por barrio"></svg><div class="ley-mapa" id="leySeg"></div>
-      <a class="ver" href="#barrios" id="verSeg3d">Verlo en el mapa 3D de barrios <svg class="i"><use href="#i-flecha"/></svg></a></article>
+      <a class="ver" href="#barrios" id="verSeg3d">Verlo en el mapa 3D de barrios</a></article>
     <article class="card panel"><div class="barra-graf"><h3 id="t-rankseg">Barrios con más casos</h3></div><ol class="ranking" id="rankSeg"></ol></article>
   </div>
   <article class="card panel"><div class="barra-graf"><h3>Los tipos de caso más comunes (toda la ciudad)</h3><span id="f-tipos"></span></div><div class="barras-simples" id="tiposSeg"></div></article>
   <div class="nota privada"><svg class="i"><use href="#i-escudo"/></svg><p id="notaPrivSeg"></p></div>
-  <div class="cabeza" style="margin-top:8px"><p class="eyebrow">Convivencia y mantenimiento urbano</p><h2 style="font-size:1.5rem">¿Dónde se queja la gente por el estado de los predios?</h2><p class="respuesta" id="r-codigo" style="font-size:1.2rem"></p></div>
+  <div class="cabeza" style="margin-top:8px"><h2 style="font-size:1.5rem">¿Dónde se queja la gente por el estado de los predios?</h2><p class="respuesta" id="r-codigo" style="font-size:1.2rem"></p></div>
   <div class="grid-2">
     <article class="card grafico"><div class="barra-graf"><h3>Casos de código urbano por año</h3></div><div class="chart" id="g-codigo"></div><div class="barra-graf"><span class="leyenda" id="ley-codigo"></span><span id="f-codigo"></span></div></article>
     <article class="card panel"><div class="barra-graf"><h3>Barrios con más quejas ciudadanas</h3></div><ol class="ranking" id="rankQuejas"></ol></article>
@@ -335,7 +328,6 @@
 <!-- ================= TURISMO ================= -->
 <section class="vista" data-vista="turismo" aria-labelledby="t-tur" hidden>
   <div class="cabeza">
-    <p class="eyebrow">Pregunta 5 · turismo</p>
     <h2 id="t-tur">¿Cuánto pesa el turismo en la ciudad?</h2>
     <p class="respuesta" id="r-tur"></p>
   </div>
@@ -363,7 +355,6 @@
 <!-- ================= CLIMA ================= -->
 <section class="vista" data-vista="clima" aria-labelledby="t-clima" hidden>
   <div class="cabeza">
-    <p class="eyebrow">Pregunta 6 · clima</p>
     <h2 id="t-clima">¿Qué clima hay hoy y cómo está cambiando?</h2>
     <p class="respuesta" id="r-clima"></p>
   </div>
@@ -391,7 +382,6 @@
 <!-- ================= MOVILIDAD ================= -->
 <section class="vista" data-vista="movilidad" aria-labelledby="t-mov" hidden>
   <div class="cabeza">
-    <p class="eyebrow">Pregunta 7 · movilidad</p>
     <h2 id="t-mov">¿Cómo se mueve la gente y qué tan seguras son las vías?</h2>
     <p class="respuesta" id="r-mov"></p>
   </div>
@@ -423,7 +413,6 @@
 <!-- ================= FUENTES ================= -->
 <section class="vista" data-vista="fuentes" aria-labelledby="t-fue" hidden>
   <div class="cabeza">
-    <p class="eyebrow">Datos · trazabilidad · lago</p>
     <h2 id="t-fue">¿De dónde sale cada dato y dónde vive?</h2>
     <p class="respuesta" id="r-datos"></p>
   </div>
