@@ -1,6 +1,6 @@
 <title>Cerebro Orlando</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Seis preguntas sobre Orlando, Florida, respondidas con datos abiertos: gente, economía y vivienda, barrios, seguridad, turismo y clima. Cada cifra con su fuente.">
+<meta name="description" content="Siete preguntas sobre Orlando, Florida, respondidas con datos abiertos: gente, economía y vivienda, barrios, seguridad, turismo, clima y movilidad. Cada cifra con su fuente.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -49,6 +49,8 @@
     <symbol id="i-capitolio" viewBox="0 0 24 24"><path d="M3 21h18M5 21v-8M9 21v-8M15 21v-8M19 21v-8M3 13h18M5 13a7 7 0 0 1 14 0M12 3v3"/></symbol>
     <symbol id="i-arbol" viewBox="0 0 24 24"><path d="M12 21v-6M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM9.5 18H14.5"/></symbol>
     <symbol id="i-escuela" viewBox="0 0 24 24"><path d="m2 9 10-5 10 5-10 5z"/><path d="M6 11v5c2 1.7 4 2.5 6 2.5s4-.8 6-2.5v-5M22 9v6"/></symbol>
+    <symbol id="i-bus" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 21v-3M16 21v-3M8.5 14.5h.01M15.5 14.5h.01M9 6.5h6"/></symbol>
+    <symbol id="i-carro" viewBox="0 0 24 24"><path d="M5 16V12l2-5h10l2 5v4M5 16h14M5 16v2.5M19 16v2.5M3.5 11.5H5M19 11.5h1.5"/><circle cx="8" cy="13.5" r=".6"/><circle cx="16" cy="13.5" r=".6"/></symbol>
     <symbol id="i-tren" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="14" rx="3"/><path d="M6 11h12M9 21l1.5-4M15 21l-1.5-4M9.5 14h.01M14.5 14h.01"/></symbol>
     <symbol id="i-gota" viewBox="0 0 24 24"><path d="M12 3.5s6.5 7 6.5 11.2A6.5 6.5 0 0 1 5.5 14.7C5.5 10.5 12 3.5 12 3.5z"/></symbol>
     <symbol id="i-viento" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h7"/></symbol>
@@ -85,6 +87,7 @@
       <a href="#seguridad" data-v="seguridad"><svg class="i"><use href="#i-sirena"/></svg>Seguridad</a>
       <a href="#turismo" data-v="turismo"><svg class="i"><use href="#i-maleta"/></svg>Turismo</a>
       <a href="#clima" data-v="clima"><svg class="i"><use href="#i-sol"/></svg>Clima</a>
+      <a href="#movilidad" data-v="movilidad"><svg class="i"><use href="#i-bus"/></svg>Movilidad</a>
       <a href="#fuentes" data-v="fuentes"><svg class="i"><use href="#i-fuente"/></svg>Datos y fuentes</a>
     </nav>
   </div>
@@ -98,7 +101,7 @@
     <div class="texto">
       <p class="eyebrow">Orlando, Florida · para quien decide en la ciudad</p>
       <h1 id="t-inicio">¿Cómo va Orlando?</h1>
-      <p class="lead">Seis preguntas sobre la ciudad y cuatro decisiones (emprender, vivir, comprar, gobernar) respondidas con datos abiertos. Cada cifra trae su fuente, su vigencia y la fecha en que la comprobamos: tócala y lo ves.</p>
+      <p class="lead">Siete preguntas sobre la ciudad y cuatro decisiones (emprender, vivir, comprar, gobernar) respondidas con datos abiertos. Cada cifra trae su fuente, su vigencia y la fecha en que la comprobamos: tócala y lo ves.</p>
       <div class="linea" id="lineaInicio"></div>
       <div class="acciones">
         <button class="btn oscuro" type="button" id="recorridoBtn"><svg class="i"><use href="#i-ruta"/></svg>Recorrido por 6 barrios</button>
@@ -115,7 +118,7 @@
   </div>
 
   <div class="seccion">
-    <div class="barra-graf"><h2>Seis preguntas, seis respuestas</h2><span class="peq">Toca una tarjeta para ver la evidencia</span></div>
+    <div class="barra-graf"><h2>Siete preguntas, siete respuestas</h2><span class="peq">Toca una tarjeta para ver la evidencia</span></div>
     <div class="grid-3" id="tarjetas"></div>
   </div>
 
@@ -385,6 +388,38 @@
   <div class="nota"><svg class="i"><use href="#i-info"/></svg><p id="notaClima"></p></div>
 </section>
 
+<!-- ================= MOVILIDAD ================= -->
+<section class="vista" data-vista="movilidad" aria-labelledby="t-mov" hidden>
+  <div class="cabeza">
+    <p class="eyebrow">Pregunta 7 · movilidad</p>
+    <h2 id="t-mov">¿Cómo se mueve la gente y qué tan seguras son las vías?</h2>
+    <p class="respuesta" id="r-mov"></p>
+  </div>
+  <article class="card panel"><div class="kpis" id="k-mov"></div></article>
+  <article class="card panel">
+    <div class="barra-graf"><h2 style="font-size:1.45rem" id="t-vias">Las carreteras de Orlando</h2><div class="seg" id="segVias" role="group" aria-label="Qué mostrar sobre las vías"><button type="button" data-m="trafico" aria-pressed="true">Tráfico</button><button type="button" data-m="buses" aria-pressed="false">Rutas de bus</button></div></div>
+    <p class="respuesta" id="r-vias" style="font-size:1.12rem"></p>
+    <div class="grid-vias">
+      <div><svg class="svgmapa mapa-vias" id="mapaVias" role="img" aria-label="Mapa de las vías de Orlando"></svg><div class="ley-mapa" id="leyVias"></div></div>
+      <div><h3 id="t-rankVias">Las vías más cargadas</h3><p class="peq" id="r-rankVias"></p><ol class="ranking" id="rankVias"></ol><span id="f-vias"></span></div>
+    </div>
+  </article>
+  <div class="grid-2">
+    <article class="card grafico"><div class="barra-graf"><h3>Muertes en choques de tránsito en la ciudad, por año</h3></div><p class="peq" id="r-fars"></p><div class="chart" id="g-fars"></div><div class="barra-graf"><span class="leyenda" id="ley-fars"></span><span id="f-fars"></span></div></article>
+    <article class="card panel"><div class="barra-graf"><h3>Vías con más choques mortales</h3><span id="f-viasfars"></span></div><p class="peq" id="r-viasfars"></p><ol class="ranking" id="rankViasFars"></ol></article>
+  </div>
+  <div class="grid-2" style="align-items:start">
+    <article class="card grafico"><div class="barra-graf"><h3>Tráfico típico de la ciudad (vehículos al día)</h3></div><p class="peq" id="r-aadtanio"></p><div class="chart" id="g-aadt"></div><div class="barra-graf"><span></span><span id="f-aadtanio"></span></div></article>
+    <article class="card panel">
+      <div class="barra-graf"><h3>¿Qué barrios tienen bus?</h3><div class="seg" id="segBus" role="group" aria-label="Medida"><button type="button" data-m="salidasBus" aria-pressed="true">Buses al día</button><button type="button" data-m="paradas" aria-pressed="false">Paradas</button><button type="button" data-m="traficoMax" aria-pressed="false">Tráfico</button></div></div>
+      <p class="peq" id="r-bus"></p>
+      <svg class="svgmapa" id="mapaBus" role="img" aria-label="Mapa de movilidad por barrio"></svg><div class="ley-mapa" id="leyBus"></div>
+      <ol class="ranking" id="rankBus" style="margin-top:14px"></ol><span id="f-bus"></span>
+    </article>
+  </div>
+  <div class="nota"><svg class="i"><use href="#i-hueco"/></svg><p id="notaMov"></p></div>
+</section>
+
 <!-- ================= FUENTES ================= -->
 <section class="vista" data-vista="fuentes" aria-labelledby="t-fue" hidden>
   <div class="cabeza">
@@ -470,7 +505,7 @@
   <div class="wrap">
     <div class="cols">
       <p><b>Cerebro Orlando</b> · Taller de datos de Tópicos de Sistemas de Información (Gobernanza de datos), Universidad EAFIT. Profesor Santiago Jiménez Londoño.<br>Equipo: Juan Esteban Alzate, Nicolás Saldarriaga y Mateo Villada.</p>
-      <p><b>Atribuciones.</b> Avisos de empleo: Indeed Hiring Lab, Job Postings Index (CC BY 4.0). Vivienda: U.S. Federal Housing Finance Agency y Realtor.com (Housing Inventory), vía FRED. Desempleo y empleo: U.S. Bureau of Labor Statistics, vía FRED. Población, ingreso y pobreza: U.S. Census Bureau, vía FRED. Salarios: BLS; ingreso por persona: BEA; solicitudes de negocios: U.S. Census Bureau (BFS), todos vía FRED. Población, ingreso, arriendo e idioma por barrio y ciudad: U.S. Census Bureau, American Community Survey 2020-2024, vía Census Reporter. Riesgo: FEMA, National Risk Index. Arriendo y valor típico: Zillow Research. Visitas: Wikimedia Foundation. Clima: National Weather Service y NOAA NCEI. Barrios, permisos, código, negocios, planeación, parques, SunRail y ciclovías: City of Orlando; colegios: Orange County Public Schools.</p>
+      <p><b>Atribuciones.</b> Avisos de empleo: Indeed Hiring Lab, Job Postings Index (CC BY 4.0). Vivienda: U.S. Federal Housing Finance Agency y Realtor.com (Housing Inventory), vía FRED. Desempleo y empleo: U.S. Bureau of Labor Statistics, vía FRED. Población, ingreso y pobreza: U.S. Census Bureau, vía FRED. Salarios: BLS; ingreso por persona: BEA; solicitudes de negocios: U.S. Census Bureau (BFS), todos vía FRED. Población, ingreso, arriendo e idioma por barrio y ciudad: U.S. Census Bureau, American Community Survey 2020-2024, vía Census Reporter. Riesgo: FEMA, National Risk Index. Arriendo y valor típico: Zillow Research. Visitas: Wikimedia Foundation. Clima: National Weather Service y NOAA NCEI. Barrios, permisos, código, negocios, planeación, parques, SunRail y ciclovías: City of Orlando; colegios: Orange County Public Schools. Tráfico: Florida Department of Transportation (FDOT). Choques mortales: NHTSA, Fatality Analysis Reporting System. Buses: LYNX (Central Florida Regional Transit Authority), horario GTFS.</p>
       <p><b>Cómo se construye.</b> <span class="mono">reconstruir.py</span> trae los datos, <span class="mono">verificar.py</span> los revisa (con un solo fallo no se publica) y <span class="mono">vista/construir_vista.py</span> arma esta página. <a id="linkRepo" href="#" target="_blank" rel="noopener">Repositorio</a>.</p>
     </div>
   </div>

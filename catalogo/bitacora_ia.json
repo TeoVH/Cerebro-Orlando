@@ -168,5 +168,15 @@
   "resultado": "Correcto",
   "fuentes": "Todas las integradas (el lago completo)",
   "aprendizaje": "Publicar no termina en «se subió»: hay que comprobarlo desde fuera (abrir la página, leer un archivo del lago, correr una consulta en la nube). Y las llaves no tienen por qué pasar por nadie: en CloudShell la consola ya trae las credenciales de quien inició sesión."
+ },
+ {
+  "n": "18",
+  "herramienta": "Claude (con el navegador del equipo para pedir las fuentes nuevas y la sesión de Mateo en AWS CloudShell)",
+  "encargo": "Pedidos de los compañeros: resaltar los dos barrios al comparar, revisar que una misma cifra diga lo mismo en todas las pestañas, agregar tráfico y transporte público, y actualizar el lago cada semana en AWS con EventBridge y Step Functions",
+  "respuesta": "Resaltó el barrio comparado en amarillo en el mapa 3D, en el mapa plano y en «Comparar en detalle». Hizo el inventario de cifras compartidas (verificacion/informe_consistencia.md), corrigió 6 inconsistencias de la vista (redondeos, una tasa con otra base sin decirlo, fuentes que faltaban, textos fijos) y dejó 4 preguntas de decisión; agregó verificacion/consistencia.py, que corre dentro de verificar.py. Agregó los temas trafico (conteos AADT de FDOT y choques mortales de NHTSA FARS, solo conteos) y transporte (paradas, rutas y salidas de LYNX en GTFS) y la pestaña «Movilidad» (pregunta 7), con un mapa de las carreteras de la ciudad según su tráfico y de los recorridos de bus. En AWS montó una Lambda, una máquina de Step Functions (trae cada tema en paralelo, verifica, publica solo si pasa y cuenta en Athena), un horario de EventBridge Scheduler los lunes a las 6:00 y CloudFront delante del bucket privado; la página lee de ahí la última foto.",
+  "comprobacion": "verificar.py: 1.185 comprobaciones, 0 fallos (con las capas de vías y de recorridos de bus); probar_verificador.py atrapa una tarjeta distinta de su gráfico y un total que no cuadra con los barrios. La primera ejecución en AWS (3 nov, 3 minutos) trajo los 16 temas desde las fuentes, pasó la verificación (1.572 comprobaciones, 0 fallos), subió 135 archivos y Athena vio 148 cifras de la foto nueva. CloudFront responde 200 en el tablero y el catálogo (con CORS) y 403 en _athena/ y fuera de las zonas del lago. Por qué «Parcial»: la comprobación de consistencia hizo fallar dos casos correctos de probar_verificador.py (exigía series que esos lagos de prueba no traen) y se pasó a aviso cuando la serie no está; y subir_s3.py habría pisado el manifiesto que escribe AWS, así que ahora nunca pisa lo que ya está en el bucket.",
+  "resultado": "Parcial",
+  "fuentes": "F21, F25 y F109 (nuevas) y todas las integradas",
+  "aprendizaje": "Una cifra puede estar bien en cada pestaña y aun así contradecirse entre pestañas (otra base, otro redondeo): por eso la revisión quedó automática. Y automatizar obliga a decidir quién es dueño del lago: desde ahora la foto semanal la escribe AWS, así que subir desde un computador no puede pisar lo que trajo la nube."
  }
 ]

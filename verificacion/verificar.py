@@ -5,13 +5,14 @@ Revisa las tres zonas del lago:
   lago/crudo/        cada respuesta guardada existe, su huella coincide con el manifiesto y no trae datos de personas
   lago/curado/       el contrato de cada tema y fecha, y que cada fuente apunte a respuestas crudas que existen (linaje)
   lago/territorio/   las geometrías
+  y que una cifra que aparece en varias pestañas salga del mismo dato (consistencia.py)
 Uso:
     python3 verificacion/verificar.py [--raiz CARPETA]
 Termina con código 1 si algo falla. Las líneas WARN no hacen fallar, pero hay que leerlas."""
 import argparse, datetime, glob, gzip, hashlib, json, pathlib, re, sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "ingesta"))
-from privacidad import PII, CAMPOS_PERSONALES, RETIRADO, RETIRADO_MUESTRA, texto_con_pii   # las mismas reglas que la ingesta
+from privacidad import PII, CAMPOS_PERSONALES, RETIRADO, RETIRADO_MUESTRA, texto_con_pii, zip_con_pii   # las mismas reglas que la ingesta
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--raiz", default=str(pathlib.Path(__file__).resolve().parents[1]))
@@ -22,6 +23,7 @@ fallos = 0
 EXCLUIDAS = re.compile(r"baker|suicid|unattended death|drowning|missing|desaparec|custody|custodia|injunction|alejamiento|elderly", re.I)
 BBOX = (-82.0, 28.0, -80.8, 29.0)        # lon_min, lat_min, lon_max, lat_max alrededor de Orlando
 MAX_KB_GEOJSON = 5000
+CAPAS_DE_LINEAS = {"vias_trafico", "rutas_bus"}   # capas de territorio que son líneas (vías de FDOT, recorridos de LYNX)
 DIAS_MAX_PRUEBA = 400
 # Fuentes que traen datos de personas y por eso entran solo como conteos con umbral (catalogo/fuentes_lago.json)
 try:
@@ -120,6 +122,16 @@ def dominio(ruta, lago):
                        ("solicitudes del último año en rango sensato", lambda: 50 < valor(lago, "solicitudes_ultimo_anio") < 100_000),
                        ("umbral mínimo por barrio de al menos 5 solicitudes", lambda: valor(lago, "umbral_minimo_por_barrio") >= 5),
                        ("porcentaje de barrio en zonas con incentivo entre 0 y 100", lambda: all(0 <= p[1] <= 100 for k in ("zona_oportunidad_barrio", "main_street_barrio", "cra_barrio") for p in lago["series"][k]["puntos"]))],
+        "trafico":   [("tramos con conteo en la ciudad en rango sensato", lambda: 50 <= valor(lago, "tramos_medidos") <= 5000),
+                      ("tráfico de la vía más cargada en rango sensato (vehículos al día)", lambda: 1_000 < valor(lago, "via_mas_cargada_aadt") < 500_000),
+                      ("muertes por año en rango sensato", lambda: all(0 <= p[1] < 1_000 for p in lago["series"]["muertes_por_anio"]["puntos"])),
+                      ("serie de choques mortales ordenada y sin el año en curso", lambda: (lambda a: a == sorted(set(a)) and max(a) < hoy.year)([int(p[0]) for p in lago["series"]["choques_mortales_por_anio"]["puntos"]])),
+                      ("umbral mínimo por vía de al menos 5 choques", lambda: valor(lago, "umbral_minimo_por_via") >= 5),
+                      ("ninguna vía bajo el umbral", lambda: all(p[1] >= valor(lago, "umbral_minimo_por_via") for p in lago["series"]["vias_con_mas_choques_mortales"]["puntos"]))],
+        "transporte": [("paradas de bus en la ciudad en rango sensato", lambda: 100 <= valor(lago, "paradas_en_la_ciudad") <= 20_000),
+                       ("rutas que paran en la ciudad en rango sensato", lambda: 5 <= valor(lago, "rutas_en_la_ciudad") <= 500),
+                       ("las paradas por barrio suman las de la ciudad", lambda: sum(p[1] for p in lago["series"]["paradas_barrio"]["puntos"]) == valor(lago, "paradas_en_la_ciudad")),
+                       ("las salidas por barrio suman las de la ciudad", lambda: sum(p[1] for p in lago["series"]["salidas_barrio"]["puntos"]) == valor(lago, "salidas_dia_habil_ciudad"))],
         "clima_historico": [("temperatura media anual en °F en rango sensato", lambda: all(55 < p[1] < 85 for p in lago["series"]["temperatura_anual"]["puntos"])),
                             ("al menos 60 años con temperatura", lambda: len(lago["series"]["temperatura_anual"]["puntos"]) >= 60)],
     }
@@ -173,6 +185,8 @@ for f in filas:
         pares = list(recorre(obj))
         abiertos = sorted({k for k, v in pares if CAMPOS_PERSONALES.search(str(k)) and v not in (RETIRADO, RETIRADO_MUESTRA)})
         hallado = next((h for h in (texto_con_pii(v, crudo=True) for _, v in pares if isinstance(v, str)) if h), None)
+    elif f.get("formato") == "zip":
+        abiertos, hallado = [], zip_con_pii(cuerpo)
     else:
         abiertos, hallado = [], texto_con_pii(texto, crudo=True)
     if abiertos or hallado:
@@ -233,14 +247,20 @@ for ruta in sorted(glob.glob(str(RAIZ / "lago" / "territorio" / "*.geojson"))):
     check(f"{nombre_ruta}: pesa menos de {MAX_KB_GEOJSON} KB", kb <= MAX_KB_GEOJSON, f"{kb} KB: simplificar más o pasar a PMTiles")
     g = json.load(open(ruta, encoding="utf-8"))
     feats = g.get("features", [])
-    check(f"{nombre_ruta}: es un FeatureCollection con polígonos", g.get("type") == "FeatureCollection" and feats and all(
-        f.get("geometry", {}).get("type") in ("Polygon", "MultiPolygon") for f in feats))
+    tipos = ("LineString", "MultiLineString") if pathlib.Path(ruta).stem in CAPAS_DE_LINEAS else ("Polygon", "MultiPolygon")
+    check(f"{nombre_ruta}: es un FeatureCollection con {'líneas' if tipos[0] == 'LineString' else 'polígonos'}", g.get("type") == "FeatureCollection" and feats and all(
+        f.get("geometry", {}).get("type") in tipos for f in feats))
     xs_ys = [c for _, c in recorre([f.get("geometry", {}).get("coordinates") for f in feats]) if isinstance(c, (int, float))]
     xs, ys = xs_ys[0::2], xs_ys[1::2]
     dentro = bool(xs) and BBOX[0] <= min(xs) and max(xs) <= BBOX[2] and BBOX[1] <= min(ys) and max(ys) <= BBOX[3]
     check(f"{nombre_ruta}: coordenadas WGS84 (lon, lat) dentro de la caja de Orlando", dentro,
           f"lon {min(xs, default=None)}..{max(xs, default=None)}, lat {min(ys, default=None)}..{max(ys, default=None)}")
     sin_datos_personales(nombre_ruta, [f.get("properties") for f in feats])
+
+# ---------- consistencia entre pestañas (verificacion/consistencia.py)
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from consistencia import revisar
+revisar(RAIZ, check, warn)
 
 print(f"\n{fallos} fallos")
 sys.exit(1 if fallos else 0)

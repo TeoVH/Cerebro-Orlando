@@ -6,33 +6,33 @@
  "zonas": {
   "catalogo": {
    "archivos": 2,
-   "bytes": 176323,
+   "bytes": 199309,
    "descripcion": "Manifiesto de lo crudo, fuentes e inventario del lago"
   },
   "consumo": {
    "archivos": 5,
-   "bytes": 1727989,
+   "bytes": 1876918,
    "descripcion": "Tablas planas para SQL y el archivo que lee el tablero"
   },
   "crudo": {
-   "archivos": 216,
-   "bytes": 27033095,
+   "archivos": 240,
+   "bytes": 28803777,
    "descripcion": "Lo que respondió cada fuente, tal cual (comprimido); solo se retiran datos de personas al guardar"
   },
   "curado": {
-   "archivos": 34,
-   "bytes": 1959776,
+   "archivos": 36,
+   "bytes": 1988530,
    "descripcion": "Un archivo por tema y fecha con la forma del contrato, verificado, con el linaje a lo crudo"
   },
   "territorio": {
-   "archivos": 4,
-   "bytes": 344401,
-   "descripcion": "Capas geográficas de referencia (barrios, distritos, límite, lagos) en WGS84"
+   "archivos": 6,
+   "bytes": 573193,
+   "descripcion": "Capas geográficas de referencia (barrios, distritos, límite, lagos, vías con su tráfico y recorridos de bus) en WGS84"
   }
  },
  "crudo": {
-  "respuestas": 216,
-  "bytes_originales": 159040727,
+  "respuestas": 240,
+  "bytes_originales": 162604225,
   "con_campos_retirados": 16,
   "bloqueadas": 0,
   "sitios": [
@@ -41,11 +41,15 @@
    "data.cityoforlando.net",
    "en.wikipedia.org",
    "es.wikipedia.org",
+   "files.mobilitydatabase.org",
    "files.zillowstatic.com",
    "fred.stlouisfed.org",
+   "geo.dot.gov",
+   "gis.fdot.gov",
    "gis.orlando.gov",
    "raw.githubusercontent.com",
    "services.arcgis.com",
+   "services1.arcgis.com",
    "wikimedia.org",
    "www.ncei.noaa.gov"
   ]
@@ -54,14 +58,14 @@
   {
    "ruta": "catalogo/fuentes/fuentes.jsonl",
    "zona": "catalogo",
-   "bytes": 19563,
-   "sha256": "ff75c7b89862222ed1e51b330d62e87b48e2834c75f41a695f0e32e035688876"
+   "bytes": 22923,
+   "sha256": "023a316915b8c835c700875218e1117aef3aca6ec04a71e048ca92ef88e88139"
   },
   {
    "ruta": "catalogo/manifiesto_crudo/manifiesto.jsonl",
    "zona": "catalogo",
-   "bytes": 156760,
-   "sha256": "aa7a66212fef2785633f3b3f52781298d33a0c7c10974a7385e1859efe277749"
+   "bytes": 176386,
+   "sha256": "72785a78fb35f544a80691a62a047e32b9780e330f18b49165554d7ee4cba979"
   },
   {
    "ruta": "consumo/cifras/fecha=2026-10-26/cifras.jsonl.gz",
@@ -73,8 +77,8 @@
   {
    "ruta": "consumo/cifras/fecha=2026-11-02/cifras.jsonl.gz",
    "zona": "consumo",
-   "bytes": 4175,
-   "sha256": "dbd554e3ee7df21fb40c0501d394cd9a4cc4b98c0b8b7dc482568f593bc0ac5d",
+   "bytes": 4743,
+   "sha256": "5962acea499791d03a2159653517f1d29d362912078416b13de923bbb56a5d01",
    "fecha": "2026-11-02"
   },
   {
@@ -87,15 +91,15 @@
   {
    "ruta": "consumo/series/fecha=2026-11-02/series.jsonl.gz",
    "zona": "consumo",
-   "bytes": 145924,
-   "sha256": "61a8a0a19fa1359f833c52a69c5e46626f55c6b35d0a7d51859332efbaeeb4ac",
+   "bytes": 149762,
+   "sha256": "d9078f6f8858b6d2c4c686dca1add7ef4bb7aa7430bcb63a80eb0572561ed008",
    "fecha": "2026-11-02"
   },
   {
    "ruta": "consumo/tablero/tablero.json",
    "zona": "consumo",
-   "bytes": 1427859,
-   "sha256": "c9d616b2c4cecf4d8b03afbd01919781fad5750a2fdba9847ecbb1fa83e1fd86"
+   "bytes": 1572382,
+   "sha256": "83006f6b58675b31c79b1bc0cb536afbe878737770af5551379dc47c86102623"
   },
   {
    "ruta": "crudo/sitio=api.censusreporter.org/fecha=2026-10-26/censo-b01003-01e1e79a28.json.gz",
@@ -962,6 +966,14 @@
    "fecha": "2026-11-02"
   },
   {
+   "ruta": "crudo/sitio=files.mobilitydatabase.org/fecha=2026-11-02/latest-zip-9241f4e8de.zip.gz",
+   "zona": "crudo",
+   "bytes": 1559225,
+   "sha256": "b0699d4111185a66a7f8431a05e824b926f8bb974d3dd18a0acc5a20f1875537",
+   "sitio": "files.mobilitydatabase.org",
+   "fecha": "2026-11-02"
+  },
+  {
    "ruta": "crudo/sitio=files.zillowstatic.com/fecha=2026-10-26/metro_zhvi_uc_sfrcondo_tier_0-33_0-67_sm_sa_month--34e4bc2cef.csv.gz",
    "zona": "crudo",
    "bytes": 2177601,
@@ -1263,6 +1275,150 @@
    "bytes": 15155,
    "sha256": "28cc411055efa2dd94d0eeab64cd150b7b5c6c4f0693da9ccd73db09cd86cb02",
    "sitio": "fred.stlouisfed.org",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-10-5bcdb2d5f2.json.gz",
+   "zona": "crudo",
+   "bytes": 186,
+   "sha256": "8f878054364ec34d47d6563ab8cf0792af7355fdc705419daf0159b167e33130",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-11-9dcc508810.json.gz",
+   "zona": "crudo",
+   "bytes": 458,
+   "sha256": "4a7e684084741ddad31b13b57d54fe20648d702d9b04d898b2dad1f79adb09a5",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-11-b67a81512b.json.gz",
+   "zona": "crudo",
+   "bytes": 184,
+   "sha256": "b6bf185597dd566d6ea6a374ec928cbfffc3de273f765a1609ec5838c0414f23",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-12-2e886f4546.json.gz",
+   "zona": "crudo",
+   "bytes": 185,
+   "sha256": "847e675c43914754d7a3ea14db1a17488347b2367c474a8a4a3d026b11c9dcab",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-12-69a27c5609.json.gz",
+   "zona": "crudo",
+   "bytes": 409,
+   "sha256": "06cd0f6a7eac515895baa5bc920c7b4a809bbcaf5cba24181edaad3562cabff9",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-13-5a8890648c.json.gz",
+   "zona": "crudo",
+   "bytes": 186,
+   "sha256": "7756a771b00325df84de9933dd4647560d8130873a0004ce4f528c36f5629b40",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-13-738fb5f08a.json.gz",
+   "zona": "crudo",
+   "bytes": 478,
+   "sha256": "1bd5690c6dfeb3b1e56cce9626285f953834cae09e66dec9d798295421e04c24",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-14-1712c25909.json.gz",
+   "zona": "crudo",
+   "bytes": 487,
+   "sha256": "b58ffb02d0428615304c9b663d7131c408feb48a809c13f68b9b04d00153939c",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-14-339f624749.json.gz",
+   "zona": "crudo",
+   "bytes": 186,
+   "sha256": "a8bc19511b7702d89b54ad25201d02711a76d4b7a5a7c82d31536466cf003bb7",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-15-1325636b85.json.gz",
+   "zona": "crudo",
+   "bytes": 456,
+   "sha256": "1f22f58da24ad01454b97def8dd058dc204c06d7cad5663c296cf53cc062ac4d",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-15-7e5dfd68d4.json.gz",
+   "zona": "crudo",
+   "bytes": 185,
+   "sha256": "2ac669d5266822f2220e78d36bb04b75515fc15d89dc863da078d2b66e67bbca",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-6-bb3618d4c8.json.gz",
+   "zona": "crudo",
+   "bytes": 185,
+   "sha256": "f2187de680e90e191c260f52bfec39395fb50c0adf9321bf85dece64e97155fd",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-7-34a8b6a29e.json.gz",
+   "zona": "crudo",
+   "bytes": 186,
+   "sha256": "cba9ac33d1c547505fc4779f81fbe852363254d68353ca794d3abcb2acd2cb83",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-8-5b049158b8.json.gz",
+   "zona": "crudo",
+   "bytes": 185,
+   "sha256": "7e324311952945fc955972ac2909ddf6b894809b01c298f727000e39678c6bdf",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-9-75431e4b4f.json.gz",
+   "zona": "crudo",
+   "bytes": 185,
+   "sha256": "45755298094a192db0fc2f92e0e8edab1aa3686c790eb57158942d83d5fac1d1",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=geo.dot.gov/fecha=2026-11-02/fqacc-servicio-c612242782.json.gz",
+   "zona": "crudo",
+   "bytes": 1579,
+   "sha256": "2d4d7eab8b115ae84bf1cf21ecb20364bcc4330e283b416ecb36c644b1d9f845",
+   "sitio": "geo.dot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=gis.fdot.gov/fecha=2026-11-02/rci_layers-13-4d50eef35f.json.gz",
+   "zona": "crudo",
+   "bytes": 144,
+   "sha256": "e6b2cfcec862065df8aeb5c751b4cd4717463561cd3380c8bcd953099301fc06",
+   "sitio": "gis.fdot.gov",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=gis.fdot.gov/fecha=2026-11-02/rci_layers-13-b8a103df4f.json.gz",
+   "zona": "crudo",
+   "bytes": 13514,
+   "sha256": "fa1908645319ecfe8ab3490fb19678dbcc629f908da658586e76d20ec5f84d58",
+   "sitio": "gis.fdot.gov",
    "fecha": "2026-11-02"
   },
   {
@@ -1682,6 +1838,46 @@
    "fecha": "2026-11-02"
   },
   {
+   "ruta": "crudo/sitio=services1.arcgis.com/fecha=2026-11-02/annual_average_daily_traffic_historical_tda-0-13c8ffbb61.json.gz",
+   "zona": "crudo",
+   "bytes": 10775,
+   "sha256": "f3217da233c66eeec275a43c524d4297174c10c352499e15ef4d232d977c9e09",
+   "sitio": "services1.arcgis.com",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=services1.arcgis.com/fecha=2026-11-02/annual_average_daily_traffic_historical_tda-0-1bc44c8993.json.gz",
+   "zona": "crudo",
+   "bytes": 4838,
+   "sha256": "544eeb68bf123154018adf04dced374464ed84d375c4e60a1d626cdb312a0fdc",
+   "sitio": "services1.arcgis.com",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=services1.arcgis.com/fecha=2026-11-02/annual_average_daily_traffic_historical_tda-0-29e90c52f7.json.gz",
+   "zona": "crudo",
+   "bytes": 10735,
+   "sha256": "c403df674f445e01ea60aaf06f8c557ff78dbbdb2a6e6ddd131b0c4f16c6bd57",
+   "sitio": "services1.arcgis.com",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=services1.arcgis.com/fecha=2026-11-02/annual_average_daily_traffic_historical_tda-0-98285a3c91.json.gz",
+   "zona": "crudo",
+   "bytes": 10776,
+   "sha256": "e14420e82c0b1d9181102abce435b2f8c3307663bb51cc3167ff8cc66090953d",
+   "sitio": "services1.arcgis.com",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "crudo/sitio=services1.arcgis.com/fecha=2026-11-02/annual_average_daily_traffic_tda-0-2406545be8.json.gz",
+   "zona": "crudo",
+   "bytes": 154955,
+   "sha256": "5ef74957b574072ad135358068882e343e085a1f7423186537ec80715eb06037",
+   "sitio": "services1.arcgis.com",
+   "fecha": "2026-11-02"
+  },
+  {
    "ruta": "crudo/sitio=wikimedia.org/fecha=2026-10-26/vistas-pageviews-per-article-en-wikipedia-045124de84.json.gz",
    "zona": "crudo",
    "bytes": 302,
@@ -2066,6 +2262,22 @@
    "fecha": "2026-11-02"
   },
   {
+   "ruta": "curado/tema=trafico/fecha=2026-11-02/trafico.json",
+   "zona": "curado",
+   "bytes": 13715,
+   "sha256": "12d07be2ee2c67de024ecafa8cb58f41cc2f2645709b1d040869e1362bb32d7e",
+   "tema": "trafico",
+   "fecha": "2026-11-02"
+  },
+  {
+   "ruta": "curado/tema=transporte/fecha=2026-11-02/transporte.json",
+   "zona": "curado",
+   "bytes": 15039,
+   "sha256": "5dd019f17c75fddcfe78925cb1fca452bdee0068de486e34137f5cfe65120644",
+   "tema": "transporte",
+   "fecha": "2026-11-02"
+  },
+  {
    "ruta": "curado/tema=turismo/fecha=2026-10-26/turismo.json",
    "zona": "curado",
    "bytes": 89394,
@@ -2120,6 +2332,18 @@
    "zona": "territorio",
    "bytes": 55602,
    "sha256": "bf6ca335b3cbddd5054d90fb7a4e857520a1b56865c8b625edce5cd917d277a5"
+  },
+  {
+   "ruta": "territorio/rutas_bus.geojson",
+   "zona": "territorio",
+   "bytes": 75516,
+   "sha256": "7ccfe158c730d65f769ee3fad3e860a431d2e46416af0cb1bbb810f3e8d4e51f"
+  },
+  {
+   "ruta": "territorio/vias_trafico.geojson",
+   "zona": "territorio",
+   "bytes": 153276,
+   "sha256": "523788656aa17640c25a6b4919f61c2456d45de6a0c178b708593209211375a4"
   }
  ]
 }

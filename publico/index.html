@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cerebro Orlando</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Seis preguntas sobre Orlando, Florida, respondidas con datos abiertos: gente, economía y vivienda, barrios, seguridad, turismo y clima. Cada cifra con su fuente.">
+<meta name="description" content="Siete preguntas sobre Orlando, Florida, respondidas con datos abiertos: gente, economía y vivienda, barrios, seguridad, turismo, clima y movilidad. Cada cifra con su fuente.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -29,6 +29,7 @@
   --bad: #c23434;
   --seq-1: #d2ebee; --seq-2: #9ad0d8; --seq-3: #57adba; --seq-4: #1f8496; --seq-5: #0a5664;
   --nodata: #e6ecea; --hatch: #a9b8b9;
+  --traf-1: #9fb3b6; --traf-2: #e7b631; --traf-3: #e88a2d; --traf-4: #d9502a; --traf-5: #a8231f;
   --water: #b9dbe6; --water-line: #8cc0d0;
   --peer: #9aa9ab;
   --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a;
@@ -47,6 +48,7 @@
     --good: #45c545; --warn: #f2b53f; --bad: #ef7070;
     --seq-1: #16363c; --seq-2: #1c5560; --seq-3: #237b88; --seq-4: #36a3b3; --seq-5: #84d6e0;
     --nodata: #18292d; --hatch: #3e5559; --water: #163f4b; --water-line: #23606f; --peer: #5f7477;
+    --traf-1: #4b6468; --traf-2: #e3b440; --traf-3: #f0913f; --traf-4: #f26b45; --traf-5: #ff9a8f;
     --c1: #3987e5; --c2: #d95926; --c3: #199e70; --day: #d95926; --night: #3987e5;
     --cold-3: #9ec5f4; --cold-2: #3987e5; --cold-1: #1c4f8a; --mid: #383835; --warm-1: #7a2e24; --warm-2: #e66767; --warm-3: #f6c3b4;
     --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 28px rgb(0 0 0 / .25);
@@ -59,6 +61,7 @@
   --good: #45c545; --warn: #f2b53f; --bad: #ef7070;
   --seq-1: #16363c; --seq-2: #1c5560; --seq-3: #237b88; --seq-4: #36a3b3; --seq-5: #84d6e0;
   --nodata: #18292d; --hatch: #3e5559; --water: #163f4b; --water-line: #23606f; --peer: #5f7477;
+  --traf-1: #4b6468; --traf-2: #e3b440; --traf-3: #f0913f; --traf-4: #f26b45; --traf-5: #ff9a8f;
   --c1: #3987e5; --c2: #d95926; --c3: #199e70; --day: #d95926; --night: #3987e5;
   --cold-3: #9ec5f4; --cold-2: #3987e5; --cold-1: #1c4f8a; --mid: #383835; --warm-1: #7a2e24; --warm-2: #e66767; --warm-3: #f6c3b4;
   --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 28px rgb(0 0 0 / .25);
@@ -293,6 +296,11 @@ select.sel { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--lin
 .svgmapa .lago { fill: var(--water); stroke: none; pointer-events: none; }
 .svgmapa .lim { fill: none; stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
 .svgmapa .dist { fill: none; stroke: var(--ink); stroke-opacity: .45; stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
+.svgmapa .marca { fill: none; stroke-width: 3; stroke-linejoin: round; vector-effect: non-scaling-stroke; pointer-events: none; }
+.svgmapa .marca.sel { stroke: var(--ink); }
+.svgmapa .marca.comp { stroke: var(--sun); }
+.svgmapa .marca.halo { stroke: var(--surface); stroke-width: 6; stroke-opacity: .85; }
+.leyenda-comp .quien { display: inline-flex; vertical-align: middle; }
 .ley-mapa { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; font-size: .82rem; color: var(--ink-2); }
 .ley-mapa .sw { display: inline-flex; gap: 6px; align-items: center; }
 .ley-mapa .sw i { width: 16px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); }
@@ -691,6 +699,17 @@ dialog#buscador { border: 1px solid var(--line); border-radius: 16px; padding: 0
 .hall .hb { position: relative; height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
 .hall .hb i, .hall .hb b { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
 .hall .hb i { background: var(--seq-2); } .hall .hb b { background: var(--accent); }
+
+/* Movilidad: mapa de carreteras y recorridos de bus */
+.grid-vias { display: grid; gap: 24px; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); align-items: start; }
+@media (max-width: 900px) { .grid-vias { grid-template-columns: 1fr; } }
+.mapa-vias .b { fill: var(--surface-2); cursor: default; }
+.mapa-vias .b:hover { stroke: var(--surface); stroke-width: .7; }
+.mapa-vias .v { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; cursor: pointer; }
+.mapa-vias .v.toque { stroke: transparent; stroke-width: 12; }
+.mapa-vias .v.fuera { stroke-opacity: .18; }
+.mapa-vias .v.resalto { stroke: var(--ink); }
+.ley-mapa .sw i.linea { height: 4px; border: 0; border-radius: 2px; }
 </style>
 </head>
 <body>
@@ -738,6 +757,8 @@ dialog#buscador { border: 1px solid var(--line); border-radius: 16px; padding: 0
     <symbol id="i-capitolio" viewBox="0 0 24 24"><path d="M3 21h18M5 21v-8M9 21v-8M15 21v-8M19 21v-8M3 13h18M5 13a7 7 0 0 1 14 0M12 3v3"/></symbol>
     <symbol id="i-arbol" viewBox="0 0 24 24"><path d="M12 21v-6M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM9.5 18H14.5"/></symbol>
     <symbol id="i-escuela" viewBox="0 0 24 24"><path d="m2 9 10-5 10 5-10 5z"/><path d="M6 11v5c2 1.7 4 2.5 6 2.5s4-.8 6-2.5v-5M22 9v6"/></symbol>
+    <symbol id="i-bus" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 21v-3M16 21v-3M8.5 14.5h.01M15.5 14.5h.01M9 6.5h6"/></symbol>
+    <symbol id="i-carro" viewBox="0 0 24 24"><path d="M5 16V12l2-5h10l2 5v4M5 16h14M5 16v2.5M19 16v2.5M3.5 11.5H5M19 11.5h1.5"/><circle cx="8" cy="13.5" r=".6"/><circle cx="16" cy="13.5" r=".6"/></symbol>
     <symbol id="i-tren" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="14" rx="3"/><path d="M6 11h12M9 21l1.5-4M15 21l-1.5-4M9.5 14h.01M14.5 14h.01"/></symbol>
     <symbol id="i-gota" viewBox="0 0 24 24"><path d="M12 3.5s6.5 7 6.5 11.2A6.5 6.5 0 0 1 5.5 14.7C5.5 10.5 12 3.5 12 3.5z"/></symbol>
     <symbol id="i-viento" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h7"/></symbol>
@@ -774,6 +795,7 @@ dialog#buscador { border: 1px solid var(--line); border-radius: 16px; padding: 0
       <a href="#seguridad" data-v="seguridad"><svg class="i"><use href="#i-sirena"/></svg>Seguridad</a>
       <a href="#turismo" data-v="turismo"><svg class="i"><use href="#i-maleta"/></svg>Turismo</a>
       <a href="#clima" data-v="clima"><svg class="i"><use href="#i-sol"/></svg>Clima</a>
+      <a href="#movilidad" data-v="movilidad"><svg class="i"><use href="#i-bus"/></svg>Movilidad</a>
       <a href="#fuentes" data-v="fuentes"><svg class="i"><use href="#i-fuente"/></svg>Datos y fuentes</a>
     </nav>
   </div>
@@ -787,7 +809,7 @@ dialog#buscador { border: 1px solid var(--line); border-radius: 16px; padding: 0
     <div class="texto">
       <p class="eyebrow">Orlando, Florida · para quien decide en la ciudad</p>
       <h1 id="t-inicio">¿Cómo va Orlando?</h1>
-      <p class="lead">Seis preguntas sobre la ciudad y cuatro decisiones (emprender, vivir, comprar, gobernar) respondidas con datos abiertos. Cada cifra trae su fuente, su vigencia y la fecha en que la comprobamos: tócala y lo ves.</p>
+      <p class="lead">Siete preguntas sobre la ciudad y cuatro decisiones (emprender, vivir, comprar, gobernar) respondidas con datos abiertos. Cada cifra trae su fuente, su vigencia y la fecha en que la comprobamos: tócala y lo ves.</p>
       <div class="linea" id="lineaInicio"></div>
       <div class="acciones">
         <button class="btn oscuro" type="button" id="recorridoBtn"><svg class="i"><use href="#i-ruta"/></svg>Recorrido por 6 barrios</button>
@@ -804,7 +826,7 @@ dialog#buscador { border: 1px solid var(--line); border-radius: 16px; padding: 0
   </div>
 
   <div class="seccion">
-    <div class="barra-graf"><h2>Seis preguntas, seis respuestas</h2><span class="peq">Toca una tarjeta para ver la evidencia</span></div>
+    <div class="barra-graf"><h2>Siete preguntas, siete respuestas</h2><span class="peq">Toca una tarjeta para ver la evidencia</span></div>
     <div class="grid-3" id="tarjetas"></div>
   </div>
 
@@ -1074,6 +1096,38 @@ dialog#buscador { border: 1px solid var(--line); border-radius: 16px; padding: 0
   <div class="nota"><svg class="i"><use href="#i-info"/></svg><p id="notaClima"></p></div>
 </section>
 
+<!-- ================= MOVILIDAD ================= -->
+<section class="vista" data-vista="movilidad" aria-labelledby="t-mov" hidden>
+  <div class="cabeza">
+    <p class="eyebrow">Pregunta 7 · movilidad</p>
+    <h2 id="t-mov">¿Cómo se mueve la gente y qué tan seguras son las vías?</h2>
+    <p class="respuesta" id="r-mov"></p>
+  </div>
+  <article class="card panel"><div class="kpis" id="k-mov"></div></article>
+  <article class="card panel">
+    <div class="barra-graf"><h2 style="font-size:1.45rem" id="t-vias">Las carreteras de Orlando</h2><div class="seg" id="segVias" role="group" aria-label="Qué mostrar sobre las vías"><button type="button" data-m="trafico" aria-pressed="true">Tráfico</button><button type="button" data-m="buses" aria-pressed="false">Rutas de bus</button></div></div>
+    <p class="respuesta" id="r-vias" style="font-size:1.12rem"></p>
+    <div class="grid-vias">
+      <div><svg class="svgmapa mapa-vias" id="mapaVias" role="img" aria-label="Mapa de las vías de Orlando"></svg><div class="ley-mapa" id="leyVias"></div></div>
+      <div><h3 id="t-rankVias">Las vías más cargadas</h3><p class="peq" id="r-rankVias"></p><ol class="ranking" id="rankVias"></ol><span id="f-vias"></span></div>
+    </div>
+  </article>
+  <div class="grid-2">
+    <article class="card grafico"><div class="barra-graf"><h3>Muertes en choques de tránsito en la ciudad, por año</h3></div><p class="peq" id="r-fars"></p><div class="chart" id="g-fars"></div><div class="barra-graf"><span class="leyenda" id="ley-fars"></span><span id="f-fars"></span></div></article>
+    <article class="card panel"><div class="barra-graf"><h3>Vías con más choques mortales</h3><span id="f-viasfars"></span></div><p class="peq" id="r-viasfars"></p><ol class="ranking" id="rankViasFars"></ol></article>
+  </div>
+  <div class="grid-2" style="align-items:start">
+    <article class="card grafico"><div class="barra-graf"><h3>Tráfico típico de la ciudad (vehículos al día)</h3></div><p class="peq" id="r-aadtanio"></p><div class="chart" id="g-aadt"></div><div class="barra-graf"><span></span><span id="f-aadtanio"></span></div></article>
+    <article class="card panel">
+      <div class="barra-graf"><h3>¿Qué barrios tienen bus?</h3><div class="seg" id="segBus" role="group" aria-label="Medida"><button type="button" data-m="salidasBus" aria-pressed="true">Buses al día</button><button type="button" data-m="paradas" aria-pressed="false">Paradas</button><button type="button" data-m="traficoMax" aria-pressed="false">Tráfico</button></div></div>
+      <p class="peq" id="r-bus"></p>
+      <svg class="svgmapa" id="mapaBus" role="img" aria-label="Mapa de movilidad por barrio"></svg><div class="ley-mapa" id="leyBus"></div>
+      <ol class="ranking" id="rankBus" style="margin-top:14px"></ol><span id="f-bus"></span>
+    </article>
+  </div>
+  <div class="nota"><svg class="i"><use href="#i-hueco"/></svg><p id="notaMov"></p></div>
+</section>
+
 <!-- ================= FUENTES ================= -->
 <section class="vista" data-vista="fuentes" aria-labelledby="t-fue" hidden>
   <div class="cabeza">
@@ -1159,7 +1213,7 @@ dialog#buscador { border: 1px solid var(--line); border-radius: 16px; padding: 0
   <div class="wrap">
     <div class="cols">
       <p><b>Cerebro Orlando</b> · Taller de datos de Tópicos de Sistemas de Información (Gobernanza de datos), Universidad EAFIT. Profesor Santiago Jiménez Londoño.<br>Equipo: Juan Esteban Alzate, Nicolás Saldarriaga y Mateo Villada.</p>
-      <p><b>Atribuciones.</b> Avisos de empleo: Indeed Hiring Lab, Job Postings Index (CC BY 4.0). Vivienda: U.S. Federal Housing Finance Agency y Realtor.com (Housing Inventory), vía FRED. Desempleo y empleo: U.S. Bureau of Labor Statistics, vía FRED. Población, ingreso y pobreza: U.S. Census Bureau, vía FRED. Salarios: BLS; ingreso por persona: BEA; solicitudes de negocios: U.S. Census Bureau (BFS), todos vía FRED. Población, ingreso, arriendo e idioma por barrio y ciudad: U.S. Census Bureau, American Community Survey 2020-2024, vía Census Reporter. Riesgo: FEMA, National Risk Index. Arriendo y valor típico: Zillow Research. Visitas: Wikimedia Foundation. Clima: National Weather Service y NOAA NCEI. Barrios, permisos, código, negocios, planeación, parques, SunRail y ciclovías: City of Orlando; colegios: Orange County Public Schools.</p>
+      <p><b>Atribuciones.</b> Avisos de empleo: Indeed Hiring Lab, Job Postings Index (CC BY 4.0). Vivienda: U.S. Federal Housing Finance Agency y Realtor.com (Housing Inventory), vía FRED. Desempleo y empleo: U.S. Bureau of Labor Statistics, vía FRED. Población, ingreso y pobreza: U.S. Census Bureau, vía FRED. Salarios: BLS; ingreso por persona: BEA; solicitudes de negocios: U.S. Census Bureau (BFS), todos vía FRED. Población, ingreso, arriendo e idioma por barrio y ciudad: U.S. Census Bureau, American Community Survey 2020-2024, vía Census Reporter. Riesgo: FEMA, National Risk Index. Arriendo y valor típico: Zillow Research. Visitas: Wikimedia Foundation. Clima: National Weather Service y NOAA NCEI. Barrios, permisos, código, negocios, planeación, parques, SunRail y ciclovías: City of Orlando; colegios: Orange County Public Schools. Tráfico: Florida Department of Transportation (FDOT). Choques mortales: NHTSA, Fatality Analysis Reporting System. Buses: LYNX (Central Florida Regional Transit Authority), horario GTFS.</p>
       <p><b>Cómo se construye.</b> <span class="mono">reconstruir.py</span> trae los datos, <span class="mono">verificar.py</span> los revisa (con un solo fallo no se publica) y <span class="mono">vista/construir_vista.py</span> arma esta página. <a id="linkRepo" href="#" target="_blank" rel="noopener">Repositorio</a>.</p>
     </div>
   </div>
@@ -1177,7 +1231,12 @@ dialog#buscador { border: 1px solid var(--line); border-radius: 16px; padding: 0
 
 <script id="datos" type="application/json"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js"></script>
-<script>fetch("lago/consumo/tablero/tablero.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+<script>const leer = u => fetch(u, {cache: "no-cache"}).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+const NUBE = "https://d1uzvgzpbvgblk.cloudfront.net", VERSION = "6422b4c127fd";
+// Primero la última foto que publicó la actualización semanal en AWS (CloudFront); si no responde o salió de otra versión
+// del código, la copia que viene con esta página
+(NUBE ? leer(NUBE + "/consumo/tablero/tablero.json").then(d => { if (d.version_vista !== VERSION) throw new Error("otra versión"); window.__LAGO = NUBE + "/"; return d; }) : Promise.reject())
+  .catch(() => leer("lago/consumo/tablero/tablero.json").then(d => { window.__LAGO = "lago/"; return d; }))
   .then(d => { window.__D = d; const s = document.createElement("script"); s.src = "app.js?v=" + encodeURIComponent(d.generado); document.body.append(s); })
   .catch(e => { document.querySelector("main").insertAdjacentHTML("afterbegin", '<div class="wrap" style="padding:40px 0"><h2>No se pudo leer el lago</h2><p>La página lee sus datos de lago/consumo/tablero/tablero.json y no respondió (' + e.message + '). Pruebe recargar.</p></div>'); });</script>
 </body>

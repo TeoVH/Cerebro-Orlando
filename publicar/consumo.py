@@ -45,7 +45,7 @@ def tablas():
 
 ZONAS = {"crudo": "Lo que respondió cada fuente, tal cual (comprimido); solo se retiran datos de personas al guardar",
          "curado": "Un archivo por tema y fecha con la forma del contrato, verificado, con el linaje a lo crudo",
-         "territorio": "Capas geográficas de referencia (barrios, distritos, límite, lagos) en WGS84",
+         "territorio": "Capas geográficas de referencia (barrios, distritos, límite, lagos, vías con su tráfico y recorridos de bus) en WGS84",
          "consumo": "Tablas planas para SQL y el archivo que lee el tablero",
          "catalogo": "Manifiesto de lo crudo, fuentes e inventario del lago"}
 

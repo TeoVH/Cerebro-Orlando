@@ -364,18 +364,18 @@
   "nombre": "Rutas, horarios, GTFS y pasajeros de buses",
   "entidad": "LYNX (Central Florida Regional Transportation Authority)",
   "tipo_publicador": "Entidad pública",
-  "url": "https://www.golynx.com",
-  "formato": "Otro",
+  "url": "http://gtfsrt.golynx.com/gtfsrt/google_transit.zip",
+  "formato": "ZIP (CSV)",
   "como_se_obtiene": "Descarga directa",
   "licencia": "Prohíbe reutilizar (términos de uso)",
   "personas": "No",
   "cobertura": "Orange, Seminole y Osceola",
   "vigencia": "Feed GTFS vigente (la página no ofrece histórico)",
   "frecuencia": "No se sabe",
-  "probado": "2026-10-06",
-  "estado": "candidato",
+  "probado": "2026-11-02",
+  "estado": "integrado",
   "hallada_por": "Salió de la IA: lista de 64 fuentes que Claude generó de memoria el 2026-09-29 (docx «Fuentes de información sobre Orlando», fuente #21); ver Bitácora IA fila 6.",
-  "nota": "Prioridad alta. GTFS es un ZIP de TXT. Buscar la sección para desarrolladores y copiar sus términos de uso. Prueba 2026-10-05 (script del grupo): HTTP 200 pero devolvió una página HTML, no una descarga ni una API; falta probar el endpoint exacto. Repetida 2026-10-06: mismo resultado. Licencia 2026-10-06 (Claude con acceso web, sesión del integrante 2): la página de descarga https://www.golynx.com/maps-schedules/data-download.stml no declara licencia: solo trae un DISCLAIMER (datos «as is», sin garantía, el riesgo es de quien los pide) y enlaza el GTFS en http://gtfsrt.golynx.com/gtfsrt/. Pero los Terms of Use del sitio (https://www.golynx.com/terms-use.stml) prohíben modificar, copiar, agregar, distribuir o publicar cualquier información del sitio sin permiso escrito de LYNX, y usar robots o spiders. No queda claro si cubren el GTFS (otro subdominio, ofrecido para desarrolladores): antes de integrar, pedir permiso escrito a inquiry@golynx.com. La capa GIS se actualiza con cada cambio de servicio, unas 3 veces al año (página GIS/GTFS de LYNX); el GTFS probablemente igual, por confirmar. El feed antiguo (golynx.com/lynxmap/GoLYNX_data/google_transit.zip) figura como reemplazado en Mobility Database. Para E conviene la URL de la página de descarga."
+  "nota": "Prioridad alta. GTFS es un ZIP de TXT. Buscar la sección para desarrolladores y copiar sus términos de uso. Prueba 2026-10-05 (script del grupo): HTTP 200 pero devolvió una página HTML, no una descarga ni una API; falta probar el endpoint exacto. Repetida 2026-10-06: mismo resultado. Licencia 2026-10-06 (Claude con acceso web, sesión del integrante 2): la página de descarga https://www.golynx.com/maps-schedules/data-download.stml no declara licencia: solo trae un DISCLAIMER (datos «as is», sin garantía, el riesgo es de quien los pide) y enlaza el GTFS en http://gtfsrt.golynx.com/gtfsrt/. Pero los Terms of Use del sitio (https://www.golynx.com/terms-use.stml) prohíben modificar, copiar, agregar, distribuir o publicar cualquier información del sitio sin permiso escrito de LYNX, y usar robots o spiders. No queda claro si cubren el GTFS (otro subdominio, ofrecido para desarrolladores): antes de integrar, pedir permiso escrito a inquiry@golynx.com. La capa GIS se actualiza con cada cambio de servicio, unas 3 veces al año (página GIS/GTFS de LYNX); el GTFS probablemente igual, por confirmar. El feed antiguo (golynx.com/lynxmap/GoLYNX_data/google_transit.zip) figura como reemplazado en Mobility Database. Para E conviene la URL de la página de descarga. Integrada 2026-11-02 en local (tema transporte, script ingesta/pull_transporte.py): paradas, rutas y paradas de bus en un día hábil por barrio. El ZIP se leyó de la copia de Mobility Database (files.mobilitydatabase.org/mdb-347), idéntica al feed oficial (vigencia 2026-10-02 a 2026-12-12). PENDIENTE: el permiso escrito de LYNX antes de publicar el ZIP crudo."
  },
  {
   "id": "F22",
@@ -436,18 +436,18 @@
   "nombre": "Conteos de tráfico (AADT) por vía",
   "entidad": "Florida Department of Transportation (FDOT)",
   "tipo_publicador": "Entidad pública",
-  "url": "https://tdaappsprod.dot.state.fl.us/fto/",
-  "formato": "Otro",
-  "como_se_obtiene": "Descarga directa",
-  "licencia": "no declara",
+  "url": "https://services1.arcgis.com/O1JpcwDW8sjYuddV/ArcGIS/rest/services/Annual_Average_Daily_Traffic_TDA/FeatureServer/0",
+  "formato": "JSON",
+  "como_se_obtiene": "API sin llave",
+  "licencia": "no declara (descargo de FDOT: datos «as is», sin garantías)",
   "personas": "No",
   "cobertura": "Vías de Florida (filtrar Orlando)",
   "vigencia": "Conteos anuales históricos; el más reciente es 2025 (publicado en abril de 2026)",
   "frecuencia": "Anual",
-  "probado": "2026-10-06",
-  "estado": "candidato",
+  "probado": "2026-11-02",
+  "estado": "integrado",
   "hallada_por": "Salió de la IA: lista de 64 fuentes que Claude generó de memoria el 2026-09-29 (docx «Fuentes de información sobre Orlando», fuente #25); ver Bitácora IA fila 6.",
-  "nota": "Prioridad alta. Buscar también la capa AADT en el portal GIS de FDOT, que suele descargarse como Shapefile. Prueba 2026-10-05 (script del grupo): HTTP 200 pero devolvió una página HTML, no una descarga ni una API; falta probar el endpoint exacto. Repetida 2026-10-06: mismo resultado. Licencia 2026-10-06 (Claude con acceso web, sesión del integrante 2): la página Traffic Information de FDOT (https://www.fdot.gov/statistics/trafficdata/default.shtm), que enlaza Florida Traffic Online, no declara licencia; dice que los datos se actualizan cada abril, que los de 2025 ya están disponibles y ofrece shapefiles de AADT. La URL de E (la aplicación de mapa) no se abrió directamente. Los metadatos de la capa AADT que copia la FGDL (Universidad de Florida) solo traen un descargo de responsabilidad."
+  "nota": "Prioridad alta. Buscar también la capa AADT en el portal GIS de FDOT, que suele descargarse como Shapefile. Prueba 2026-10-05 (script del grupo): HTTP 200 pero devolvió una página HTML, no una descarga ni una API; falta probar el endpoint exacto. Repetida 2026-10-06: mismo resultado. Licencia 2026-10-06 (Claude con acceso web, sesión del integrante 2): la página Traffic Information de FDOT (https://www.fdot.gov/statistics/trafficdata/default.shtm), que enlaza Florida Traffic Online, no declara licencia; dice que los datos se actualizan cada abril, que los de 2025 ya están disponibles y ofrece shapefiles de AADT. La URL de E (la aplicación de mapa) no se abrió directamente. Los metadatos de la capa AADT que copia la FGDL (Universidad de Florida) solo traen un descargo de responsabilidad. Integrada 2026-11-02: script ingesta/pull_trafico.py, tema trafico. Capa AADT de FDOT en ArcGIS Online (tramos de 2025 con su línea) más la capa histórica (2021-2025 por estación) y los nombres de vía de RCI (gis.fdot.gov, capa 13). Tramos que tocan la ciudad: 502; la ficha del ítem solo trae un descargo de responsabilidad."
  },
  {
   "id": "F26",
@@ -1942,5 +1942,23 @@
   "estado": "integrado",
   "hallada_por": "Búsqueda asistida por IA (Claude), tras fallar F61: servicio público de FEMA en ArcGIS Online",
   "nota": "Integrada 2026-10-26 (v3): script ingesta/pull_censo.py. Puntajes de riesgo (percentil nacional 0 a 100) de huracán, inundación fluvial, calor y tornado, vulnerabilidad social y pérdida anual esperada, por sector; se llevan a barrios ponderando por población. No reemplaza el mapa de zonas inundables (F61). v4 2026-11-02: el lago pasó a zonas. Las respuestas originales de esta fuente quedan en lago/crudo/ (con URL, fecha y huella en el manifiesto) y el archivo verificado en lago/curado/, con el linaje a lo crudo. Se pidió de nuevo desde el navegador del equipo el 2026-11-02 (segunda foto del lago)."
+ },
+ {
+  "id": "F109",
+  "nombre": "Fatality Analysis Reporting System (FARS): choques de tránsito con al menos un muerto",
+  "entidad": "National Highway Traffic Safety Administration (NHTSA)",
+  "tipo_publicador": "Entidad pública",
+  "url": "https://geo.dot.gov/server/rest/services/NHTSA/FQAcc/MapServer",
+  "formato": "JSON",
+  "como_se_obtiene": "API sin llave",
+  "licencia": "Dominio público (obra del gobierno de EE. UU.)",
+  "personas": "Sí (cada choque trae fecha, hora y punto)",
+  "cobertura": "Ciudad de Orlando (código de ciudad 2360)",
+  "vigencia": "2015-2024 (una capa por año)",
+  "frecuencia": "Anual",
+  "probado": "2026-11-02",
+  "estado": "integrado",
+  "hallada_por": "Búsqueda asistida por IA (Claude), 2026-11-02, al buscar choques para el tema tráfico: la capa pública de choques de FDOT se quedó en 2019 y Signal Four Analytics pide usuario.",
+  "nota": "Integrada 2026-11-02: script ingesta/pull_trafico.py, tema trafico. Solo se piden estadísticas al servidor (conteos por año y por vía); las vías con menos de 5 choques mortales en cinco años no se publican."
  }
 ]

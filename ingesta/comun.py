@@ -260,6 +260,36 @@ def leer_territorio(nombre):
     return json.loads((LAGO / "territorio" / f"{nombre}.geojson").read_text(encoding="utf-8"))["features"]
 
 
+def simplificar_linea(puntos, tol=0.00005):
+    """Douglas-Peucker en grados (0,00005 ≈ 5 m en Orlando), con 5 decimales y sin puntos repetidos."""
+    pts = []
+    for x, y in puntos:
+        q = [round(float(x), 5), round(float(y), 5)]
+        if not pts or q != pts[-1]:
+            pts.append(q)
+    if len(pts) <= 2:
+        return pts
+    def dp(a, b):
+        (x1, y1), (x2, y2) = pts[a], pts[b]
+        dx, dy = x2 - x1, y2 - y1
+        n = (dx * dx + dy * dy) ** 0.5 or 1e-12
+        lejos, k = 0.0, None
+        for i in range(a + 1, b):
+            d = abs(dy * pts[i][0] - dx * pts[i][1] + x2 * y1 - y2 * x1) / n
+            if d > lejos:
+                lejos, k = d, i
+        return dp(a, k)[:-1] + dp(k, b) if k is not None and lejos > tol else [pts[a], pts[b]]
+    return dp(0, len(pts) - 1)
+
+
+def escribir_territorio(nombre, features):
+    """Capa de referencia en lago/territorio/<nombre>.geojson (WGS84), compacta y siempre igual para los mismos datos."""
+    ruta = LAGO / "territorio" / f"{nombre}.geojson"
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    ruta.write_text(json.dumps({"type": "FeatureCollection", "features": features}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    return ruta
+
+
 def capa_barrios():
     return Capa([(f["properties"]["nombre"], f["geometry"]) for f in leer_territorio("barrios")])
 

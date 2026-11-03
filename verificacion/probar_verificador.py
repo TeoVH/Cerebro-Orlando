@@ -4,7 +4,8 @@
 Arma carpetas temporales. En la buena pone un lago correcto (zona cruda con su manifiesto y zona curada con su linaje) y
 espera código 0. En las malas rompe el lago a propósito (cifra sin fuente, licencia pendiente, hora en 'probado', un correo
 y dos teléfonos; una respuesta cruda con un correo, una que cambió después de guardarse y una fuente sin respuestas
-crudas) y espera código 1 con cada falla nombrada."""
+crudas) y espera código 1 con cada falla nombrada. Al final hace lo mismo con la consistencia entre pestañas
+(consistencia.py) sobre una copia del lago real."""
 import gzip, hashlib, json, os, pathlib, subprocess, sys, tempfile, datetime
 
 VERIFICAR = pathlib.Path(__file__).resolve().parent / "verificar.py"
@@ -121,5 +122,30 @@ with tempfile.TemporaryDirectory() as t:
     (pathlib.Path(t) / "catalogo" / "fuentes_lago.json").write_text(CATALOGO, encoding="utf-8")
     vacio = subprocess.run([sys.executable, str(VERIFICAR), "--raiz", t], capture_output=True, text=True, encoding="utf-8", env=ENV).returncode
 print("lago vacío ->", "ATRAPADO" if vacio == 1 else "NO LO ATRAPÓ: pasa sin revisar nada")
-sys.exit(0 if all(c for _, c in crudos) and vacio == 1 and ok and codigo == 1 and c_ok == 0 and atrapo_censo and len(atrapadas) == len(esperadas) and cod_ok == 0 and atrapo
+# Consistencia entre pestañas: la copia real del lago pasa; con la tarjeta y el gráfico en desacuerdo, tiene que fallar
+CONSISTENCIA = pathlib.Path(__file__).resolve().parent / "consistencia.py"
+RAIZ_REAL = pathlib.Path(__file__).resolve().parents[1]
+cons = []
+with tempfile.TemporaryDirectory() as t:
+    t = pathlib.Path(t)
+    import shutil
+    for parte in ("lago/curado", "lago/consumo"):
+        if (RAIZ_REAL / parte).exists():
+            shutil.copytree(RAIZ_REAL / parte, t / parte)
+    (t / "vista").mkdir()
+    for f in ("plantilla.html", "app.js"):
+        shutil.copy(RAIZ_REAL / "vista" / f, t / "vista" / f)
+    correr_c = lambda: subprocess.run([sys.executable, str(CONSISTENCIA), "--raiz", str(t)], capture_output=True, text=True, encoding="utf-8", env=ENV)
+    r0 = correr_c()
+    cons.append(("lago real, todo consistente", r0.returncode == 0))
+    ruta = sorted((t / "lago" / "curado").glob("tema=permisos/fecha=*/permisos.json"))[-1]
+    d = json.loads(ruta.read_text(encoding="utf-8"))
+    d["cifras"]["permisos_emitidos_ultimo_anio_completo"]["valor"] += 50
+    ruta.write_text(json.dumps(d), encoding="utf-8")
+    r1 = correr_c()
+    cons.append(("tarjeta de permisos distinta del gráfico", atrapa(r1.stdout, r1.returncode, "punto 2025 de la serie permisos_por_anio")))
+    cons.append(("total de la ciudad que no cuadra con la suma por barrio", atrapa(r1.stdout, r1.returncode, "cuadra con la suma por barrio")))
+for nombre, ok_c in cons:
+    print("consistencia:", nombre, "->", ("PASA" if ok_c else "FALLA") if nombre.startswith("lago real") else ("ATRAPADO" if ok_c else "NO LO ATRAPÓ"))
+sys.exit(0 if all(c for _, c in crudos) and all(c for _, c in cons) and vacio == 1 and ok and codigo == 1 and c_ok == 0 and atrapo_censo and len(atrapadas) == len(esperadas) and cod_ok == 0 and atrapo
          and s_ok == 0 and atrapo_cat and atrapo_bar else 1)

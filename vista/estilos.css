@@ -18,6 +18,7 @@
   --bad: #c23434;
   --seq-1: #d2ebee; --seq-2: #9ad0d8; --seq-3: #57adba; --seq-4: #1f8496; --seq-5: #0a5664;
   --nodata: #e6ecea; --hatch: #a9b8b9;
+  --traf-1: #9fb3b6; --traf-2: #e7b631; --traf-3: #e88a2d; --traf-4: #d9502a; --traf-5: #a8231f;
   --water: #b9dbe6; --water-line: #8cc0d0;
   --peer: #9aa9ab;
   --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a;
@@ -36,6 +37,7 @@
     --good: #45c545; --warn: #f2b53f; --bad: #ef7070;
     --seq-1: #16363c; --seq-2: #1c5560; --seq-3: #237b88; --seq-4: #36a3b3; --seq-5: #84d6e0;
     --nodata: #18292d; --hatch: #3e5559; --water: #163f4b; --water-line: #23606f; --peer: #5f7477;
+    --traf-1: #4b6468; --traf-2: #e3b440; --traf-3: #f0913f; --traf-4: #f26b45; --traf-5: #ff9a8f;
     --c1: #3987e5; --c2: #d95926; --c3: #199e70; --day: #d95926; --night: #3987e5;
     --cold-3: #9ec5f4; --cold-2: #3987e5; --cold-1: #1c4f8a; --mid: #383835; --warm-1: #7a2e24; --warm-2: #e66767; --warm-3: #f6c3b4;
     --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 28px rgb(0 0 0 / .25);
@@ -48,6 +50,7 @@
   --good: #45c545; --warn: #f2b53f; --bad: #ef7070;
   --seq-1: #16363c; --seq-2: #1c5560; --seq-3: #237b88; --seq-4: #36a3b3; --seq-5: #84d6e0;
   --nodata: #18292d; --hatch: #3e5559; --water: #163f4b; --water-line: #23606f; --peer: #5f7477;
+  --traf-1: #4b6468; --traf-2: #e3b440; --traf-3: #f0913f; --traf-4: #f26b45; --traf-5: #ff9a8f;
   --c1: #3987e5; --c2: #d95926; --c3: #199e70; --day: #d95926; --night: #3987e5;
   --cold-3: #9ec5f4; --cold-2: #3987e5; --cold-1: #1c4f8a; --mid: #383835; --warm-1: #7a2e24; --warm-2: #e66767; --warm-3: #f6c3b4;
   --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 28px rgb(0 0 0 / .25);
@@ -282,6 +285,11 @@ select.sel { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--lin
 .svgmapa .lago { fill: var(--water); stroke: none; pointer-events: none; }
 .svgmapa .lim { fill: none; stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
 .svgmapa .dist { fill: none; stroke: var(--ink); stroke-opacity: .45; stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
+.svgmapa .marca { fill: none; stroke-width: 3; stroke-linejoin: round; vector-effect: non-scaling-stroke; pointer-events: none; }
+.svgmapa .marca.sel { stroke: var(--ink); }
+.svgmapa .marca.comp { stroke: var(--sun); }
+.svgmapa .marca.halo { stroke: var(--surface); stroke-width: 6; stroke-opacity: .85; }
+.leyenda-comp .quien { display: inline-flex; vertical-align: middle; }
 .ley-mapa { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; font-size: .82rem; color: var(--ink-2); }
 .ley-mapa .sw { display: inline-flex; gap: 6px; align-items: center; }
 .ley-mapa .sw i { width: 16px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); }
@@ -680,3 +688,14 @@ dialog#buscador { border: 1px solid var(--line); border-radius: 16px; padding: 0
 .hall .hb { position: relative; height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
 .hall .hb i, .hall .hb b { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
 .hall .hb i { background: var(--seq-2); } .hall .hb b { background: var(--accent); }
+
+/* Movilidad: mapa de carreteras y recorridos de bus */
+.grid-vias { display: grid; gap: 24px; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); align-items: start; }
+@media (max-width: 900px) { .grid-vias { grid-template-columns: 1fr; } }
+.mapa-vias .b { fill: var(--surface-2); cursor: default; }
+.mapa-vias .b:hover { stroke: var(--surface); stroke-width: .7; }
+.mapa-vias .v { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; cursor: pointer; }
+.mapa-vias .v.toque { stroke: transparent; stroke-width: 12; }
+.mapa-vias .v.fuera { stroke-opacity: .18; }
+.mapa-vias .v.resalto { stroke: var(--ink); }
+.ley-mapa .sw i.linea { height: 4px; border: 0; border-radius: 2px; }

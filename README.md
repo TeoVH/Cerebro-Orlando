@@ -1,12 +1,13 @@
 # Cerebro Orlando
 
 Sistema de información sobre Orlando, Florida, para el taller de datos de Tópicos de Sistemas de Información (EAFIT).
-Responde seis preguntas con datos abiertos, ayuda a decidir (emprender, vivir, comprar o invertir, gobernar) y compara
+Responde siete preguntas con datos abiertos, ayuda a decidir (emprender, vivir, comprar o invertir, gobernar) y compara
 Orlando con otras ciudades, sus seis distritos y sus barrios. Cada cifra trae su fuente, su vigencia y la fecha en que la
 comprobamos.
 
 **Publicado en https://cerebro-orlando.vercel.app** (el lago completo, en https://cerebro-orlando.vercel.app/lago/…; el
-inventario está en `lago/catalogo/catalogo_lago.json`).
+inventario está en `lago/catalogo/catalogo_lago.json`). **Se actualiza solo cada lunes en AWS** (EventBridge → Step
+Functions → Lambda → S3 → Athena; ver «Actualización semanal en AWS»).
 
 Réplica mejorada del lago del Cerebro Lima: un script por tema, un **lago de datos con tres zonas** (cruda, curada y de
 consumo) y fotos con fecha, una verificación que sabe fallar y una vista publicada en Vercel. La ingesta, la verificación
@@ -16,19 +17,22 @@ exportar el Excel del catálogo.
 
 **Las tres preguntas de la sustentación, en corto:**
 
-- **¿De dónde jalamos los datos?** De 32 fuentes abiertas en 12 sitios (Datos abiertos y SIG de la Ciudad de Orlando,
-  FRED, Census Reporter, FEMA, Servicio Meteorológico, NOAA, Wikimedia y Wikipedia, Indeed Hiring Lab en GitHub y Zillow).
+- **¿De dónde jalamos los datos?** De 37 fuentes abiertas en 16 sitios (Datos abiertos y SIG de la Ciudad de Orlando,
+  FRED, Census Reporter, FEMA, Servicio Meteorológico, NOAA, Wikimedia y Wikipedia, Indeed Hiring Lab en GitHub, Zillow,
+  el Departamento de Transporte de Florida (FDOT), NHTSA y LYNX).
   Cada pedido queda en `lago/catalogo/manifiesto_crudo/manifiesto.jsonl` con su URL exacta, la fecha y su huella.
 - **¿De dónde los sacó la IA?** La IA (Claude) no puso ninguna cifra: escribió los scripts y pidió esas mismas URL desde el
-  navegador del equipo, porque su entorno no tenía salida a esos sitios. Las respuestas se guardaron tal cual en la zona
+  navegador del equipo, porque su entorno no tenía salida a esos sitios. Desde el 3 de noviembre, además, una Lambda en
+  AWS pide cada lunes las mismas URL directamente a las fuentes, con los mismos scripts. Las respuestas se guardaron tal cual en la zona
   cruda y los scripts las leyeron. `verificar.py` falla si una fuente no apunta a una respuesta cruda con la huella
   correcta, y `reconstruir.py --desde-crudo` rehace la zona curada sin internet y sale idéntica. La única excepción está
   en la bitácora (encargo 1): el primer borrador del catálogo de fuentes lo llenó de memoria y el equipo lo corrigió.
 - **¿Dónde están guardados?** En `lago/`, con historial en este repositorio; publicado completo en Vercel junto a la
   página (`/lago/…`); y en un bucket privado de Amazon S3, `cerebro-orlando-lago-eafit` (us-east-1, cifrado y con
-  versiones), donde Athena lo consulta con SQL (`publicar/athena.sql`). Subido el 2026-11-02: 264 archivos, 31 MB.
+  versiones), donde Athena lo consulta con SQL (`publicar/athena.sql`). Cada lunes AWS le agrega una foto nueva, y la
+  página lee la última a través de CloudFront (el bucket sigue privado).
 
-## Las seis preguntas y de dónde salen
+## Las siete preguntas y de dónde salen
 
 | Pregunta | Temas del lago | Fuentes (ficha del Excel) |
 |---|---|---|
@@ -38,6 +42,7 @@ exportar el Excel del catálogo.
 | ¿Qué pasa con la seguridad y la convivencia? | `seguridad`, `codigo` | Policía de Orlando (F106); casos de código urbano (F83) |
 | ¿Cuánto pesa el turismo? | `turismo`, `negocios`, `escucha` | BLS vía FRED (F14); licencias de negocio (F81) y de alquiler de corto plazo (F85); Wikipedia (F71) |
 | ¿Qué clima hay hoy, cómo está cambiando y qué barrios están más expuestos? | `clima`, `clima_historico`, `riesgo` | National Weather Service (F57); NOAA NCEI (F58); FEMA, Índice Nacional de Riesgo (F108) |
+| ¿Cómo se mueve la gente y qué tan seguras son las vías? | `trafico`, `transporte` | FDOT, tráfico promedio diario por vía (AADT) y su histórico (F25), dibujado como mapa de carreteras; NHTSA, choques mortales (FARS, F109); LYNX, horario y recorridos de los buses en GTFS (F21) |
 
 Cada pregunta se compara «contra algo»: Tampa, Miami y Jacksonville (y Florida y EE. UU.) para las cifras del área y de
 la ciudad; el año anterior para las tendencias; la mediana de los 125 barrios en cada ficha; los demás distritos.
@@ -54,6 +59,8 @@ python3 vista/construir_vista.py                 # arma el tablero (publico/ par
 python3 publicar/probar_sql.py                   # consultas SQL de ejemplo sobre el lago, con DuckDB (pip install duckdb)
 python3 publicar/subir_s3.py --bucket NOMBRE     # sube el lago a S3 (pip install boto3 y llaves de AWS; ver abajo)
 python3 publicar/correr_athena.py --bucket NOMBRE  # crea las tablas en Athena y corre las 5 consultas de ejemplo
+python3 verificacion/consistencia.py             # que una cifra diga lo mismo en todas las pestañas (verificar.py ya la corre)
+python3 aws/crear_infra.py --bucket NOMBRE       # (en AWS CloudShell) monta o actualiza la actualización semanal
 ```
 
 Los scripts de ingesta, uno por tema (cada uno dice arriba qué lee y qué escribe):
@@ -93,8 +100,9 @@ correr, porque el servicio del clima pide que el cliente se identifique.
 |---|---|
 | `ingesta/` | Un script por tema. `comun.py` tiene lo compartido (contrato, consultas a Socrata, ArcGIS y FRED, supresión bajo el umbral, geometría); `crudo.py` guarda y relee la zona cruda; `privacidad.py` tiene las reglas de datos de personas que usan la ingesta y la verificación. |
 | `lago/` | El lago de datos (ver abajo). Va completo al repositorio. |
-| `catalogo/` | `fuentes_lago.json`: las 32 fuentes que alimentan el lago, con su licencia tal como aparece y su nivel de protección. `catalogo_completo.json`, `diccionario.json` y `bitacora_ia.json`: exportados del Excel por `exportar_catalogo.py`. |
-| `verificacion/` | `verificar.py` y la prueba de que sabe fallar. |
+| `catalogo/` | `fuentes_lago.json`: las 37 fuentes que alimentan el lago, con su licencia tal como aparece y su nivel de protección. `catalogo_completo.json`, `diccionario.json` y `bitacora_ia.json`: exportados del Excel por `exportar_catalogo.py`. |
+| `verificacion/` | `verificar.py`, `consistencia.py` (la misma cifra en todas las pestañas), la prueba de que saben fallar y `informe_consistencia.md`. |
+| `aws/` | La actualización semanal: `lambda_cerebro.py`, `maquina.asl.json` (Step Functions) y `crear_infra.py` (lo monta todo). |
 | `publicar/` | `consumo.py` (zona de consumo e inventario), `subir_s3.py` (lago → Amazon S3), `athena.sql` (tablas y consultas de ejemplo), `correr_athena.py` (las crea y las corre en Athena), `probar_sql.py` (las mismas consultas con DuckDB) y `politica_iam.json` (permisos mínimos para subir). |
 | `vista/` | `plantilla.html`, `estilos.css`, `app.js` y `construir_vista.py`. |
 | `publico/` | Lo que publica Vercel: `index.html` y `app.js`. Al construir (y en el build de Vercel) se copia `lago/` adentro. |
@@ -106,7 +114,7 @@ correr, porque el servicio del clima pide que el cliente se identifique.
 lago/
   crudo/sitio=<servidor>/fecha=<AAAA-MM-DD>/<nombre>-<huella>.<json|csv>.gz   lo que respondió cada fuente, tal cual
   curado/tema=<tema>/fecha=<AAAA-MM-DD>/<tema>.json                          un archivo por tema y foto, verificado
-  territorio/*.geojson                                                       capas de referencia (barrios, distritos, límite, lagos)
+  territorio/*.geojson                                                       capas de referencia (barrios, distritos, límite, lagos, vías con su tráfico y recorridos de bus)
   consumo/cifras/fecha=<…>/cifras.jsonl.gz                                   una fila por cifra (para SQL)
   consumo/series/fecha=<…>/series.jsonl.gz                                   una fila por punto de cada serie (para SQL)
   consumo/tablero/tablero.json                                               lo que lee el tablero publicado
@@ -128,23 +136,24 @@ lago/
 - **Reproducible:** `reconstruir.py --desde-crudo <fecha>` borra la zona curada de esa fecha y la rehace leyendo solo la
   zona cruda; sale idéntica byte a byte (probado con las dos fotos). Todo lo que depende del día usa la fecha de la foto,
   no el reloj (`comun.fecha_prueba()`).
-- Hoy pesa ~30 MB: 27 MB de zona cruda (el archivo de Indeed, 63 MB sin comprimir, es casi la mitad), 2 MB curada,
-  2 MB de consumo.
+- En el repositorio pesa ~33 MB (dos fotos), casi todo zona cruda: el archivo de Indeed (63 MB sin comprimir) es casi la
+  mitad. En S3 crece con cada foto semanal.
 
 ## Dónde viven los datos
 
 | Lugar | Qué hay | Para qué |
 |---|---|---|
 | Este repositorio (GitHub) | Todo `lago/` | Historial: cada foto nueva es un cambio con fecha y autor; cualquiera puede clonar y reconstruir |
-| Vercel | La página y una copia de `lago/` en `/lago/…` | Ver y descargar: el tablero lee `lago/consumo/tablero/tablero.json` y cada respuesta cruda se abre desde la pestaña «Datos y fuentes» |
-| Amazon S3 | El mismo árbol en el bucket privado `cerebro-orlando-lago-eafit` (us-east-1), cifrado y con versionado | Nube de verdad: Athena consulta las tablas con SQL (base `cerebro_orlando`) |
+| Vercel | La página y una copia de `lago/` en `/lago/…` | Ver y descargar; es el respaldo si CloudFront no responde |
+| Amazon S3 | El lago maestro: el mismo árbol en el bucket privado `cerebro-orlando-lago-eafit` (us-east-1), cifrado y con versionado, más una foto nueva cada lunes | Nube de verdad: Athena consulta las tablas con SQL (base `cerebro_orlando`) |
+| CloudFront | Una puerta de solo lectura a las zonas del lago (`publicar/nube.json` tiene la dirección) | La página lee de ahí la última foto; `_athena/`, `_trabajo/` y todo lo demás responden 403 |
 
 ### Publicar en Vercel
 
 `vercel.json` ya trae todo: sin framework, sin instalación, el build copia `lago/` dentro de `publico/` y se publica
 `publico/`. Pasos: en vercel.com, *Add New → Project → Import* este repositorio (lo importa quien tenga acceso al repo en
 GitHub) y *Deploy*, sin cambiar nada. Cada push a la rama vuelve a publicar. Plan Hobby: gratis para uso personal y no
-comercial; 100 GB de transferencia al mes (el sitio pesa ~32 MB). Sin GitHub: `npx vercel deploy --prod` desde la raíz.
+comercial; 100 GB de transferencia al mes (el sitio pesa ~35 MB). Sin GitHub: `npx vercel deploy --prod` desde la raíz.
 
 ### Subir el lago a Amazon S3 y consultarlo con Athena
 
@@ -157,7 +166,8 @@ volver a subir después de una foto nueva, o para montarlo en otra cuenta:
    política de `publicar/politica_iam.json`, `pip install boto3` y `aws configure` (las llaves nunca van al repo).
 2. (Solo fuera de CloudShell) Revisar la región: el bucket está en us-east-1.
 3. `python publicar/subir_s3.py --bucket cerebro-orlando-lago-eafit --crear`: crea el bucket privado (acceso público
-   bloqueado, cifrado SSE-S3, versionado) y sube el lago. Las siguientes veces, sin `--crear`: sube solo lo que cambió.
+   bloqueado, cifrado SSE-S3, versionado) y sube el lago. Las siguientes veces, sin `--crear`: sube solo lo nuevo y
+   **nunca pisa** lo que ya está (el manifiesto se une; lo derivado lo rehace la próxima ejecución en AWS).
 4. `python publicar/correr_athena.py --bucket cerebro-orlando-lago-eafit` (o pegar en el editor de Athena el archivo
    `publicar/athena_<bucket>.sql` que deja el paso 3): crea la base
    `cerebro_orlando`, las tablas `cifras`, `series`, `manifiesto` y `fuentes`, la vista `por_barrio` y cinco consultas
@@ -168,14 +178,39 @@ volver a subir después de una foto nueva, o para montarlo en otra cuenta:
 Costo: el lago pesa ~31 MB; S3 cobra centavos al año y Athena cobra por datos leídos (las 5 consultas leen menos de 1 MB).
 Los resultados de Athena quedan en `s3://<bucket>/_athena/` y se borran solos a los 7 días.
 El bucket es privado: para que otro integrante lo vea, se le crea un usuario de IAM con la política de
-`publicar/politica_iam.json`; lo público es la copia de Vercel.
+`publicar/politica_iam.json`; lo público es la puerta de CloudFront (solo las zonas del lago) y la copia de Vercel.
 
-### Actualización automática (experimental)
+### Actualización semanal en AWS (EventBridge → Step Functions)
 
-`.github/workflows/actualizar-lago.yml` corre `reconstruir.py` y la vista desde los servidores de GitHub y guarda la
-foto nueva si la verificación pasa. Está en modo manual (*Actions → Actualizar el lago → Run workflow*); si sale bien, se
-le activa el horario semanal. Algunas fuentes podrían rechazar a los servidores de GitHub: en ese caso falla y no
-guarda nada.
+Montada el 3 nov 2026 en la cuenta de AWS de Mateo Villada (us-east-1) con `python3 aws/crear_infra.py --bucket
+cerebro-orlando-lago-eafit`, desde CloudShell. Todos los lunes a las 6:00 (hora de Bogotá):
+
+```
+EventBridge Scheduler «cerebro-orlando-lunes»
+  └─▶ Step Functions «cerebro-orlando-semanal»
+        Planear ─▶ Traer de las fuentes (Map: un script de ingesta por tema, 4 a la vez, cada uno en la Lambda)
+              ─▶ Verificar (verificar.py sobre el lago + lo traído) ─▶ ¿0 fallos?
+                     no ─▶ «No se publica» (falla la ejecución; el lago y la página quedan como estaban)
+                     sí ─▶ Publicar (consumo, tablero, sube a S3 solo lo nuevo, invalida CloudFront)
+                           ─▶ Contar en Athena las cifras de la foto nueva ─▶ ¿más de 0? ─▶ Listo
+```
+
+- **Lambda** `cerebro-orlando-actualizar` (Python 3.12, 2 GB, hasta 15 min): lleva el código del repositorio y baja el
+  lago del bucket en cada paso. Lo que trae cada script queda en `_trabajo/<ejecución>/` (se borra a los 3 días).
+- **Primera ejecución** (3 nov, a mano): 16 temas traídos desde AWS sin errores, 1.572 comprobaciones y 0 fallos, 135
+  archivos subidos y 148 cifras de la foto nueva vistas en Athena, en 3 minutos.
+- **La página** pide primero `consumo/tablero/tablero.json` a CloudFront; lo usa solo si salió del mismo código que la
+  página (`version_vista`) y, si no, usa su copia de Vercel.
+- **Después de cambiar el código** (push a `main`): en CloudShell, `git pull` y `python3 aws/crear_infra.py --bucket
+  cerebro-orlando-lago-eafit --solo-codigo` (con `--correr` lanza una ejecución en el momento).
+- **Pausar**: `aws scheduler update-schedule …` con `--state DISABLED`, o en la consola: *EventBridge → Schedules*.
+- **Costo:** una ejecución por semana cabe en la capa gratuita de Lambda, Step Functions, Scheduler y CloudFront; S3 y
+  Athena cuestan centavos.
+- Tres roles de IAM, uno por pieza, con lo mínimo: la Lambda solo lee y escribe en el bucket; Step Functions solo invoca
+  la Lambda y consulta Athena; el horario solo puede arrancar la máquina.
+
+`.github/workflows/actualizar-lago.yml` hace lo mismo desde los servidores de GitHub, en modo manual. Queda como
+alternativa.
 
 ## Cómo cuidamos a las personas
 
@@ -198,6 +233,13 @@ punto exacto), código urbano (nombres en el caso), licencias de negocio (dueño
 - La zona cruda guarda respuestas enteras, así que tiene su propio filtro (`ingesta/privacidad.py`): antes de guardar
   se retiran los campos con nombre de dato personal y los «valores de muestra» de las fichas del portal (ahí aparecían
   correos de personas que registraron alquileres de corto plazo); `verificar.py` revisa cada respuesta guardada.
+
+- **Choques mortales (FARS).** Cada registro de NHTSA es un choque con muertos, con fecha, hora y punto. No se baja
+  ninguno: al servidor solo se le piden conteos por año y por vía, y una vía con menos de 5 choques en cinco años no se
+  publica (`umbral_minimo_por_via`).
+- **Buses (GTFS de LYNX).** Son horarios publicados, sin personas. El ZIP se guarda entero en la zona cruda y
+  `verificar.py` revisa el texto de cada archivo de adentro; el único contacto permitido es el de atención al público de
+  la empresa (`agency.txt`).
 
 Las demás fuentes son **«abierto»**: series agregadas por área sin datos de personas.
 
@@ -257,7 +299,8 @@ y `vista/index.html` (un solo archivo con los datos adentro: se abre sin servido
    del portal tiene el campo vacío). `verificar.py` lo marca con WARN. Antes de un uso fuera del curso, hay que leer los
    términos del portal.
 2. **Realtor.com vía FRED** dice «Copyrighted: Citation Required»: se usa con la atribución visible en la vista.
-3. **Zillow y el SIG de la ciudad** no traen texto de licencia: se citan junto a cada gráfico y quedan con WARN.
+3. **Zillow, el SIG de la ciudad, FDOT y LYNX** no traen texto de licencia (FDOT entrega sus capas «as is»): se citan
+   junto a cada gráfico y quedan con WARN.
 4. **Huecos declarados:** zonas inundables por predio (el servidor de FEMA no respondió; se usa el índice por sector),
    supermercados y farmacias por barrio (OpenStreetMap rechazó el navegador automatizado y no se saltó con espejos),
    PIB del área (descontinuado en FRED), solicitudes al 311 (no publicadas), turistas y pasajeros (solo en PDF), cargos y
@@ -273,3 +316,5 @@ y `vista/index.html` (un solo archivo con los datos adentro: se abre sin servido
   todas las estimaciones por barrio.
 - Wikipedia suma un mes nuevo cada mes; Indeed, cada semana; las series de FRED, cuando la agencia publica.
 - Seguridad, código y permisos guardan el año en curso solo como cifra aparte («va en …»); los gráficos usan años completos.
+- FDOT publica los conteos de tráfico una vez al año; FARS, los choques mortales con más de un año de rezago; LYNX cambia
+  su horario de buses unas veces al año (la fecha del horario es la vigencia).

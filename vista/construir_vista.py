@@ -17,12 +17,12 @@ Qué agrega la vista (todo queda marcado como «derivado» en la página):
 - Las geometrías se proyectan aquí a coordenadas de pantalla (mapas planos SVG) y se incrustan como GeoJSON para el mapa 3D
   (MapLibre GL desde cdnjs, sin teselas ni llaves: solo las capas del lago).
 Nada de esto agrega datos de personas: la vista solo usa conteos por barrio que ya pasaron el umbral del lago."""
-import argparse, datetime, gzip, json, math, pathlib, shutil, subprocess, sys
+import argparse, datetime, gzip, hashlib, json, math, pathlib, shutil, subprocess, sys
 
 RAIZ = pathlib.Path(__file__).resolve().parents[1]
 VISTA = RAIZ / "vista"
 TEMAS = ["gente", "economia", "empleo", "vivienda", "escucha", "permisos", "seguridad", "codigo", "negocios", "turismo",
-         "clima", "clima_historico", "territorio", "censo", "riesgo", "servicios", "planeacion"]
+         "clima", "clima_historico", "territorio", "censo", "riesgo", "servicios", "planeacion", "trafico", "transporte"]
 ANCHO = 1000                      # ancho del mapa en unidades de pantalla (viewBox)
 REPO = "https://github.com/TeoVH/Cerebro-Orlando"         # fork del repo del equipo (NSaldarriagaV/Cerebro-Orlando) con la v4
 WEB = "https://cerebro-orlando.vercel.app"          # la copia publicada (Vercel), con el lago en /lago/
@@ -213,10 +213,31 @@ def geo(features, campos):
         {"type": "Feature", "properties": {k: (i if k == "i" else f["properties"].get(k)) for k in campos}, "geometry": f["geometry"]}
         for i, f in enumerate(features)]}
 
+# Vías (FDOT, con su tráfico) y recorridos de bus (LYNX) como líneas del mapa plano; de la más chica a la más grande, para
+# que las cargadas queden encima
+def linea_svg(geom):
+    caminos = [geom["coordinates"]] if geom["type"] == "LineString" else geom["coordinates"]
+    return "".join("M" + "L".join(f"{x:.1f},{y:.1f}" for x, y in (xy(p) for p in c)) for c in caminos)
+
+
+def capa_lineas(nombre, valor, etiqueta):
+    ruta = RAIZ / "lago" / "territorio" / f"{nombre}.geojson"
+    if not ruta.exists():
+        return []
+    fs = leer(ruta)["features"]
+    return [[linea_svg(f["geometry"]), f["properties"][valor], f["properties"][etiqueta]] for f in sorted(fs, key=lambda f: (f["properties"][valor], f["properties"][etiqueta]))]
+
+
+# La copia del lago en AWS (CloudFront delante del bucket), si ya se montó con aws/crear_infra.py
+NUBE = json.loads((RAIZ / "publicar" / "nube.json").read_text(encoding="utf-8")) if (RAIZ / "publicar" / "nube.json").exists() else {}
+# Versión de la vista: el tablero que arme la Lambda en AWS solo se usa si salió del mismo código que esta página
+VERSION = hashlib.sha1(b"".join((VISTA / f).read_bytes() for f in ("app.js", "plantilla.html", "construir_vista.py"))).hexdigest()[:12]
 datos = {
     "generado": max(l["probado"] for l in lago.values()),          # el día más reciente en que una fuente respondió
+    "version_vista": VERSION,
     "repo": REPO,
     "web": WEB,
+    "nube": NUBE.get("cloudfront", ""),
     "lago": lago,
     "fuentes_lago": leer(RAIZ / "catalogo" / "fuentes_lago.json"),
     "catalogo": leer(RAIZ / "catalogo" / "catalogo_completo.json"),
@@ -224,6 +245,7 @@ datos = {
     "bitacora": leer(RAIZ / "catalogo" / "bitacora_ia.json"),
     "mapa": {"ancho": ANCHO, "alto": ALTO, "km_por_unidad": round(1 / ESCALA, 5), "limite": limite, "lagos": lagos,
              "barrios": barrios, "distritos": distritos, "sin_poligono": sin_poligono,
+             "vias": capa_lineas("vias_trafico", "aadt", "via"), "rutas": capa_lineas("rutas_bus", "paradas_dia", "ruta"),
              "caja": [round(min_lon, 5), round(min_lat, 5), round(max_lon, 5), round(max_lat, 5)],
              "geo": {"barrios": geo(barrios_geo, ["i", "nombre"]), "distritos": geo(distritos_geo, ["distrito"]),
                      "limite": geo(limite_geo, []), "lagos": geo(lagos_geo, ["nombre"])}},
@@ -275,9 +297,15 @@ TABLERO.write_text(json_datos, encoding="utf-8")
 # 3) publico/: el sitio de Vercel. La página no trae los datos: los lee del lago publicado al abrirse
 PUB = RAIZ / "publico"
 PUB.mkdir(exist_ok=True)
-CARGADOR = """fetch("lago/consumo/tablero/tablero.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+CARGADOR = """const leer = u => fetch(u, {cache: "no-cache"}).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+const NUBE = "__NUBE__", VERSION = "__VERSION__";
+// Primero la última foto que publicó la actualización semanal en AWS (CloudFront); si no responde o salió de otra versión
+// del código, la copia que viene con esta página
+(NUBE ? leer(NUBE + "/consumo/tablero/tablero.json").then(d => { if (d.version_vista !== VERSION) throw new Error("otra versión"); window.__LAGO = NUBE + "/"; return d; }) : Promise.reject())
+  .catch(() => leer("lago/consumo/tablero/tablero.json").then(d => { window.__LAGO = "lago/"; return d; }))
   .then(d => { window.__D = d; const s = document.createElement("script"); s.src = "app.js?v=" + encodeURIComponent(d.generado); document.body.append(s); })
   .catch(e => { document.querySelector("main").insertAdjacentHTML("afterbegin", '<div class="wrap" style="padding:40px 0"><h2>No se pudo leer el lago</h2><p>La página lee sus datos de lago/consumo/tablero/tablero.json y no respondió (' + e.message + '). Pruebe recargar.</p></div>'); });"""
+CARGADOR = CARGADOR.replace("__NUBE__", NUBE.get("cloudfront", "")).replace("__VERSION__", VERSION)
 web = plantilla.replace("/*__ESTILOS__*/", estilos).replace("__DATOS__", "").replace("<script>/*__APP__*/</script>", f"<script>{CARGADOR}</script>")
 (PUB / "index.html").write_text(pagina(web)[2], encoding="utf-8")
 (PUB / "app.js").write_text(app_txt, encoding="utf-8")
@@ -290,6 +318,12 @@ shutil.copytree(RAIZ / "lago", PUB / "lago")
 sys.path.insert(0, str(RAIZ / "publicar"))
 import consumo
 consumo.catalogar()
+# Después de escribir el tablero: lo que lee la página tiene que ser la última foto del lago (verificacion/consistencia.py)
+if not args.sin_verificar:
+    r = subprocess.run([sys.executable, str(RAIZ / "verificacion" / "consistencia.py")], capture_output=True, text=True)
+    print("consistencia entre pestañas:", (r.stdout.strip().splitlines() or ["sin salida"])[-1])
+    if r.returncode:
+        sys.exit("consistencia.py falló después de construir:\n" + "\n".join(l for l in r.stdout.splitlines() if l.startswith("FAIL")))
 shutil.copy2(RAIZ / "lago" / "catalogo" / "catalogo_lago.json", PUB / "lago" / "catalogo" / "catalogo_lago.json")
 asignados = sum(1 for b in barrios if b["distrito"])
 print(f"vista/index.html: {salida.stat().st_size // 1024} KB · tablero.json: {TABLERO.stat().st_size // 1024} KB · {len(cambios)} cifras cambiaron · {len(barrios)} barrios ({asignados} con distrito) · "

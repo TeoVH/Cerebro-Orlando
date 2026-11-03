@@ -51,3 +51,22 @@ def texto_con_pii(texto, crudo=False):
                 continue
             return m.group(0)
     return None
+
+
+# Archivos ZIP (el GTFS de los buses): se revisa el texto de cada archivo de adentro. agency.txt trae, por norma del
+# formato, el teléfono y el correo de atención al público de la empresa de transporte: no son de personas.
+CONTACTO_INSTITUCIONAL_ZIP = {"agency.txt"}
+
+
+def zip_con_pii(cuerpo):
+    """Primer correo o teléfono dentro de un ZIP (fuera de los contactos institucionales), o None."""
+    import io, zipfile
+    with zipfile.ZipFile(io.BytesIO(cuerpo)) as z:
+        for n in z.namelist():
+            if n.rsplit("/", 1)[-1] in CONTACTO_INSTITUCIONAL_ZIP:
+                continue
+            hallado = texto_con_pii(z.read(n).decode("utf-8", "replace"), crudo=True)
+            if hallado:
+                return f"{n}: {hallado}"
+    return None
+

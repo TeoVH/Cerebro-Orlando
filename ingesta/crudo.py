@@ -9,7 +9,7 @@ la respuesta tal como llegó y la de lo guardado, y dice qué campos se retiraro
 correo o un teléfono, la respuesta NO se guarda (estado «bloqueado») y la reconstrucción desde la zona cruda lo avisa."""
 import gzip, hashlib, json, pathlib, re, sys, urllib.parse
 
-from privacidad import retirar, texto_con_pii
+from privacidad import retirar, texto_con_pii, zip_con_pii
 
 RAIZ = pathlib.Path(__file__).resolve().parents[1]
 CRUDO = RAIZ / "lago" / "crudo"
@@ -43,6 +43,8 @@ def _nombre(url):
 
 
 def _formato(url, cuerpo):
+    if cuerpo[:4] == b"PK\x03\x04":
+        return "zip", None
     try:
         return "json", json.loads(cuerpo)
     except Exception:
@@ -77,6 +79,8 @@ def guardar(url, cuerpo, fecha, como):
             guardado = json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         valores = [v for v in _hojas(obj) if isinstance(v, str)]
         pii = next((p for p in (texto_con_pii(v, crudo=True) for v in valores) if p), None)
+    elif formato == "zip":
+        pii = zip_con_pii(guardado)
     else:
         pii = texto_con_pii(guardado.decode("utf-8", "replace"), crudo=True)
     rel = f"crudo/sitio={sitio}/fecha={fecha}/{_nombre(url)}.{formato}.gz"
