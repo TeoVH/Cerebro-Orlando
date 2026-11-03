@@ -158,5 +158,15 @@
   "resultado": "Parcial",
   "fuentes": "Todas las integradas (21 fichas)",
   "aprendizaje": "Un lago no es una carpeta con archivos: es poder decir de dónde salió cada uno y rehacerlo. Guardar lo crudo destapó un riesgo que no veíamos (la ficha del portal de alquileres de corto plazo trae correos de personas en sus valores de muestra; se retiran al guardar) y un error escondido (fechas tomadas del reloj). Y «lo trajo la IA» no alcanza: hay que poder mostrar la respuesta que dio la fuente."
+ },
+ {
+  "n": "17",
+  "herramienta": "Claude (con el navegador del equipo y las sesiones de Mateo en GitHub, Vercel y AWS)",
+  "encargo": "Hacer el despliegue en vez de dejar solo las instrucciones: publicar el tablero en Vercel y subir el lago a Amazon S3",
+  "respuesta": "Hizo un fork del repositorio en la cuenta de GitHub de Mateo y lo importó en Vercel como sitio estático (cerebro-orlando.vercel.app; cada push a main vuelve a publicar). Desde AWS CloudShell, en la cuenta de Mateo, creó el bucket privado cerebro-orlando-lago-eafit (us-east-1; acceso público bloqueado, cifrado y con versiones), subió el lago (264 archivos, 31 MB) y creó en Athena la base cerebro_orlando con 4 tablas y una vista. Escribió correr_athena.py para crear las tablas y correr las consultas de ejemplo con un solo comando. Mateo inició sesión y escribió los códigos de verificación: la IA no vio ni escribió contraseñas ni llaves.",
+  "comprobacion": "La página publicada responde desde fuera, sirve el lago con los .gz intactos y «Ver» abre las respuestas crudas, sin errores en la consola; después de un push, Vercel volvió a publicar solo. En S3, una segunda subida dejó 263 de 264 archivos sin tocar (solo subió el que cambió), y la línea de comandos de AWS confirma el bloqueo de acceso público y el versionado. En Athena, 11 de 11 sentencias bien; las 5 consultas de ejemplo leen menos de 1 MB y dan lo mismo que con DuckDB en local (por ejemplo, Florida Center encabeza los barrios con 1.587 casos de policía en 2025).",
+  "resultado": "Correcto",
+  "fuentes": "Todas las integradas (el lago completo)",
+  "aprendizaje": "Publicar no termina en «se subió»: hay que comprobarlo desde fuera (abrir la página, leer un archivo del lago, correr una consulta en la nube). Y las llaves no tienen por qué pasar por nadie: en CloudShell la consola ya trae las credenciales de quien inició sesión."
  }
 ]
