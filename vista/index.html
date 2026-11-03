@@ -124,6 +124,9 @@ nav.preguntas a[aria-current="page"] { background: var(--ink); color: var(--surf
 nav.preguntas a[aria-current="page"] svg { color: var(--surface); }
 @media (max-width: 720px) { .marca small { display: none; } .estado-lago .largo, .icono-btn .largo { display: none; } }
 @media (max-width: 420px) { .estado-lago { display: none; } }
+/* en celular y tableta la marca cede espacio para que los botones quepan en la misma fila
+   (antes el de tema caía solo a una segunda fila en celular, y en tableta los botones se partían en dos filas) */
+@media (max-width: 1023px) { .marca small { display: none; } .top .wrap { column-gap: 8px; } .marca { flex: 1 1 0; } }
 
 /* ---------- vistas ---------- */
 main { padding-block: 26px 64px; }
